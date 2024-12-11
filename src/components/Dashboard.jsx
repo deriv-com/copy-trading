@@ -1,82 +1,95 @@
-import { useEffect } from 'react'
-import useDerivAccounts from '../hooks/useDerivAccounts'
+import { useEffect, useState } from 'react'
+import { Button, Text } from '@deriv-com/quill-ui'
 import useDerivWebSocket from '../hooks/useDerivWebSocket'
-import { Text } from '@deriv-com/quill-ui'
 import Header from './Header'
+import TraderStatistics from './TraderStatistics'
 
 const Dashboard = () => {
-    const { defaultAccount, otherAccounts, clearAccounts, updateAccounts } = useDerivAccounts()
-    const { isConnected, sendRequest } = useDerivWebSocket()
-
-    const accountOptions = [defaultAccount, ...otherAccounts]
-        .filter(Boolean)
-        .map(account => ({
-            value: account.account,
-            label: `${account.account} (${account.currency})`,
-            data: account
-        }))
-
-    const handleAccountChange = (selectedAccount) => {
-        const newDefault = accountOptions.find(opt => opt.value === selectedAccount)?.data
-        if (!newDefault) return
-
-        const newOthers = [defaultAccount, ...otherAccounts]
-            .filter(acc => acc && acc.account !== newDefault.account)
-
-        updateAccounts(newDefault, newOthers)
-    }
-
-    const handleLogout = () => {
-        clearAccounts()
-        window.location.href = '/'
-    }
+    const { settings, isLoading, getSettings, isConnected, sendRequest } = useDerivWebSocket()
+    const [userType, setUserType] = useState(null)
 
     useEffect(() => {
-        if (isConnected) {
-            sendRequest({
-                balance: 1,
-                subscribe: 1
-            })
+        if (settings) {
+            setUserType(settings.allow_copiers ? 'trader' : null)
         }
-    }, [isConnected, sendRequest])
+    }, [settings])
+
+    const handleBecomeTrader = () => {
+        sendRequest({
+            set_settings: 1,
+            allow_copiers: 1
+        })
+    }
+
+    if (isLoading) {
+        return <div>Loading...</div>
+    }
+
+    if (userType === 'trader') {
+        return (
+            <div className="min-h-screen bg-gray-50">
+                <Header />
+                <div className="flex flex-col items-center justify-center p-6 mt-10">
+                    <Text
+                        size="5xl"
+                        bold
+                        className="mb-4 text-center animate-fade-in"
+                    >
+                        Welcome Trader! 🎉
+                    </Text>
+                    <Text
+                        size="xl"
+                        className="text-gray-600 text-center max-w-2xl mb-8"
+                    >
+                        You are now set up as a trader. Other users can copy your trades and benefit from your expertise.
+                    </Text>
+                    <TraderStatistics />
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Header
-                defaultAccount={defaultAccount}
-                accountOptions={accountOptions}
-                onAccountChange={handleAccountChange}
-                onLogout={handleLogout}
-            />
-
-            <main className="max-w-4xl mx-auto p-8">
-                <div className="bg-white rounded-lg shadow-lg p-6">
-                    <Text
-                        size="lg"
-                        color="general"
-                        className="mb-2"
-                    >
-                        Account: <Text color="prominent">{defaultAccount?.account}</Text>
-                    </Text>
-                    <Text
-                        size="lg"
-                        color="general"
-                        className="mb-2"
-                    >
-                        Currency: <Text color="prominent">{defaultAccount?.currency}</Text>
-                    </Text>
-                    <Text
-                        size="lg"
-                        color="general"
-                        className="mb-6"
-                    >
-                        Connection Status:{' '}
-                        <Text color={isConnected ? 'success' : 'error'}>
-                            {isConnected ? 'Connected' : 'Disconnected'}
+            <Header />
+            <div className="p-6">
+                <Text size="2xl" bold className="mb-6">
+                    Choose Your Role
+                </Text>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="p-6 border rounded-lg shadow-sm">
+                        <Text size="xl" bold className="mb-4">
+                            Become a Trader
                         </Text>
-                    </Text>
+                        <Text className="mb-4">
+                            Allow others to copy your trades and earn from your trading expertise.
+                        </Text>
+                        <Button
+                            variant="primary"
+                            onClick={handleBecomeTrader}
+                        >
+                            Become a Trader
+                        </Button>
+                    </div>
+
+                    <div className="p-6 border rounded-lg shadow-sm">
+                        <Text size="xl" bold className="mb-4">
+                            Become a Copier
+                        </Text>
+                        <Text className="mb-4">
+                            Copy trades from successful traders and benefit from their experience.
+                        </Text>
+                        <Button
+                            variant="secondary"
+                            onClick={() => {
+                                console.log('Becoming a copier...')
+                            }}
+                        >
+                            Become a Copier
+                        </Button>
+                    </div>
                 </div>
-            </main>
+            </div>
         </div>
     )
 }

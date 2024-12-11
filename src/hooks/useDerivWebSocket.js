@@ -1,90 +1,87 @@
 import { useState, useEffect, useCallback } from 'react'
 import useDerivAccounts from './useDerivAccounts'
 
-const DERIV_SOCKET_URL = 'wss://qa10.deriv.dev/websockets/v3?app_id=9999'
-
 const useDerivWebSocket = () => {
     const [socket, setSocket] = useState(null)
+    const [settings, setSettings] = useState(null)
+    const [isLoading, setIsLoading] = useState(true)
     const [isConnected, setIsConnected] = useState(false)
     const { defaultAccount } = useDerivAccounts()
 
     // Initialize WebSocket connection
     useEffect(() => {
-        const ws = new WebSocket(DERIV_SOCKET_URL)
+        if (defaultAccount?.token) {
+            const ws = new WebSocket('wss://qa10.deriv.dev/websockets/v3?app_id=9999')
 
-        ws.onopen = () => {
-            console.log('[open] Connection established')
-            setIsConnected(true)
+            // Set socket immediately so it's available
+            setSocket(ws)
 
-            // Authorize with token immediately after connection
-            if (defaultAccount?.token) {
+            ws.onopen = () => {
+                console.log('WebSocket connected, readyState:', ws.readyState)
+                setIsConnected(true)
                 ws.send(JSON.stringify({
                     authorize: defaultAccount.token
                 }))
             }
-        }
 
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data)
-            console.log('[message] Data received:', data)
+            ws.onclose = () => {
+                setIsConnected(false)
+            }
 
-            // Handle authorization response
-            if (data.msg_type === 'authorize') {
-                if (data.error) {
-                    console.error('Authorization failed:', data.error)
-                } else {
-                    console.log('Authorization successful:', data)
-                    // You can store additional user info here if needed
+            ws.onmessage = (msg) => {
+                const response = JSON.parse(msg.data)
+                console.log('WebSocket message:', response)
+
+                if (response.msg_type === 'authorize') {
+                    if (response.error) {
+                        console.error('Authorization failed:', response.error)
+                    } else {
+                        console.log('Authorization successful')
+                        ws.send(JSON.stringify({
+                            get_settings: 1
+                        }))
+                    }
+                }
+                else if (response.msg_type === 'get_settings') {
+                    setSettings(response.get_settings)
+                    setIsLoading(false)
+                } else if (response.msg_type === 'set_settings') {
+                    ws.send(JSON.stringify({
+                        get_settings: 1
+                    }))
                 }
             }
-        }
 
-        ws.onclose = (event) => {
-            if (event.wasClean) {
-                console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`)
-            } else {
-                console.log('[close] Connection died')
-            }
-            setIsConnected(false)
-        }
-
-        ws.onerror = (error) => {
-            console.error('[error] WebSocket error:', error)
-        }
-
-        setSocket(ws)
-
-        // Cleanup on unmount
-        return () => {
-            if (ws.readyState === WebSocket.OPEN) {
-                ws.close()
+            return () => {
+                if (ws) {
+                    ws.close()
+                }
             }
         }
     }, [defaultAccount])
 
-    // Function to send messages through WebSocket
-    const sendRequest = useCallback((request) => {
+    // Function to request account settings
+    const getSettings = useCallback(() => {
         if (socket?.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify(request))
-        } else {
-            console.error('WebSocket is not connected')
+            socket.send(JSON.stringify({
+                get_settings: 1
+            }))
         }
     }, [socket])
 
-    // Keep connection alive with ping
-    useEffect(() => {
-        if (!isConnected) return
-
-        const pingInterval = setInterval(() => {
-            sendRequest({ ping: 1 })
-        }, 30000) // Send ping every 30 seconds
-
-        return () => clearInterval(pingInterval)
-    }, [isConnected, sendRequest])
+    // Function to send any WebSocket request
+    const sendRequest = useCallback((request) => {
+        if (socket?.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify(request))
+        }
+    }, [socket])
 
     return {
         socket,
+        settings,
+        isLoading,
         isConnected,
+        getSettings,
         sendRequest
     }
 }
