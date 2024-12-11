@@ -4,12 +4,15 @@ import useDerivAccounts from '../hooks/useDerivAccounts'
 const ProtectedRoute = ({ children }) => {
     const { defaultAccount, isLoading } = useDerivAccounts()
 
-    // Show nothing while checking authentication
+    console.log('ProtectedRoute - defaultAccount:', defaultAccount)
+    console.log('ProtectedRoute - isLoading:', isLoading)
+
     if (isLoading) {
-        return null // or return a loading spinner
+        return <div>Loading...</div>
     }
 
     if (!defaultAccount?.token) {
+        console.log('No token found, redirecting to login')
         return <Navigate to="/" replace />
     }
 

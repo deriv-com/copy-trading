@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import useDerivAccounts from './useDerivAccounts'
 
-const DERIV_SOCKET_URL = 'wss://ws.derivws.com/websockets/v3?app_id=66438'
+const DERIV_SOCKET_URL = 'wss://qa10.deriv.dev/websockets/v3?app_id=9999'
 
 const useDerivWebSocket = () => {
     const [socket, setSocket] = useState(null)

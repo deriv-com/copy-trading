@@ -4,8 +4,11 @@ import { useNavigate } from 'react-router-dom'
 import useDerivAccounts from '../hooks/useDerivAccounts'
 
 const Login = () => {
-    const APP_ID = '66438'
-    const REDIRECT_URI = 'https://1.ashkan.live/redirect'
+    const APP_ID = '9999'
+    // Force http for development, use normal origin for production
+    const REDIRECT_URI = import.meta.env.DEV
+        ? `http://${window.location.host}`
+        : window.location.origin
     const navigate = useNavigate()
     const { defaultAccount, isLoading } = useDerivAccounts()
 
@@ -22,7 +25,7 @@ const Login = () => {
     }
 
     const handleDerivLogin = () => {
-        window.location.href = `https://qa.deriv.com/oauth2/authorize?app_id=${APP_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`
+        window.location.href = `https://qa10.deriv.dev/oauth2/authorize?app_id=${APP_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`
     }
 
     return (

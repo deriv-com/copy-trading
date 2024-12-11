@@ -7,42 +7,43 @@ const OAuthRedirect = () => {
     const { updateAccounts } = useDerivAccounts()
 
     useEffect(() => {
-        // Get URL parameters from either search or pathname+search
+        console.log('OAuth Redirect - Search params:', window.location.search)
         const params = new URLSearchParams(window.location.search)
+        const accounts = []
+        let defaultAccount = null
 
-        // Extract default account (account1)
-        const defaultAccount = {
-            account: params.get('acct1'),
-            currency: params.get('cur1'),
-            token: params.get('token1')
-        }
-
-        // Extract other accounts
-        const otherAccounts = []
-        for (let i = 2; i <= 7; i++) {
-            const account = params.get(`acct${i}`)
-            const currency = params.get(`cur${i}`)
-            const token = params.get(`token${i}`)
-
-            if (account && currency && token) {
-                otherAccounts.push({
-                    account,
-                    currency,
-                    token
-                })
+        // Iterate through params to find account data
+        let index = 1
+        while (params.has(`acct${index}`)) {
+            const account = {
+                account: params.get(`acct${index}`),
+                token: params.get(`token${index}`),
+                currency: params.get(`cur${index}`)
             }
+            console.log(`Found account ${index}:`, account)
+            accounts.push(account)
+
+            // Set the first account as default
+            if (index === 1) {
+                defaultAccount = account
+            }
+            index++
         }
 
-        if (defaultAccount.token) {
-            // Use the hook to update accounts
+        console.log('Processed accounts:', accounts)
+        // Only update if we found accounts
+        if (accounts.length > 0) {
+            console.log('Updating accounts and redirecting to dashboard')
+            const otherAccounts = accounts.slice(1)
             updateAccounts(defaultAccount, otherAccounts)
-            navigate('/dashboard', { replace: true })  // Use replace to prevent back navigation
+            navigate('/dashboard', { replace: true })
         } else {
-            navigate('/', { replace: true })
+            console.log('No accounts found, redirecting to login')
+            navigate('/login', { replace: true })
         }
     }, [navigate, updateAccounts])
 
-    return null
+    return <div>Processing login...</div> // Added visual feedback
 }
 
 export default OAuthRedirect 
