@@ -8,7 +8,6 @@ const Header = () => {
 
     const handleLogout = () => {
         clearAccounts()
-        // Redirect to login page
         window.location.href = '/'
     }
 

@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { ThemeProvider } from '@deriv-com/quill-ui'
+import { ThemeProvider, SnackbarProvider } from '@deriv-com/quill-ui'
 import Login from './components/Login'
 import OAuthRedirect from './components/OAuthRedirect'
 import Dashboard from './components/Dashboard'

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 
 const useDerivAccounts = () => {
     const [defaultAccount, setDefaultAccount] = useState(null)
@@ -8,10 +8,12 @@ const useDerivAccounts = () => {
     // Load accounts from localStorage when hook is initialized
     useEffect(() => {
         try {
+            console.log('Loading accounts from localStorage')
             const storedDefault = localStorage.getItem('deriv_default_account')
             const storedOthers = localStorage.getItem('deriv_other_accounts')
 
             if (storedDefault) {
+                console.log('Found stored default account:', JSON.parse(storedDefault))
                 setDefaultAccount(JSON.parse(storedDefault))
             }
             if (storedOthers) {
@@ -24,31 +26,32 @@ const useDerivAccounts = () => {
         }
     }, [])
 
-    // Function to update accounts
-    const updateAccounts = (newDefault, newOthers) => {
+    const updateAccounts = useCallback((newDefaultAccount, newOtherAccounts) => {
+        console.log('Updating accounts:', { newDefaultAccount, newOtherAccounts })
         // Update state
-        setDefaultAccount(newDefault)
-        setOtherAccounts(newOthers)
+        setDefaultAccount(newDefaultAccount)
+        setOtherAccounts(newOtherAccounts)
+        setIsLoading(false)
 
         // Update localStorage
-        localStorage.setItem('deriv_default_account', JSON.stringify(newDefault))
-        localStorage.setItem('deriv_other_accounts', JSON.stringify(newOthers))
-    }
+        localStorage.setItem('deriv_default_account', JSON.stringify(newDefaultAccount))
+        localStorage.setItem('deriv_other_accounts', JSON.stringify(newOtherAccounts))
+    }, [])
 
-    // Function to clear accounts (for logout)
-    const clearAccounts = () => {
+    const clearAccounts = useCallback(() => {
+        console.log('Clearing accounts')
         setDefaultAccount(null)
         setOtherAccounts([])
         localStorage.removeItem('deriv_default_account')
         localStorage.removeItem('deriv_other_accounts')
-    }
+    }, [])
 
     return {
         defaultAccount,
         otherAccounts,
+        isLoading,
         updateAccounts,
-        clearAccounts,
-        isLoading
+        clearAccounts
     }
 }
 
