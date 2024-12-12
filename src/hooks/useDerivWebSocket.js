@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import useDerivAccounts from './useDerivAccounts'
 
+
+const WS_URL = `${import.meta.env.VITE_WS_URL}?app_id=${import.meta.env.VITE_APP_ID}`
+
+
 const useDerivWebSocket = () => {
     const [socket, setSocket] = useState(null)
     const [settings, setSettings] = useState(null)
@@ -11,7 +15,7 @@ const useDerivWebSocket = () => {
     // Initialize WebSocket connection
     useEffect(() => {
         if (defaultAccount?.token) {
-            const ws = new WebSocket('wss://green.derivws.com/websockets/v3?app_id=9999')
+            const ws = new WebSocket(WS_URL)
 
             // Set socket immediately so it's available
             setSocket(ws)

@@ -4,25 +4,25 @@ import { useNavigate } from 'react-router-dom'
 import useDerivAccounts from '../hooks/useDerivAccounts'
 
 const Login = () => {
-    const APP_ID = '66435'
-    const REDIRECT_URI = 'https://ashkan-deriv.github.io'
+    const APP_ID = import.meta.env.VITE_APP_ID
+    const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URL
+    const OAUTH_URL = import.meta.env.VITE_OAUTH_URL
+
     const navigate = useNavigate()
     const { defaultAccount, isLoading } = useDerivAccounts()
 
     useEffect(() => {
-        // Only redirect after loading is complete and we have an account
         if (!isLoading && defaultAccount?.token) {
             navigate('/dashboard', { replace: true })
         }
     }, [defaultAccount, navigate, isLoading])
 
-    // Show loading state or nothing while checking authentication
     if (isLoading) {
-        return null // or return a loading spinner
+        return null
     }
 
     const handleDerivLogin = () => {
-        window.location.href = `https://oauth.deriv.com/oauth2/authorize?app_id=${APP_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`
+        window.location.href = `${OAUTH_URL}/oauth2/authorize?app_id=${APP_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`
     }
 
     return (
