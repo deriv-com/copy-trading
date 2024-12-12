@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 8443,
     },
-    base: './',
+    base: '/copy-trading/',
     define: {
       __APP_ENV__: env.APP_ENV
     }

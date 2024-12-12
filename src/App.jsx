@@ -11,7 +11,7 @@ function App() {
       theme="light"
       persistent
     >
-      <Router>
+      <Router basename="/copy-trading">
         <Routes>
           <Route path="/" element={<OAuthRedirect />} />
           <Route path="/login" element={<Login />} />
