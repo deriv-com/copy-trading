@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { HashRouter as Router, Routes, Route } from 'react-router-dom'
 import { ThemeProvider, SnackbarProvider } from '@deriv-com/quill-ui'
 import Login from './components/Login'
 import OAuthRedirect from './components/OAuthRedirect'
@@ -11,21 +11,23 @@ function App() {
       theme="light"
       persistent
     >
-      <Router basename="/copy-trading">
-        <Routes>
-          <Route path="/" element={<OAuthRedirect />} />
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/*" element={<OAuthRedirect />} />
-        </Routes>
-      </Router>
+      <SnackbarProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<OAuthRedirect />} />
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/*" element={<OAuthRedirect />} />
+          </Routes>
+        </Router>
+      </SnackbarProvider>
     </ThemeProvider>
   )
 }
