@@ -1,20 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import useDerivAccounts from './useDerivAccounts'
+import { getConfig } from '../config'
 
-// Production fallback values
-const PROD_WS_URL = 'wss://ws.derivws.com/websockets/v3'
-const PROD_APP_ID = '66435'
-
-// Use env variables with fallback to production values
-const WS_URL = import.meta.env.VITE_WS_URL || PROD_WS_URL
-const APP_ID = import.meta.env.VITE_APP_ID || PROD_APP_ID
-
-// Construct WebSocket URL
-const WEBSOCKET_URL = `${WS_URL}?app_id=${APP_ID}`
+const config = getConfig()
+const WEBSOCKET_URL = `${config.WS_URL}?app_id=${config.APP_ID}`
 
 console.log('WebSocket Configuration:', {
-    WS_URL,
-    APP_ID,
+    ...config,
     FINAL_URL: WEBSOCKET_URL
 })
 

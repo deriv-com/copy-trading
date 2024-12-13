@@ -2,20 +2,14 @@ import { Button, Text, Link } from '@deriv-com/quill-ui'
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useDerivAccounts from '../hooks/useDerivAccounts'
-
-// Production fallback values
-const PROD_APP_ID = '66435'
-const PROD_OAUTH_URL = 'https://oauth.deriv.com'
+import { getConfig } from '../config'
 
 const Login = () => {
-    // Use env variables with fallback to production values
-    const APP_ID = import.meta.env.VITE_APP_ID || PROD_APP_ID
-    const OAUTH_URL = import.meta.env.VITE_OAUTH_URL || PROD_OAUTH_URL
+    const config = getConfig()
 
     console.log('OAuth Configuration:', {
-        APP_ID,
-        OAUTH_URL,
-        FINAL_URL: `${OAUTH_URL}/oauth2/authorize?app_id=${APP_ID}`
+        ...config,
+        FINAL_URL: `${config.OAUTH_URL}/oauth2/authorize?app_id=${config.APP_ID}`
     })
 
     const navigate = useNavigate()
@@ -32,7 +26,7 @@ const Login = () => {
     }
 
     const handleDerivLogin = () => {
-        window.location.href = `${OAUTH_URL}/oauth2/authorize?app_id=${APP_ID}`
+        window.location.href = `${config.OAUTH_URL}/oauth2/authorize?app_id=${config.APP_ID}`
     }
 
     return (
