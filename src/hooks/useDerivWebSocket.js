@@ -1,7 +1,23 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import useDerivAccounts from './useDerivAccounts'
 
-const WS_URL = `${import.meta.env.VITE_WS_URL}?app_id=${import.meta.env.VITE_APP_ID}`
+// Add console.log to debug env variables
+console.log('Environment variables:', {
+    WS_URL: import.meta.env.VITE_WS_URL,
+    APP_ID: import.meta.env.VITE_APP_ID
+})
+
+// Construct WS_URL after ensuring env variables exist
+const WS_URL = import.meta.env.VITE_WS_URL && import.meta.env.VITE_APP_ID
+    ? `${import.meta.env.VITE_WS_URL}?app_id=${import.meta.env.VITE_APP_ID}`
+    : null
+
+if (!WS_URL) {
+    console.error('WebSocket URL could not be constructed. Missing environment variables:', {
+        WS_URL: import.meta.env.VITE_WS_URL,
+        APP_ID: import.meta.env.VITE_APP_ID
+    })
+}
 
 // Singleton WebSocket instance
 let globalWs = null
@@ -41,8 +57,12 @@ const useDerivWebSocket = () => {
 
     // Initialize WebSocket connection
     useEffect(() => {
-        if (!defaultAccount?.token) {
-            console.log('No default account or token available', defaultAccount)
+        if (!defaultAccount?.token || !WS_URL) {
+            console.log('Cannot initialize WebSocket:', {
+                hasToken: Boolean(defaultAccount?.token),
+                hasWsUrl: Boolean(WS_URL),
+                wsUrl: WS_URL
+            })
             return
         }
 
