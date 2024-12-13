@@ -4,7 +4,17 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
+    <title>Copy Trading</title>
+    <script>
+      // Redirect to hash router if accessing root without hash and no query params
+      (function() {
+        if (!window.location.hash && 
+            window.location.pathname === '/copy-trading/' && 
+            !window.location.search) {  // Only redirect if no query parameters
+          window.location.replace(window.location.origin + '/copy-trading/#/');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
