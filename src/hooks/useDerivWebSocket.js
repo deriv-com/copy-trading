@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import useDerivAccounts from './useDerivAccounts'
 
 // Production fallback values
-const PROD_WS_URL = 'wss://green.derivws.com/websockets/v3'
+const PROD_WS_URL = 'wss://ws.derivws.com/websockets/v3'
 const PROD_APP_ID = '66435'
 
 // Use env variables with fallback to production values
