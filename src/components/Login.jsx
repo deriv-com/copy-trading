@@ -3,9 +3,20 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useDerivAccounts from '../hooks/useDerivAccounts'
 
+// Production fallback values
+const PROD_APP_ID = '66435'
+const PROD_OAUTH_URL = 'https://oauth.deriv.com'
+
 const Login = () => {
-    const APP_ID = import.meta.env.VITE_APP_ID
-    const OAUTH_URL = 'https://oauth.deriv.com'
+    // Use env variables with fallback to production values
+    const APP_ID = import.meta.env.VITE_APP_ID || PROD_APP_ID
+    const OAUTH_URL = import.meta.env.VITE_OAUTH_URL || PROD_OAUTH_URL
+
+    console.log('OAuth Configuration:', {
+        APP_ID,
+        OAUTH_URL,
+        FINAL_URL: `${OAUTH_URL}/oauth2/authorize?app_id=${APP_ID}`
+    })
 
     const navigate = useNavigate()
     const { defaultAccount, isLoading } = useDerivAccounts()
