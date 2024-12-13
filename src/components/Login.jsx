@@ -5,8 +5,7 @@ import useDerivAccounts from '../hooks/useDerivAccounts'
 
 const Login = () => {
     const APP_ID = import.meta.env.VITE_APP_ID
-    const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URL
-    const OAUTH_URL = import.meta.env.VITE_OAUTH_URL
+    const OAUTH_URL = 'https://oauth.deriv.com'
 
     const navigate = useNavigate()
     const { defaultAccount, isLoading } = useDerivAccounts()
@@ -22,7 +21,7 @@ const Login = () => {
     }
 
     const handleDerivLogin = () => {
-        window.location.href = `${OAUTH_URL}/oauth2/authorize?app_id=${APP_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`
+        window.location.href = `${OAUTH_URL}/oauth2/authorize?app_id=${APP_ID}`
     }
 
     return (
