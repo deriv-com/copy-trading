@@ -1,71 +1,12 @@
 import { useEffect, useState } from "react";
-import { Text, Button, useSnackbar, Snackbar } from "@deriv-com/quill-ui";
+import { Text, Snackbar } from "@deriv-com/quill-ui";
 import useDerivWebSocket from "../hooks/useDerivWebSocket";
-import useCopyTradersList from "../hooks/useCopyTradersList";
 import AddTraderForm from "./AddTraderForm";
-
-const TraderCard = ({
-    trader,
-    onCopyClick,
-    onStopCopy,
-    isCopying,
-    isProcessing,
-}) => {
-    return (
-        <div className="bg-white p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-4">
-                <div>
-                    <Text size="xl" bold className="mb-2">
-                        {trader.name}
-                    </Text>
-                    <Text className="text-green-600 font-medium">
-                        {trader.profit}
-                    </Text>
-                </div>
-                {isCopying ? (
-                    <Button
-                        variant="secondary"
-                        onClick={() => onStopCopy(trader)}
-                        disabled={isProcessing}
-                    >
-                        Stop Copying
-                    </Button>
-                ) : (
-                    <Button
-                        variant="primary"
-                        onClick={() => onCopyClick(trader)}
-                        disabled={isProcessing}
-                        isLoading={isProcessing}
-                    >
-                        {isProcessing ? "Copying..." : "Copy Trader"}
-                    </Button>
-                )}
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-4">
-                <div>
-                    <Text size="sm" className="text-gray-500">
-                        Total Trades
-                    </Text>
-                    <Text bold>{trader.trades}</Text>
-                </div>
-                <div>
-                    <Text size="sm" className="text-gray-500">
-                        Success Rate
-                    </Text>
-                    <Text bold>{trader.success_rate}</Text>
-                </div>
-            </div>
-        </div>
-    );
-};
+import TraderCard from "./TraderCard";
 
 const CopierDashboard = () => {
     const { sendRequest, wsResponse } = useDerivWebSocket();
-    const {
-        traders,
-        isLoading: isLoadingTraders,
-        error: tradersError,
-    } = useCopyTradersList();
+    const [localTraders, setLocalTraders] = useState([]);
     const [processingTrader, setProcessingTrader] = useState(null);
     const [copiedTrader, setCopiedTrader] = useState(null);
     const [snackbar, setSnackbar] = useState({
@@ -74,9 +15,13 @@ const CopierDashboard = () => {
         status: "neutral",
     });
 
+    // Load traders from localStorage on mount and when traders are added
     useEffect(() => {
-        console.log("Available traders:", traders);
-    }, [traders]);
+        const storedTraders = JSON.parse(
+            localStorage.getItem("traders") || "[]"
+        );
+        setLocalTraders(storedTraders);
+    }, []);
 
     useEffect(() => {
         if (!wsResponse || !processingTrader) return;
@@ -147,7 +92,7 @@ const CopierDashboard = () => {
         console.log("Copy clicked for trader:", trader);
         setProcessingTrader(trader);
         sendRequest({
-            copy_start: trader.token,
+            copy_start: trader.id,
         });
     };
 
@@ -155,13 +100,13 @@ const CopierDashboard = () => {
         console.log("Stop copy clicked for trader:", trader);
         setProcessingTrader(trader);
         sendRequest({
-            copy_stop: trader.token,
+            copy_stop: trader.id,
         });
     };
 
     const handleAddTrader = (trader) => {
         console.log("New trader added:", trader);
-        // You can add additional logic here if needed
+        setLocalTraders((prev) => [...prev, trader]);
     };
 
     return (
@@ -178,28 +123,18 @@ const CopierDashboard = () => {
 
             <AddTraderForm onAddTrader={handleAddTrader} />
 
-            {isLoadingTraders ? (
-                <div className="text-center py-8">Loading traders...</div>
-            ) : tradersError ? (
-                <div className="text-center py-8 text-red-600">
-                    {tradersError}
-                </div>
-            ) : (
-                <div className="grid gap-6">
-                    {traders.map((trader, index) => (
-                        <TraderCard
-                            key={trader.id || index}
-                            trader={trader}
-                            onCopyClick={handleCopyClick}
-                            onStopCopy={handleStopCopy}
-                            isCopying={copiedTrader?.token === trader.token}
-                            isProcessing={
-                                processingTrader?.token === trader.token
-                            }
-                        />
-                    ))}
-                </div>
-            )}
+            <div className="grid gap-6">
+                {localTraders.map((trader, index) => (
+                    <TraderCard
+                        key={trader.id || index}
+                        trader={trader}
+                        onCopyClick={handleCopyClick}
+                        onStopCopy={handleStopCopy}
+                        isCopying={copiedTrader?.id === trader.id}
+                        isProcessing={processingTrader?.id === trader.id}
+                    />
+                ))}
+            </div>
 
             <div className="fixed top-0 left-0 right-0 flex justify-center pt-4 z-50">
                 <Snackbar
