@@ -41,8 +41,8 @@ const AddTraderForm = ({ onAddTrader }) => {
                 Add New Trader
             </Text>
             <form onSubmit={handleSubmit}>
-                <div className="flex items-center gap-4">
-                    <div className="flex-1">
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                    <div className="w-full md:flex-1">
                         <TextField
                             label="Trader Name"
                             name="name"
@@ -52,7 +52,7 @@ const AddTraderForm = ({ onAddTrader }) => {
                             required
                         />
                     </div>
-                    <div className="flex-1">
+                    <div className="w-full md:flex-1">
                         <TextField
                             label="Trader ID"
                             name="id"
@@ -62,15 +62,18 @@ const AddTraderForm = ({ onAddTrader }) => {
                             required
                         />
                     </div>
-                    <Button
-                        type="submit"
-                        variant="primary"
-                        disabled={
-                            !traderData.id.trim() || !traderData.name.trim()
-                        }
-                    >
-                        Add Trader
-                    </Button>
+                    <div className="w-full md:w-auto">
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            fullWidth
+                            disabled={
+                                !traderData.id.trim() || !traderData.name.trim()
+                            }
+                        >
+                            Add Trader
+                        </Button>
+                    </div>
                 </div>
             </form>
         </div>

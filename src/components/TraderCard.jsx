@@ -10,7 +10,7 @@ const TraderCard = ({
 }) => {
     return (
         <div className="bg-white p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-4">
+            <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                 <div>
                     <Text size="xl" bold className="mb-2">
                         {trader.name}
@@ -19,8 +19,8 @@ const TraderCard = ({
                         {trader.id}
                     </Text>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="secondary" color="black">
+                <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                    <Button variant="secondary" color="black" fullWidth>
                         View Details
                     </Button>
                     {isCopying ? (
@@ -28,6 +28,7 @@ const TraderCard = ({
                             variant="secondary"
                             onClick={() => onStopCopy(trader)}
                             disabled={isProcessing}
+                            fullWidth
                         >
                             Stop Copying
                         </Button>
@@ -37,6 +38,7 @@ const TraderCard = ({
                             onClick={() => onCopyClick(trader)}
                             disabled={isProcessing}
                             isLoading={isProcessing}
+                            fullWidth
                         >
                             {isProcessing ? "Copying..." : "Start Copying"}
                         </Button>

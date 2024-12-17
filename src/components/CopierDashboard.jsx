@@ -116,8 +116,7 @@ const CopierDashboard = () => {
                     Copy Trading Dashboard
                 </Text>
                 <Text size="lg" className="text-gray-600">
-                    Find and copy successful traders to automate your trading
-                    strategy.
+                    Available traders to copy
                 </Text>
             </div>
 
