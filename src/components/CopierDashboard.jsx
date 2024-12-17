@@ -159,8 +159,8 @@ const CopierDashboard = () => {
         });
     };
 
-    const handleAddTrader = (traderId) => {
-        console.log("New trader added:", traderId);
+    const handleAddTrader = (trader) => {
+        console.log("New trader added:", trader);
         // You can add additional logic here if needed
     };
 
