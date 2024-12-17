@@ -1,56 +1,58 @@
-import { useEffect, useState } from 'react'
-import { Button, Text } from '@deriv-com/quill-ui'
-import useDerivWebSocket from '../hooks/useDerivWebSocket'
-import Header from './Header'
-import TraderStatistics from './TraderStatistics'
-import CopierDashboard from './CopierDashboard'
+import { useEffect, useState } from "react";
+import { Button, Text } from "@deriv-com/quill-ui";
+import useDerivWebSocket from "../hooks/useDerivWebSocket";
+import Header from "./Header";
+import TraderStatistics from "./TraderStatistics";
+import CopierDashboard from "./CopierDashboard";
 
 const Dashboard = () => {
-    const { settings, isLoading, sendRequest, isAuthorized } = useDerivWebSocket()
-    const [userType, setUserType] = useState(null) // null, 'trader', or 'copier'
-
-    // Only set initial user type from settings
-    useEffect(() => {
-        if (settings && userType === null) {
-            setUserType(settings.allow_copiers ? 'trader' : null)
-        }
-    }, [settings, userType])
+    const { settings, isLoading, sendRequest } = useDerivWebSocket();
+    const [userType, setUserType] = useState(() => {
+        // Check localStorage for saved user type
+        return localStorage.getItem("userType");
+    });
 
     const handleBecomeTrader = () => {
         sendRequest({
             set_settings: 1,
-            allow_copiers: 1
-        })
-        setUserType('trader')
-    }
+            allow_copiers: 1,
+        });
+        setUserType("trader");
+        localStorage.setItem("userType", "trader");
+    };
 
     const handleBecomeCopier = () => {
-        setUserType('copier')
-    }
+        sendRequest({
+            set_settings: 1,
+            allow_copiers: 0,
+        });
+        setUserType("copier");
+        localStorage.setItem("userType", "copier");
+    };
 
     // Show loading state when authorizing or loading settings
     if (isLoading) {
-        return <div>Loading...</div>
+        return <div>Loading...</div>;
     }
 
     // Render trader dashboard
-    if (userType === 'trader') {
+    if (userType === "trader") {
         return (
             <div className="min-h-screen bg-gray-50">
                 <Header />
                 <TraderStatistics />
             </div>
-        )
+        );
     }
 
     // Render copier dashboard
-    if (userType === 'copier') {
+    if (userType === "copier") {
         return (
             <div className="min-h-screen bg-gray-50">
                 <Header />
                 <CopierDashboard />
             </div>
-        )
+        );
     }
 
     // Render role selection for users who haven't chosen yet
@@ -67,8 +69,9 @@ const Dashboard = () => {
                             Become a Trader 📈
                         </Text>
                         <Text className="mb-6 text-gray-600 h-24">
-                            Share your trading expertise with others. Allow copiers to follow your trades
-                            and earn additional income through performance fees.
+                            Share your trading expertise with others. Allow
+                            copiers to follow your trades and earn additional
+                            income through performance fees.
                         </Text>
                         <ul className="mb-6 space-y-2 text-gray-600">
                             <li>• Set your own performance fees</li>
@@ -89,8 +92,9 @@ const Dashboard = () => {
                             Become a Copier 🔄
                         </Text>
                         <Text className="mb-6 text-gray-600 h-24">
-                            Copy trades from successful traders automatically. Choose from a variety of
-                            traders and let their expertise work for you.
+                            Copy trades from successful traders automatically.
+                            Choose from a variety of traders and let their
+                            expertise work for you.
                         </Text>
                         <ul className="mb-6 space-y-2 text-gray-600">
                             <li>• Browse top traders</li>
@@ -108,7 +112,7 @@ const Dashboard = () => {
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default Dashboard 
+export default Dashboard;
