@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Text, Snackbar } from "@deriv-com/quill-ui";
 import useDerivWebSocket from "../hooks/useDerivWebSocket";
+import useCopyTradersList from "../hooks/useCopyTradersList";
 import AddTraderForm from "./AddTraderForm";
 import TraderCard from "./TraderCard";
 
 const CopierDashboard = () => {
     const { sendRequest, wsResponse } = useDerivWebSocket();
+    const { traders: apiTraders, isLoading } = useCopyTradersList();
     const [localTraders, setLocalTraders] = useState([]);
     const [processingTrader, setProcessingTrader] = useState(null);
     const [copiedTrader, setCopiedTrader] = useState(null);
@@ -15,13 +17,42 @@ const CopierDashboard = () => {
         status: "neutral",
     });
 
-    // Load traders from localStorage on mount and when traders are added
+    // Load traders from localStorage and API
     useEffect(() => {
         const storedTraders = JSON.parse(
             localStorage.getItem("traders") || "[]"
         );
-        setLocalTraders(storedTraders);
-    }, []);
+
+        if (apiTraders?.length) {
+            // Convert API traders to our format
+            const formattedApiTraders = apiTraders.map((trader) => ({
+                id: trader.loginid,
+                name: trader.name || `Trader ${trader.loginid}`, // Fallback name if not provided
+            }));
+
+            // Merge API traders with stored traders, avoiding duplicates
+            const mergedTraders = [...storedTraders];
+
+            formattedApiTraders.forEach((apiTrader) => {
+                const existingIndex = mergedTraders.findIndex(
+                    (local) => local.id === apiTrader.id
+                );
+
+                if (existingIndex === -1) {
+                    // Add new trader if not exists
+                    mergedTraders.push(apiTrader);
+                }
+            });
+
+            // Update localStorage and state
+            localStorage.setItem("traders", JSON.stringify(mergedTraders));
+            setLocalTraders(mergedTraders);
+
+            console.log("Merged traders:", mergedTraders);
+        } else {
+            setLocalTraders(storedTraders);
+        }
+    }, [apiTraders]);
 
     useEffect(() => {
         if (!wsResponse || !processingTrader) return;
@@ -122,18 +153,22 @@ const CopierDashboard = () => {
 
             <AddTraderForm onAddTrader={handleAddTrader} />
 
-            <div className="grid gap-6">
-                {localTraders.map((trader, index) => (
-                    <TraderCard
-                        key={trader.id || index}
-                        trader={trader}
-                        onCopyClick={handleCopyClick}
-                        onStopCopy={handleStopCopy}
-                        isCopying={copiedTrader?.id === trader.id}
-                        isProcessing={processingTrader?.id === trader.id}
-                    />
-                ))}
-            </div>
+            {isLoading ? (
+                <div className="text-center py-8">Loading traders...</div>
+            ) : (
+                <div className="grid gap-6">
+                    {localTraders.map((trader, index) => (
+                        <TraderCard
+                            key={trader.id || index}
+                            trader={trader}
+                            onCopyClick={handleCopyClick}
+                            onStopCopy={handleStopCopy}
+                            isCopying={copiedTrader?.id === trader.id}
+                            isProcessing={processingTrader?.id === trader.id}
+                        />
+                    ))}
+                </div>
+            )}
 
             <div className="fixed top-0 left-0 right-0 flex justify-center pt-4 z-50">
                 <Snackbar

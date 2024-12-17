@@ -1,13 +1,46 @@
 import { Text, Button } from "@deriv-com/quill-ui";
 import PropTypes from "prop-types";
+import { useState, useEffect } from "react";
 
-const TraderCard = ({
-    trader,
-    onCopyClick,
-    onStopCopy,
-    isCopying,
-    isProcessing,
-}) => {
+const TraderCard = ({ trader, onCopyClick, onStopCopy, isProcessing }) => {
+    const [isCopying, setIsCopying] = useState(false);
+
+    // Read initial copying status from localStorage
+    useEffect(() => {
+        const traders = JSON.parse(localStorage.getItem("traders") || "[]");
+        const currentTrader = traders.find((t) => t.id === trader.id);
+        if (currentTrader) {
+            setIsCopying(currentTrader.isCopying);
+        }
+    }, [trader.id]);
+
+    const updateLocalStorage = (newCopyingStatus) => {
+        // Get current traders from localStorage
+        const traders = JSON.parse(localStorage.getItem("traders") || "[]");
+
+        // Find and update the specific trader's isCopying status
+        const updatedTraders = traders.map((t) => {
+            if (t.id === trader.id) {
+                return { ...t, isCopying: newCopyingStatus };
+            }
+            return t;
+        });
+
+        // Save back to localStorage
+        localStorage.setItem("traders", JSON.stringify(updatedTraders));
+        setIsCopying(newCopyingStatus);
+    };
+
+    const handleCopyClick = () => {
+        updateLocalStorage(true);
+        onCopyClick(trader);
+    };
+
+    const handleStopCopy = () => {
+        updateLocalStorage(false);
+        onStopCopy(trader);
+    };
+
     return (
         <div className="bg-white p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow">
             <div className="flex flex-col md:flex-row justify-between items-start gap-4">
@@ -26,7 +59,7 @@ const TraderCard = ({
                     {isCopying ? (
                         <Button
                             variant="secondary"
-                            onClick={() => onStopCopy(trader)}
+                            onClick={handleStopCopy}
                             disabled={isProcessing}
                             fullWidth
                         >
@@ -35,7 +68,7 @@ const TraderCard = ({
                     ) : (
                         <Button
                             variant="primary"
-                            onClick={() => onCopyClick(trader)}
+                            onClick={handleCopyClick}
                             disabled={isProcessing}
                             isLoading={isProcessing}
                             fullWidth
@@ -56,7 +89,6 @@ TraderCard.propTypes = {
     }).isRequired,
     onCopyClick: PropTypes.func.isRequired,
     onStopCopy: PropTypes.func.isRequired,
-    isCopying: PropTypes.bool.isRequired,
     isProcessing: PropTypes.bool.isRequired,
 };
 

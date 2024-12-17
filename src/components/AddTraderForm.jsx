@@ -6,6 +6,7 @@ const AddTraderForm = ({ onAddTrader }) => {
     const [traderData, setTraderData] = useState({
         id: "",
         name: "",
+        isCopying: false,
     });
 
     const handleSubmit = (e) => {
@@ -24,7 +25,7 @@ const AddTraderForm = ({ onAddTrader }) => {
         }
 
         // Clear form after submission
-        setTraderData({ id: "", name: "" });
+        setTraderData({ id: "", name: "", isCopying: false });
     };
 
     const handleChange = (e) => {
