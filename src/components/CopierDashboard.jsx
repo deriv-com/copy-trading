@@ -123,7 +123,7 @@ const CopierDashboard = () => {
         console.log("Copy clicked for trader:", trader);
         setProcessingTrader(trader);
         sendRequest({
-            copy_start: trader.id,
+            copy_start: trader.token,
         });
     };
 
@@ -131,7 +131,7 @@ const CopierDashboard = () => {
         console.log("Stop copy clicked for trader:", trader);
         setProcessingTrader(trader);
         sendRequest({
-            copy_stop: trader.id,
+            copy_stop: trader.token,
         });
     };
 

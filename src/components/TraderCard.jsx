@@ -1,18 +1,20 @@
 import { Text, Button } from "@deriv-com/quill-ui";
 import PropTypes from "prop-types";
 import { useState, useEffect } from "react";
+import useCopyTradingStats from "../hooks/useCopyTradingStats";
 
 const TraderCard = ({ trader, onCopyClick, onStopCopy, isProcessing }) => {
     const [isCopying, setIsCopying] = useState(false);
+    const { stats, isLoading } = useCopyTradingStats(trader.token);
 
     // Read initial copying status from localStorage
     useEffect(() => {
         const traders = JSON.parse(localStorage.getItem("traders") || "[]");
-        const currentTrader = traders.find((t) => t.id === trader.id);
+        const currentTrader = traders.find((t) => t.token === trader.token);
         if (currentTrader) {
             setIsCopying(currentTrader.isCopying);
         }
-    }, [trader.id]);
+    }, [trader.token]);
 
     const updateLocalStorage = (newCopyingStatus) => {
         // Get current traders from localStorage
@@ -20,7 +22,7 @@ const TraderCard = ({ trader, onCopyClick, onStopCopy, isProcessing }) => {
 
         // Find and update the specific trader's isCopying status
         const updatedTraders = traders.map((t) => {
-            if (t.id === trader.id) {
+            if (t.token === trader.token) {
                 return { ...t, isCopying: newCopyingStatus };
             }
             return t;
@@ -86,6 +88,7 @@ TraderCard.propTypes = {
     trader: PropTypes.shape({
         name: PropTypes.string.isRequired,
         id: PropTypes.string.isRequired,
+        token: PropTypes.string.isRequired,
     }).isRequired,
     onCopyClick: PropTypes.func.isRequired,
     onStopCopy: PropTypes.func.isRequired,
