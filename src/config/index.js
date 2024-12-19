@@ -8,8 +8,8 @@ export const PROD_CONFIG = {
 // Development configuration
 export const DEV_CONFIG = {
     APP_ID: '9999',
-    WS_URL: 'wss://qa10.deriv.dev/websockets/v3',
-    OAUTH_URL: 'https://qa10.deriv.dev',
+    WS_URL: 'wss://qa47.deriv.dev/websockets/v3',
+    OAUTH_URL: 'https://qa47.deriv.dev',
     REDIRECT_URL: 'http://localhost:8443'
 }
 

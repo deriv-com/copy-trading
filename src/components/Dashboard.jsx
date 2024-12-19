@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button, Text } from "@deriv-com/quill-ui";
 import useDerivWebSocket from "../hooks/useDerivWebSocket";
 import Header from "./Header";
-import TraderStatistics from "./TraderStatistics";
+import TraderDashboard from "./TraderDashboard";
 import CopierDashboard from "./CopierDashboard";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
     const { settings, isLoading, sendRequest } = useDerivWebSocket();
+    const navigate = useNavigate();
     const [userType, setUserType] = useState(() => {
-        // Check localStorage for saved user type
         return localStorage.getItem("userType");
     });
 
@@ -30,7 +31,6 @@ const Dashboard = () => {
         localStorage.setItem("userType", "copier");
     };
 
-    // Show loading state when authorizing or loading settings
     if (isLoading) {
         return <div>Loading...</div>;
     }
@@ -40,7 +40,7 @@ const Dashboard = () => {
         return (
             <div className="min-h-screen bg-gray-50">
                 <Header />
-                <TraderStatistics />
+                <TraderDashboard />
             </div>
         );
     }
