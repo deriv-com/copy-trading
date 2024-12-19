@@ -6,6 +6,7 @@ const AddTraderForm = ({ onAddTrader }) => {
     const [traderData, setTraderData] = useState({
         id: "",
         name: "",
+        token: "",
         isCopying: false,
     });
 
@@ -25,7 +26,7 @@ const AddTraderForm = ({ onAddTrader }) => {
         }
 
         // Clear form after submission
-        setTraderData({ id: "", name: "", isCopying: false });
+        setTraderData({ id: "", name: "", token: "", isCopying: false });
     };
 
     const handleChange = (e) => {
@@ -59,7 +60,17 @@ const AddTraderForm = ({ onAddTrader }) => {
                             name="id"
                             value={traderData.id}
                             onChange={handleChange}
-                            placeholder="Enter trader's token"
+                            placeholder="Enter trader's ID"
+                            required
+                        />
+                    </div>
+                    <div className="w-full md:flex-1">
+                        <TextField
+                            label="Trading Token"
+                            name="token"
+                            value={traderData.token}
+                            onChange={handleChange}
+                            placeholder="Enter trading token"
                             required
                         />
                     </div>
@@ -69,7 +80,9 @@ const AddTraderForm = ({ onAddTrader }) => {
                             variant="primary"
                             fullWidth
                             disabled={
-                                !traderData.id.trim() || !traderData.name.trim()
+                                !traderData.id.trim() ||
+                                !traderData.name.trim() ||
+                                !traderData.token.trim()
                             }
                         >
                             Add Trader
