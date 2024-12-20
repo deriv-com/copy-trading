@@ -134,7 +134,7 @@ const TraderCard = ({
                             <Text size="sm" className="text-gray-500">
                                 Total Loss
                             </Text>
-                            <Text size="lg" bold className="text-red-500">
+                            <Text size="lg" bold className="text-red-400">
                                 {stats.avg_loss || 0}
                             </Text>
                         </div>
