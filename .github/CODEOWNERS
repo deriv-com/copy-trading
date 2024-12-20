@@ -1,0 +1,13 @@
+# These owners will be the default owners for everything in
+# the repo. Unless a later match takes precedence,
+# these users will be requested for review when someone 
+# opens a pull request.
+*       @ashkan-deriv @review-deriv
+
+# Order is important; the last matching pattern takes the most
+# precedence.
+
+./**                           @ashkan-deriv @review-deriv
+
+# GitHub specific files
+/.github/*                     @ashkan-deriv @review-deriv 
