@@ -11,6 +11,7 @@ const CopierDashboard = () => {
     const [localTraders, setLocalTraders] = useState([]);
     const [processingTrader, setProcessingTrader] = useState(null);
     const [copiedTrader, setCopiedTrader] = useState(null);
+    const [failedCopyTrader, setFailedCopyTrader] = useState(null);
     const [snackbar, setSnackbar] = useState({
         isVisible: false,
         message: "",
@@ -74,6 +75,7 @@ const CopierDashboard = () => {
                             "Error starting copy trade",
                         status: "fail",
                     });
+                    setFailedCopyTrader(processingTrader);
                     setProcessingTrader(null);
                 } else {
                     const trader = processingTrader;
@@ -165,6 +167,7 @@ const CopierDashboard = () => {
                             onStopCopy={handleStopCopy}
                             isCopying={copiedTrader?.id === trader.id}
                             isProcessing={processingTrader?.id === trader.id}
+                            copyFailed={failedCopyTrader?.id === trader.id}
                         />
                     ))}
                 </div>

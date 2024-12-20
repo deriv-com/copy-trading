@@ -3,7 +3,13 @@ import PropTypes from "prop-types";
 import { useState, useEffect } from "react";
 import useCopyTradingStats from "../hooks/useCopyTradingStats";
 
-const TraderCard = ({ trader, onCopyClick, onStopCopy, isProcessing }) => {
+const TraderCard = ({
+    trader,
+    onCopyClick,
+    onStopCopy,
+    isProcessing,
+    copyFailed,
+}) => {
     const [isCopying, setIsCopying] = useState(false);
     const { stats, isLoading } = useCopyTradingStats(trader.id);
 
@@ -15,6 +21,13 @@ const TraderCard = ({ trader, onCopyClick, onStopCopy, isProcessing }) => {
             setIsCopying(currentTrader.isCopying);
         }
     }, [trader.token]);
+
+    useEffect(() => {
+        if (copyFailed) {
+            updateLocalStorage(false);
+            setIsCopying(false);
+        }
+    }, [copyFailed]);
 
     const updateLocalStorage = (newCopyingStatus) => {
         // Get current traders from localStorage
@@ -55,7 +68,7 @@ const TraderCard = ({ trader, onCopyClick, onStopCopy, isProcessing }) => {
                     </Text>
                 </div>
                 <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-                    {isCopying ? (
+                    {isCopying && !copyFailed ? (
                         <Button
                             variant="secondary"
                             onClick={handleStopCopy}
@@ -163,6 +176,7 @@ TraderCard.propTypes = {
     onCopyClick: PropTypes.func.isRequired,
     onStopCopy: PropTypes.func.isRequired,
     isProcessing: PropTypes.bool.isRequired,
+    copyFailed: PropTypes.bool,
 };
 
 export default TraderCard;
