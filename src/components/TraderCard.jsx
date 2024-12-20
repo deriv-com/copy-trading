@@ -165,18 +165,16 @@ const TraderCard = ({
                 )}
             </div>
 
-            {!isCopying && (
-                <div className="flex justify-end mt-4">
-                    <Button
-                        variant="secondary"
-                        colorStyle="red"
-                        onClick={() => onRemove(trader)}
-                        disabled={isCopying}
-                    >
-                        ⛌ Delete
-                    </Button>
-                </div>
-            )}
+            <div className="flex justify-end mt-4">
+                <Button
+                    variant="secondary"
+                    colorStyle="red"
+                    onClick={() => onRemove(trader)}
+                    disabled={isCopying}
+                >
+                    ⛌ Delete
+                </Button>
+            </div>
         </div>
     );
 };
