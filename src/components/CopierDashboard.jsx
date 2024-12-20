@@ -142,6 +142,31 @@ const CopierDashboard = () => {
         setLocalTraders((prev) => [...prev, trader]);
     };
 
+    const handleRemoveTrader = (trader) => {
+        // Get current traders from localStorage
+        const storedTraders = JSON.parse(
+            localStorage.getItem("traders") || "[]"
+        );
+
+        // Remove the trader
+        const updatedTraders = storedTraders.filter(
+            (t) => t.token !== trader.token
+        );
+
+        // Update localStorage
+        localStorage.setItem("traders", JSON.stringify(updatedTraders));
+
+        // Update state
+        setLocalTraders(updatedTraders);
+
+        // Show feedback
+        setSnackbar({
+            isVisible: true,
+            message: `Removed ${trader.name}`,
+            status: "neutral",
+        });
+    };
+
     return (
         <div className="max-w-6xl mx-auto p-6">
             <div className="mb-8">
@@ -168,6 +193,7 @@ const CopierDashboard = () => {
                             isCopying={copiedTrader?.id === trader.id}
                             isProcessing={processingTrader?.id === trader.id}
                             copyFailed={failedCopyTrader?.id === trader.id}
+                            onRemove={handleRemoveTrader}
                         />
                     ))}
                 </div>

@@ -9,6 +9,7 @@ const TraderCard = ({
     onStopCopy,
     isProcessing,
     copyFailed,
+    onRemove,
 }) => {
     const [isCopying, setIsCopying] = useState(false);
     const { stats, isLoading } = useCopyTradingStats(trader.id);
@@ -91,7 +92,7 @@ const TraderCard = ({
                 </div>
             </div>
 
-            <div className="border-t pt-4">
+            <div className="border-t pt-4 mb-4">
                 {isLoading ? (
                     <Text className="text-center text-gray-500">
                         Loading statistics...
@@ -163,6 +164,19 @@ const TraderCard = ({
                     </Text>
                 )}
             </div>
+
+            {!isCopying && (
+                <div className="flex justify-end mt-4">
+                    <Button
+                        variant="secondary"
+                        colorStyle="red"
+                        onClick={() => onRemove(trader)}
+                        disabled={isCopying}
+                    >
+                        ⛌ Delete
+                    </Button>
+                </div>
+            )}
         </div>
     );
 };
@@ -177,6 +191,7 @@ TraderCard.propTypes = {
     onStopCopy: PropTypes.func.isRequired,
     isProcessing: PropTypes.bool.isRequired,
     copyFailed: PropTypes.bool,
+    onRemove: PropTypes.func.isRequired,
 };
 
 export default TraderCard;
