@@ -1,102 +1,45 @@
 import { useState, useEffect } from 'react'
 import useDerivWebSocket from '../hooks/useDerivWebSocket'
 import TraderStatistics from './TraderStatistics'
-import { TextField, Button, Text } from '@deriv-com/quill-ui'
+import StartTrader from './StartTrader'
+import TokenManagement from './TokenManagement'
 
 const TraderDashboard = () => {
-    const [apiToken, setApiToken] = useState('')
-    const { sendRequest, wsResponse, isConnected } = useDerivWebSocket()
+    const [isSettingsLoading, setIsSettingsLoading] = useState(false)
+    const { sendRequest, wsResponse, settings } = useDerivWebSocket()
 
     useEffect(() => {
-        if (!wsResponse) return
-
-        // When connected, request existing tokens
-        if (wsResponse.msg_type === 'authorize' && isConnected && !apiToken) {
-            console.log('Checking for existing API tokens...')
-            sendRequest({
-                api_token: 1
-            })
-        }
-
-        // Handle API token responses
-        if (wsResponse.msg_type === 'api_token') {
-            console.log('API token response:', wsResponse)
-
-            // If we got a list of tokens, check for existing copy trading token
-            if (wsResponse.api_token?.tokens) {
-                console.log('Existing tokens:', wsResponse.api_token.tokens)
-
-                const copyTradingToken = wsResponse.api_token.tokens.find(token => {
-                    console.log('Checking token:', {
-                        display_name: token.display_name,
-                        scopes: token.scopes,
-                        token: token.token
-                    })
-                    // Only check for read scope and CopyTrading display name
-                    return token.scopes?.includes('read') && token.display_name === 'CopyTrading'
+        if (wsResponse?.msg_type === 'set_settings') {
+            setIsSettingsLoading(false)
+            if (!wsResponse.error) {
+                // Refresh settings after successful update
+                sendRequest({
+                    get_settings: 1
                 })
-
-                if (copyTradingToken) {
-                    console.log('Found existing copy trading token:', copyTradingToken)
-                    setApiToken(copyTradingToken.token)
-                } else {
-                    console.log('No copy trading token found, creating new one...')
-                    sendRequest({
-                        api_token: 1,
-                        new_token: "CopyTrading",
-                        new_token_scopes: ["read"],
-                        valid_for_current_ip_only: 0
-                    })
-                }
-            }
-            // If we got a new token, save it
-            else if (wsResponse.api_token?.token) {
-                console.log('New token received:', wsResponse.api_token.token)
-                setApiToken(wsResponse.api_token.token)
-            }
-
-            if (wsResponse.error) {
-                console.error('API token error:', wsResponse.error.message)
+            } else {
+                console.error('Failed to update settings:', wsResponse.error)
             }
         }
-    }, [wsResponse, isConnected, sendRequest, apiToken])
+    }, [wsResponse, sendRequest])
 
-    const handleCopyToken = () => {
-        navigator.clipboard.writeText(apiToken)
+    const handleStartTrading = () => {
+        setIsSettingsLoading(true)
+        sendRequest({
+            set_settings: 1,
+            allow_copiers: 1
+        })
+    }
+
+    if (!settings?.allow_copiers) {
+        return <StartTrader onStartTrading={handleStartTrading} isLoading={isSettingsLoading} />
     }
 
     return (
         <div className="max-w-6xl mx-auto p-6">
-            <div className="mb-8">
-                <Text size="2xl" bold className="mb-4">
-                    Your Copy Trading API Token
-                </Text>
-                <div className="bg-white p-6 rounded-lg shadow-sm">
-                    <div className="flex gap-2">
-                        <TextField
-                            value={apiToken || "Loading API token..."}
-                            readOnly
-                            onClick={(e) => e.target.select()}
-                            className="flex-1"
-                        />
-                        <Button
-                            onClick={handleCopyToken}
-                            disabled={!apiToken}
-                            variant="primary"
-                        >
-                            Copy
-                        </Button>
-                    </div>
-                    <Text className="mt-4 text-gray-600">
-                        Share this token with users who want to copy your trades.
-                        This is a read-only token that allows others to monitor and copy your trading activity.
-                    </Text>
-                </div>
-            </div>
-
+            <TokenManagement sendRequest={sendRequest} wsResponse={wsResponse} />
             <TraderStatistics />
         </div>
     )
 }
 
-export default TraderDashboard 
+export default TraderDashboard
