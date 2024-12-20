@@ -11,6 +11,7 @@ const CopierDashboard = () => {
     const [localTraders, setLocalTraders] = useState([]);
     const [processingTrader, setProcessingTrader] = useState(null);
     const [copiedTrader, setCopiedTrader] = useState(null);
+    const [failedCopyTrader, setFailedCopyTrader] = useState(null);
     const [snackbar, setSnackbar] = useState({
         isVisible: false,
         message: "",
@@ -74,6 +75,7 @@ const CopierDashboard = () => {
                             "Error starting copy trade",
                         status: "fail",
                     });
+                    setFailedCopyTrader(processingTrader);
                     setProcessingTrader(null);
                 } else {
                     const trader = processingTrader;
@@ -140,6 +142,31 @@ const CopierDashboard = () => {
         setLocalTraders((prev) => [...prev, trader]);
     };
 
+    const handleRemoveTrader = (trader) => {
+        // Get current traders from localStorage
+        const storedTraders = JSON.parse(
+            localStorage.getItem("traders") || "[]"
+        );
+
+        // Remove the trader
+        const updatedTraders = storedTraders.filter(
+            (t) => t.token !== trader.token
+        );
+
+        // Update localStorage
+        localStorage.setItem("traders", JSON.stringify(updatedTraders));
+
+        // Update state
+        setLocalTraders(updatedTraders);
+
+        // Show feedback
+        setSnackbar({
+            isVisible: true,
+            message: `Removed ${trader.name}`,
+            status: "neutral",
+        });
+    };
+
     return (
         <div className="max-w-6xl mx-auto p-6">
             <div className="mb-8">
@@ -165,6 +192,8 @@ const CopierDashboard = () => {
                             onStopCopy={handleStopCopy}
                             isCopying={copiedTrader?.id === trader.id}
                             isProcessing={processingTrader?.id === trader.id}
+                            copyFailed={failedCopyTrader?.id === trader.id}
+                            onRemove={handleRemoveTrader}
                         />
                     ))}
                 </div>

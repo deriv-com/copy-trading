@@ -22,19 +22,21 @@ const useCopyTradingStats = (traderId) => {
     }, [traderId, sendRequest]);
 
     useEffect(() => {
-        if (!wsResponse) return;
+        if (!wsResponse || !traderId) return;
 
-        if (wsResponse.error) {
-            setError(wsResponse.error.message);
-            setIsLoading(false);
-            return;
-        }
+        if (wsResponse.echo_req?.trader_id === traderId) {
+            if (wsResponse.error) {
+                setError(wsResponse.error.message);
+                setIsLoading(false);
+                return;
+            }
 
-        if (wsResponse.msg_type === 'copytrading_statistics') {
-            setStats(wsResponse.copytrading_statistics);
-            setIsLoading(false);
+            if (wsResponse.msg_type === 'copytrading_statistics') {
+                setStats(wsResponse.copytrading_statistics);
+                setIsLoading(false);
+            }
         }
-    }, [wsResponse]);
+    }, [wsResponse, traderId]);
 
     return {
         stats,

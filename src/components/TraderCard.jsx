@@ -3,7 +3,14 @@ import PropTypes from "prop-types";
 import { useState, useEffect } from "react";
 import useCopyTradingStats from "../hooks/useCopyTradingStats";
 
-const TraderCard = ({ trader, onCopyClick, onStopCopy, isProcessing }) => {
+const TraderCard = ({
+    trader,
+    onCopyClick,
+    onStopCopy,
+    isProcessing,
+    copyFailed,
+    onRemove,
+}) => {
     const [isCopying, setIsCopying] = useState(false);
     const { stats, isLoading } = useCopyTradingStats(trader.id);
 
@@ -15,6 +22,13 @@ const TraderCard = ({ trader, onCopyClick, onStopCopy, isProcessing }) => {
             setIsCopying(currentTrader.isCopying);
         }
     }, [trader.token]);
+
+    useEffect(() => {
+        if (copyFailed) {
+            updateLocalStorage(false);
+            setIsCopying(false);
+        }
+    }, [copyFailed]);
 
     const updateLocalStorage = (newCopyingStatus) => {
         // Get current traders from localStorage
@@ -55,7 +69,7 @@ const TraderCard = ({ trader, onCopyClick, onStopCopy, isProcessing }) => {
                     </Text>
                 </div>
                 <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-                    {isCopying ? (
+                    {isCopying && !copyFailed ? (
                         <Button
                             variant="secondary"
                             onClick={handleStopCopy}
@@ -78,7 +92,7 @@ const TraderCard = ({ trader, onCopyClick, onStopCopy, isProcessing }) => {
                 </div>
             </div>
 
-            <div className="border-t pt-4">
+            <div className="border-t pt-4 mb-4">
                 {isLoading ? (
                     <Text className="text-center text-gray-500">
                         Loading statistics...
@@ -150,6 +164,17 @@ const TraderCard = ({ trader, onCopyClick, onStopCopy, isProcessing }) => {
                     </Text>
                 )}
             </div>
+
+            <div className="flex justify-end mt-4">
+                <Button
+                    variant="secondary"
+                    colorStyle="red"
+                    onClick={() => onRemove(trader)}
+                    disabled={isCopying}
+                >
+                    ⛌ Delete
+                </Button>
+            </div>
         </div>
     );
 };
@@ -163,6 +188,8 @@ TraderCard.propTypes = {
     onCopyClick: PropTypes.func.isRequired,
     onStopCopy: PropTypes.func.isRequired,
     isProcessing: PropTypes.bool.isRequired,
+    copyFailed: PropTypes.bool,
+    onRemove: PropTypes.func.isRequired,
 };
 
 export default TraderCard;
