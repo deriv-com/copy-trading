@@ -8,18 +8,21 @@ on:
       - main
       - master
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   request-review:
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ secrets.REVIEW_TOKEN }}
-      REVIEWER: review-deriv
     steps:
       - uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.REVIEW_TOKEN }}
       
       - name: Handle PR and Review
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REVIEWER: review-deriv
         run: |
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             echo "Requesting review for PR #${{ github.event.pull_request.number }}"
