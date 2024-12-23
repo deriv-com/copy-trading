@@ -161,14 +161,8 @@ const CopierDashboard = () => {
                                 id: trader.loginid,
                                 name: trader.name || `Trader ${trader.loginid}`,
                                 token: trader.token,
-                                isCopying: trader.is_copying,
                             }}
-                            onCopyClick={handleCopyClick}
                             onStopCopy={handleStopCopy}
-                            isCopying={copiedTrader?.id === trader.id}
-                            isProcessing={processingTrader?.id === trader.id}
-                            copyFailed={failedCopyTrader?.id === trader.id}
-                            onRemove={handleRemoveTrader}
                         />
                     ))}
                 </div>
