@@ -9,10 +9,18 @@ on:
       - '!main'  # Exclude main branch to avoid noise
       - '!master'
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   request-review:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
       - name: Request Review
         uses: actions/github-script@v6
         with:
@@ -21,55 +29,71 @@ jobs:
             const reviewer = 'review-deriv';
             
             if (context.eventName === 'pull_request') {
-              await github.rest.pulls.requestReviewers({
-                owner: context.repo.owner,
-                repo: context.repo.name,
-                pull_number: context.payload.pull_request.number,
-                reviewers: [reviewer]
-              });
-            } else if (context.eventName === 'push' && !context.ref.endsWith('main') && !context.ref.endsWith('master')) {
-              // For push events, create a pull request if one doesn't exist
-              const branches = await github.rest.repos.listBranches({
-                owner: context.repo.owner,
-                repo: context.repo.name
-              });
-              
-              const defaultBranch = branches.data.find(b => b.default)?.name || 'main';
-              
-              // Try to find an existing PR
-              const prs = await github.rest.pulls.list({
-                owner: context.repo.owner,
-                repo: context.repo.name,
-                head: context.ref.replace('refs/heads/', ''),
-                base: defaultBranch,
-                state: 'open'
-              });
-              
-              if (prs.data.length === 0) {
-                // Create a new PR
-                const newPr = await github.rest.pulls.create({
+              try {
+                await github.rest.pulls.requestReviewers({
                   owner: context.repo.owner,
                   repo: context.repo.name,
-                  title: `Review requested for ${context.ref.replace('refs/heads/', '')}`,
-                  head: context.ref.replace('refs/heads/', ''),
-                  base: defaultBranch,
-                  body: 'Automated pull request for review'
+                  pull_number: context.payload.pull_request.number,
+                  reviewers: [reviewer]
+                });
+                console.log('Successfully requested review for PR');
+              } catch (error) {
+                console.error('Error requesting PR review:', error);
+                core.setFailed(error.message);
+              }
+            } else if (context.eventName === 'push' && !context.ref.endsWith('main') && !context.ref.endsWith('master')) {
+              try {
+                // For push events, create a pull request if one doesn't exist
+                const currentBranch = context.ref.replace('refs/heads/', '');
+                
+                // Get the default branch
+                const repoData = await github.rest.repos.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.name
                 });
                 
-                // Request review on the new PR
+                const defaultBranch = repoData.data.default_branch;
+                
+                // Try to find an existing PR
+                const prs = await github.rest.pulls.list({
+                  owner: context.repo.owner,
+                  repo: context.repo.name,
+                  head: `${context.repo.owner}:${currentBranch}`,
+                  base: defaultBranch,
+                  state: 'open'
+                });
+                
+                let pullRequest;
+                
+                if (prs.data.length === 0) {
+                  // Create a new PR
+                  console.log('Creating new PR for branch:', currentBranch);
+                  pullRequest = await github.rest.pulls.create({
+                    owner: context.repo.owner,
+                    repo: context.repo.name,
+                    title: `Review requested for ${currentBranch}`,
+                    head: currentBranch,
+                    base: defaultBranch,
+                    body: 'Automated pull request for review'
+                  });
+                  
+                  console.log('Created PR:', pullRequest.data.number);
+                } else {
+                  pullRequest = { data: prs.data[0] };
+                  console.log('Found existing PR:', pullRequest.data.number);
+                }
+                
+                // Request review
                 await github.rest.pulls.requestReviewers({
                   owner: context.repo.owner,
                   repo: context.repo.name,
-                  pull_number: newPr.data.number,
+                  pull_number: pullRequest.data.number,
                   reviewers: [reviewer]
                 });
-              } else {
-                // Request review on existing PR
-                await github.rest.pulls.requestReviewers({
-                  owner: context.repo.owner,
-                  repo: context.repo.name,
-                  pull_number: prs.data[0].number,
-                  reviewers: [reviewer]
-                });
+                
+                console.log('Successfully requested review');
+              } catch (error) {
+                console.error('Error in workflow:', error);
+                core.setFailed(error.message);
               }
             }
