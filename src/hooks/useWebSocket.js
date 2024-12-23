@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
+import { getConfig } from '../config';
 
 // Singleton WebSocket instance
 let wsInstance = null;
-let wsUrl = null;
 let subscribers = new Set();
 let messageHandlers = new Map();
 let currentReqId = 1;
@@ -22,13 +22,14 @@ const generateReqId = () => {
     return currentReqId++;
 };
 
-const createWebSocket = (url) => {
-    if (wsInstance && wsUrl === url) {
+const createWebSocket = () => {
+    const config = getConfig();
+    const wsUrl = config.WS_URL;
+
+    if (wsInstance) {
         return wsInstance;
     }
-
-    wsUrl = url;
-    wsInstance = new WebSocket(url);
+    wsInstance = new WebSocket(wsUrl);
 
     wsInstance.onopen = () => {
         subscribers.forEach(subscriber => subscriber.onOpen?.());
@@ -75,7 +76,7 @@ const createWebSocket = (url) => {
     return wsInstance;
 };
 
-const useWebSocket = (url) => {
+const useWebSocket = () => {
     const [isConnected, setIsConnected] = useState(false);
     const [error, setError] = useState(null);
     const [lastMessage, setLastMessage] = useState(null);
@@ -99,7 +100,7 @@ const useWebSocket = (url) => {
         };
 
         subscribers.add(subscriber);
-        const ws = createWebSocket(url);
+        const ws = createWebSocket();
 
         // If WebSocket is already open when hook is initialized
         if (ws.readyState === WebSocket.OPEN) {
@@ -113,7 +114,7 @@ const useWebSocket = (url) => {
                 wsInstance = null;
             }
         };
-    }, [url]);
+    }, []);
 
     const sendMessage = useCallback((message, callback) => {
         if (!wsInstance || wsInstance.readyState !== WebSocket.OPEN) {

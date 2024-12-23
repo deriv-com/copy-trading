@@ -1,17 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import useWebSocket from './useWebSocket';
 import useAuthorize from './useAuthorize';
-import { getConfig } from '../config';
-
-const config = getConfig();
-const WEBSOCKET_URL = `${config.WS_URL}?app_id=${config.APP_ID}`;
 
 const useSettings = () => {
     const [settings, setSettings] = useState(null);
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const { isAuthorized } = useAuthorize();
-    const { isConnected, sendMessage } = useWebSocket(WEBSOCKET_URL);
+    const { isConnected, sendMessage } = useWebSocket();
 
     // Fetch settings when authorized
     useEffect(() => {
@@ -70,9 +66,7 @@ const useSettings = () => {
         settings,
         error,
         isLoading,
-        updateSettings,
-        isConnected,
-        isAuthorized
+        updateSettings
     };
 };
 

@@ -1,10 +1,6 @@
 import { useEffect } from 'react';
 import useWebSocket from './useWebSocket';
 import useDerivAccounts from './useDerivAccounts';
-import { getConfig } from '../config';
-
-const config = getConfig();
-const WEBSOCKET_URL = `${config.WS_URL}?app_id=${config.APP_ID}`;
 
 // Singleton state
 let isAuthorizedGlobal = false;
@@ -12,7 +8,7 @@ let authErrorGlobal = null;
 
 const useAuthorize = () => {
     const { defaultAccount, clearAccounts } = useDerivAccounts();
-    const { isConnected, sendMessage, close } = useWebSocket(WEBSOCKET_URL);
+    const { isConnected, sendMessage, close } = useWebSocket();
 
     // Handle authorization
     useEffect(() => {
