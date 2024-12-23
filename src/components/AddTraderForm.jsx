@@ -6,7 +6,6 @@ import useDerivWebSocket from "../hooks/useDerivWebSocket";
 const AddTraderForm = ({ onAddTrader }) => {
     const [traderData, setTraderData] = useState({
         token: "",
-        isCopying: false,
     });
 
     const { sendRequest, wsResponse } = useDerivWebSocket();
@@ -33,7 +32,7 @@ const AddTraderForm = ({ onAddTrader }) => {
                 });
             } else {
                 onAddTrader?.(traderData);
-                setTraderData({ token: "", isCopying: false });
+                setTraderData({ token: "" });
                 setSnackbar({
                     isVisible: true,
                     message: "Successfully started copy trading",
