@@ -4,10 +4,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
   push:
-    branches:
-      - '**'
-      - '!main'  # Exclude main branch to avoid noise
-      - '!master'
+    branches-ignore:
+      - main
+      - master
 
 permissions:
   contents: write
@@ -18,82 +17,56 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      
+      - name: Auto Request Review
+        uses: necojackarc/auto-request-review@v0.12.0
         with:
-          fetch-depth: 0
-          
-      - name: Request Review
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config: |
+            reviewers:
+              defaults:
+                - review-deriv
+
+      # Fallback for push events to create PR if needed
+      - name: Create Pull Request
+        if: github.event_name == 'push'
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const reviewer = 'review-deriv';
-            
-            if (context.eventName === 'pull_request') {
-              try {
-                await github.rest.pulls.requestReviewers({
+            try {
+              const currentBranch = context.ref.replace('refs/heads/', '');
+              
+              // Get default branch
+              const { data: repo } = await github.rest.repos.get({
+                owner: context.repo.owner,
+                repo: context.repo.name
+              });
+              
+              // Check for existing PR
+              const { data: prs } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.name,
+                head: `${context.repo.owner}:${currentBranch}`,
+                base: repo.default_branch,
+                state: 'open'
+              });
+              
+              if (prs.length === 0) {
+                console.log('No existing PR found. Creating new PR...');
+                const { data: newPr } = await github.rest.pulls.create({
                   owner: context.repo.owner,
                   repo: context.repo.name,
-                  pull_number: context.payload.pull_request.number,
-                  reviewers: [reviewer]
+                  title: `Review requested for ${currentBranch}`,
+                  head: currentBranch,
+                  base: repo.default_branch,
+                  body: 'Automated pull request for review'
                 });
-                console.log('Successfully requested review for PR');
-              } catch (error) {
-                console.error('Error requesting PR review:', error);
-                core.setFailed(error.message);
+                console.log(`Created PR #${newPr.number}`);
+              } else {
+                console.log(`Found existing PR #${prs[0].number}`);
               }
-            } else if (context.eventName === 'push' && !context.ref.endsWith('main') && !context.ref.endsWith('master')) {
-              try {
-                // For push events, create a pull request if one doesn't exist
-                const currentBranch = context.ref.replace('refs/heads/', '');
-                
-                // Get the default branch
-                const repoData = await github.rest.repos.get({
-                  owner: context.repo.owner,
-                  repo: context.repo.name
-                });
-                
-                const defaultBranch = repoData.data.default_branch;
-                
-                // Try to find an existing PR
-                const prs = await github.rest.pulls.list({
-                  owner: context.repo.owner,
-                  repo: context.repo.name,
-                  head: `${context.repo.owner}:${currentBranch}`,
-                  base: defaultBranch,
-                  state: 'open'
-                });
-                
-                let pullRequest;
-                
-                if (prs.data.length === 0) {
-                  // Create a new PR
-                  console.log('Creating new PR for branch:', currentBranch);
-                  pullRequest = await github.rest.pulls.create({
-                    owner: context.repo.owner,
-                    repo: context.repo.name,
-                    title: `Review requested for ${currentBranch}`,
-                    head: currentBranch,
-                    base: defaultBranch,
-                    body: 'Automated pull request for review'
-                  });
-                  
-                  console.log('Created PR:', pullRequest.data.number);
-                } else {
-                  pullRequest = { data: prs.data[0] };
-                  console.log('Found existing PR:', pullRequest.data.number);
-                }
-                
-                // Request review
-                await github.rest.pulls.requestReviewers({
-                  owner: context.repo.owner,
-                  repo: context.repo.name,
-                  pull_number: pullRequest.data.number,
-                  reviewers: [reviewer]
-                });
-                
-                console.log('Successfully requested review');
-              } catch (error) {
-                console.error('Error in workflow:', error);
-                core.setFailed(error.message);
-              }
+            } catch (error) {
+              console.error('Error:', error.message);
+              core.setFailed(error.message);
             }
