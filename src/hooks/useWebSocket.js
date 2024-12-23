@@ -24,7 +24,8 @@ const generateReqId = () => {
 
 const createWebSocket = () => {
     const config = getConfig();
-    const wsUrl = config.WS_URL;
+    const { WS_URL, APP_ID } = config;
+    const wsUrl = `${WS_URL}?app_id=${APP_ID}`;
 
     if (wsInstance) {
         return wsInstance;
@@ -109,10 +110,6 @@ const useWebSocket = () => {
 
         return () => {
             subscribers.delete(subscriber);
-            if (subscribers.size === 0 && wsInstance) {
-                wsInstance.close();
-                wsInstance = null;
-            }
         };
     }, []);
 
