@@ -1,59 +1,11 @@
 import { Text, Button } from "@deriv-com/quill-ui";
 import PropTypes from "prop-types";
-import { useState, useEffect } from "react";
 import useCopyTradingStats from "../hooks/useCopyTradingStats";
 
-const TraderCard = ({
-    trader,
-    onCopyClick,
-    onStopCopy,
-    isProcessing,
-    copyFailed,
-    onRemove,
-}) => {
-    const [isCopying, setIsCopying] = useState(false);
+const TraderCard = ({ trader, onStopCopy }) => {
     const { stats, isLoading } = useCopyTradingStats(trader.id);
 
-    // Read initial copying status from localStorage
-    useEffect(() => {
-        const traders = JSON.parse(localStorage.getItem("traders") || "[]");
-        const currentTrader = traders.find((t) => t.token === trader.token);
-        if (currentTrader) {
-            setIsCopying(currentTrader.isCopying);
-        }
-    }, [trader.token]);
-
-    useEffect(() => {
-        if (copyFailed) {
-            updateLocalStorage(false);
-            setIsCopying(false);
-        }
-    }, [copyFailed]);
-
-    const updateLocalStorage = (newCopyingStatus) => {
-        // Get current traders from localStorage
-        const traders = JSON.parse(localStorage.getItem("traders") || "[]");
-
-        // Find and update the specific trader's isCopying status
-        const updatedTraders = traders.map((t) => {
-            if (t.token === trader.token) {
-                return { ...t, isCopying: newCopyingStatus };
-            }
-            return t;
-        });
-
-        // Save back to localStorage
-        localStorage.setItem("traders", JSON.stringify(updatedTraders));
-        setIsCopying(newCopyingStatus);
-    };
-
-    const handleCopyClick = () => {
-        updateLocalStorage(true);
-        onCopyClick(trader);
-    };
-
     const handleStopCopy = () => {
-        updateLocalStorage(false);
         onStopCopy(trader);
     };
 
@@ -69,26 +21,13 @@ const TraderCard = ({
                     </Text>
                 </div>
                 <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-                    {isCopying && !copyFailed ? (
-                        <Button
-                            variant="secondary"
-                            onClick={handleStopCopy}
-                            disabled={isProcessing}
-                            fullWidth
-                        >
-                            Stop Copying
-                        </Button>
-                    ) : (
-                        <Button
-                            variant="primary"
-                            onClick={handleCopyClick}
-                            disabled={isProcessing}
-                            isLoading={isProcessing}
-                            fullWidth
-                        >
-                            {isProcessing ? "Copying..." : "Start Copying"}
-                        </Button>
-                    )}
+                    <Button
+                        variant="secondary"
+                        onClick={handleStopCopy}
+                        fullWidth
+                    >
+                        Stop Copying
+                    </Button>
                 </div>
             </div>
 
@@ -164,17 +103,6 @@ const TraderCard = ({
                     </Text>
                 )}
             </div>
-
-            <div className="flex justify-end mt-4">
-                <Button
-                    variant="secondary"
-                    colorStyle="red"
-                    onClick={() => onRemove(trader)}
-                    disabled={isCopying}
-                >
-                    ⛌ Delete
-                </Button>
-            </div>
         </div>
     );
 };
@@ -185,11 +113,7 @@ TraderCard.propTypes = {
         id: PropTypes.string.isRequired,
         token: PropTypes.string.isRequired,
     }).isRequired,
-    onCopyClick: PropTypes.func.isRequired,
     onStopCopy: PropTypes.func.isRequired,
-    isProcessing: PropTypes.bool.isRequired,
-    copyFailed: PropTypes.bool,
-    onRemove: PropTypes.func.isRequired,
 };
 
 export default TraderCard;

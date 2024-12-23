@@ -4,8 +4,6 @@ import PropTypes from "prop-types";
 
 const AddTraderForm = ({ onAddTrader }) => {
     const [traderData, setTraderData] = useState({
-        id: "",
-        name: "",
         token: "",
         isCopying: false,
     });
@@ -18,15 +16,12 @@ const AddTraderForm = ({ onAddTrader }) => {
             localStorage.getItem("traders") || "[]"
         );
 
-        // Add new trader if ID not already in the list
-        if (!existingTraders.some((trader) => trader.id === traderData.id)) {
-            const updatedTraders = [...existingTraders, traderData];
-            localStorage.setItem("traders", JSON.stringify(updatedTraders));
-            onAddTrader?.(traderData);
-        }
+        const updatedTraders = [...existingTraders, traderData];
+        localStorage.setItem("traders", JSON.stringify(updatedTraders));
+        onAddTrader?.(traderData);
 
         // Clear form after submission
-        setTraderData({ id: "", name: "", token: "", isCopying: false });
+        setTraderData({ token: "", isCopying: false });
     };
 
     const handleChange = (e) => {
@@ -43,28 +38,8 @@ const AddTraderForm = ({ onAddTrader }) => {
                 Add New Trader
             </Text>
             <form onSubmit={handleSubmit}>
-                <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-                    <div className="w-full md:flex-1">
-                        <TextField
-                            label="Trader Name"
-                            name="name"
-                            value={traderData.name}
-                            onChange={handleChange}
-                            placeholder="Enter trader's name"
-                            required
-                        />
-                    </div>
-                    <div className="w-full md:flex-1">
-                        <TextField
-                            label="Trader ID"
-                            name="id"
-                            value={traderData.id}
-                            onChange={handleChange}
-                            placeholder="Enter trader's ID"
-                            required
-                        />
-                    </div>
-                    <div className="w-full md:flex-1">
+                <div className="flex gap-4">
+                    <div className="flex-1">
                         <TextField
                             label="Trading Token"
                             name="token"
@@ -74,18 +49,13 @@ const AddTraderForm = ({ onAddTrader }) => {
                             required
                         />
                     </div>
-                    <div className="w-full md:w-auto">
+                    <div>
                         <Button
                             type="submit"
                             variant="primary"
-                            fullWidth
-                            disabled={
-                                !traderData.id.trim() ||
-                                !traderData.name.trim() ||
-                                !traderData.token.trim()
-                            }
+                            disabled={!traderData.token.trim()}
                         >
-                            Add Trader
+                            Start Copying
                         </Button>
                     </div>
                 </div>

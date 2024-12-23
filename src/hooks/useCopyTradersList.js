@@ -4,6 +4,7 @@ import useDerivWebSocket from './useDerivWebSocket'
 const useCopyTradersList = () => {
     const { sendRequest, wsResponse } = useDerivWebSocket()
     const [traders, setTraders] = useState([])
+    const [copiers, setCopiers] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState(null)
 
@@ -30,7 +31,8 @@ const useCopyTradersList = () => {
             }
 
             if (wsResponse.copytrading_list) {
-                setTraders(wsResponse.copytrading_list.copiers)
+                setTraders(wsResponse.copytrading_list.traders)
+                setCopiers(wsResponse.copytrading_list.copiers)
                 setIsLoading(false)
                 setError(null)
             }
@@ -39,10 +41,11 @@ const useCopyTradersList = () => {
 
     return {
         traders,
+        copiers,
         isLoading,
         error,
         refreshList: () => sendRequest({ copytrading_list: 1 })
     }
 }
 
-export default useCopyTradersList 
+export default useCopyTradersList
