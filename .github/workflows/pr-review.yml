@@ -5,37 +5,25 @@ on:
     types: [opened, synchronize]
 
 jobs:
-  dismiss-review:
+  re-request-review:
     runs-on: ubuntu-latest
     steps:
-      - name: Dismiss and Re-request Review
-        uses: actions/github-script@v6
+      - uses: octokit/request-action@v2.x
         with:
-          token: ${{ secrets.REVIEW_TOKEN }}
-          script: |
-            // First dismiss any existing reviews
-            const reviews = await github.rest.pulls.listReviews({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number
-            });
-            
-            for (const review of reviews.data) {
-              if (review.user.login === 'review-deriv') {
-                await github.rest.pulls.dismissReview({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: context.issue.number,
-                  review_id: review.id,
-                  message: 'Dismissed due to new changes'
-                });
-              }
-            }
-            
-            // Then request a new review
-            await github.rest.pulls.requestReviewers({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number,
-              reviewers: ['review-deriv']
-            });
+          route: DELETE /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          pull_number: ${{ github.event.pull_request.number }}
+          reviewers: '["review-deriv"]'
+        env:
+          GITHUB_TOKEN: ${{ secrets.REVIEW_TOKEN }}
+      
+      - uses: octokit/request-action@v2.x
+        with:
+          route: POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          pull_number: ${{ github.event.pull_request.number }}
+          reviewers: '["review-deriv"]'
+        env:
+          GITHUB_TOKEN: ${{ secrets.REVIEW_TOKEN }}
