@@ -37,9 +37,10 @@ const AddTraderForm = ({ onAddTrader }) => {
                 Add New Trader
             </Text>
             <form onSubmit={handleSubmit}>
-                <div className="flex gap-4">
-                    <div className="flex-1">
+                <div className="flex flex-col md:flex-row items-center gap-4">
+                    <div className="w-full flex-1">
                         <TextField
+                            className="w-full"
                             label="Trading Token"
                             name="token"
                             value={traderData.token}
@@ -48,8 +49,9 @@ const AddTraderForm = ({ onAddTrader }) => {
                             required
                         />
                     </div>
-                    <div>
+                    <div className="w-full md:w-auto">
                         <Button
+                            className="w-full"
                             type="submit"
                             variant="primary"
                             disabled={!traderData.token.trim()}
