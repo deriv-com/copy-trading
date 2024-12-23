@@ -26,30 +26,71 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             echo "Requesting review for PR #${{ github.event.pull_request.number }}"
-            gh pr edit ${{ github.event.pull_request.number }} --add-reviewer $REVIEWER
+            curl -L \
+              -X POST \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/requested_reviewers" \
+              -d "{\"reviewers\":[\"$REVIEWER\"]}"
           else
             current_branch="${{ github.ref_name }}"
-            default_branch=$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name)
+            
+            # Get default branch without using GraphQL
+            default_branch=$(curl -L \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/${{ github.repository }}" \
+              | jq -r .default_branch)
             
             echo "Current branch: $current_branch"
             echo "Default branch: $default_branch"
             
-            # Check for existing PR
-            existing_pr=$(gh pr list --head "$current_branch" --state open --json number --jq '.[0].number')
+            # Check for existing PR using REST API
+            existing_pr=$(curl -L \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/${{ github.repository }}/pulls?head=${{ github.repository_owner }}:$current_branch&state=open" \
+              | jq -r '.[0].number')
             
-            if [ -z "$existing_pr" ]; then
+            if [[ "$existing_pr" == "null" ]]; then
               echo "Creating new PR..."
-              pr_number=$(gh pr create --title "Review requested for $current_branch" \
-                                     --body "Automated pull request for review" \
-                                     --base "$default_branch" \
-                                     --head "$current_branch" \
-                                     --json number --jq .number)
+              # Create PR using REST API
+              pr_response=$(curl -L \
+                -X POST \
+                -H "Accept: application/vnd.github+json" \
+                -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                "https://api.github.com/repos/${{ github.repository }}/pulls" \
+                -d "{
+                  \"title\":\"Review requested for $current_branch\",
+                  \"body\":\"Automated pull request for review\",
+                  \"head\":\"$current_branch\",
+                  \"base\":\"$default_branch\"
+                }")
+              
+              pr_number=$(echo "$pr_response" | jq -r .number)
               echo "Created PR #$pr_number"
               
               # Request review for the new PR
-              gh pr edit "$pr_number" --add-reviewer $REVIEWER
+              curl -L \
+                -X POST \
+                -H "Accept: application/vnd.github+json" \
+                -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                "https://api.github.com/repos/${{ github.repository }}/pulls/$pr_number/requested_reviewers" \
+                -d "{\"reviewers\":[\"$REVIEWER\"]}"
             else
               echo "PR already exists: #$existing_pr"
-              gh pr edit "$existing_pr" --add-reviewer $REVIEWER
+              # Request review for existing PR
+              curl -L \
+                -X POST \
+                -H "Accept: application/vnd.github+json" \
+                -H "Authorization: Bearer $GITHUB_TOKEN" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                "https://api.github.com/repos/${{ github.repository }}/pulls/$existing_pr/requested_reviewers" \
+                -d "{\"reviewers\":[\"$REVIEWER\"]}"
             fi
           fi
