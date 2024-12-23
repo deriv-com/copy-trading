@@ -14,30 +14,34 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      - name: Request Review
-        uses: reviewdog/action-request-review@v1
-        with:
-          github_token: ${{ secrets.REVIEW_TOKEN }}
-          reviewers: review-deriv
-
-      # Fallback for push events to create PR if needed
-      - name: Create Pull Request
-        if: github.event_name == 'push'
+      - name: Handle PR and Review
         env:
           GH_TOKEN: ${{ secrets.REVIEW_TOKEN }}
+          REVIEWER: review-deriv
         run: |
-          current_branch=$(git rev-parse --abbrev-ref HEAD)
-          default_branch=$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name)
-          
-          # Check for existing PR
-          existing_pr=$(gh pr list --head "$current_branch" --state open --json number --jq '.[0].number')
-          
-          if [ -z "$existing_pr" ]; then
-            echo "Creating new PR..."
-            gh pr create --title "Review requested for $current_branch" \
-                        --body "Automated pull request for review" \
-                        --base "$default_branch" \
-                        --head "$current_branch"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "Requesting review for PR #${{ github.event.pull_request.number }}"
+            gh pr edit ${{ github.event.pull_request.number }} --add-reviewer $REVIEWER
           else
-            echo "PR already exists: #$existing_pr"
+            current_branch=$(git rev-parse --abbrev-ref HEAD)
+            default_branch=$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name)
+            
+            # Check for existing PR
+            existing_pr=$(gh pr list --head "$current_branch" --state open --json number --jq '.[0].number')
+            
+            if [ -z "$existing_pr" ]; then
+              echo "Creating new PR..."
+              pr_number=$(gh pr create --title "Review requested for $current_branch" \
+                                     --body "Automated pull request for review" \
+                                     --base "$default_branch" \
+                                     --head "$current_branch" \
+                                     --json number --jq .number)
+              echo "Created PR #$pr_number"
+              
+              # Request review for the new PR
+              gh pr edit "$pr_number" --add-reviewer $REVIEWER
+            else
+              echo "PR already exists: #$existing_pr"
+              gh pr edit "$existing_pr" --add-reviewer $REVIEWER
+            fi
           fi
