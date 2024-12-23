@@ -1,50 +1,77 @@
-import { useEffect, useState } from 'react'
-import useDerivWebSocket from './useDerivWebSocket'
+import { useEffect, useState, useCallback } from 'react'
+import useWebSocket from './useWebSocket'
+import useAuthorize from './useAuthorize'
 
 const useCopyTradersList = () => {
-    const { sendRequest, wsResponse } = useDerivWebSocket()
+    const { sendMessage, lastMessage } = useWebSocket()
+    const { isAuthorized, isConnected } = useAuthorize()
     const [traders, setTraders] = useState([])
     const [copiers, setCopiers] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState(null)
 
+    const fetchList = useCallback(() => {
+        if (!isConnected || !isAuthorized) return
+
+        sendMessage(
+            {
+                copytrading_list: 1,
+                // Optional parameters can be added here:
+                // sort_fields: ["performance", "monthly_profitable_trades"],
+                // sort_order: ["DESC", "DESC"]
+            },
+            (response) => {
+                console.log('Copy Trading List Response:', response)
+
+                if (response.error) {
+                    setError(response.error.message)
+                    setIsLoading(false)
+                    return
+                }
+
+                if (response.copytrading_list) {
+                    setTraders(response.copytrading_list.traders)
+                    setCopiers(response.copytrading_list.copiers)
+                    setIsLoading(false)
+                    setError(null)
+                }
+            }
+        )
+    }, [sendMessage, isConnected, isAuthorized])
+
+    // Initial fetch when authorized and connected
     useEffect(() => {
-        // Make the initial request
-        sendRequest({
-            copytrading_list: 1,
-            // Optional parameters can be added here:
-            // sort_fields: ["performance", "monthly_profitable_trades"],
-            // sort_order: ["DESC", "DESC"]
-        })
-    }, [sendRequest])
+        if (isAuthorized && isConnected) {
+            fetchList()
+        }
+    }, [isAuthorized, isConnected, fetchList])
 
+    // Handle broadcast messages
     useEffect(() => {
-        if (!wsResponse) return
+        if (!lastMessage) return
 
-        if (wsResponse.msg_type === 'copytrading_list') {
-            console.log('Copy Trading List Response:', wsResponse)
-
-            if (wsResponse.error) {
-                setError(wsResponse.error.message)
+        if (lastMessage.msg_type === 'copytrading_list') {
+            if (lastMessage.error) {
+                setError(lastMessage.error.message)
                 setIsLoading(false)
                 return
             }
 
-            if (wsResponse.copytrading_list) {
-                setTraders(wsResponse.copytrading_list.traders)
-                setCopiers(wsResponse.copytrading_list.copiers)
+            if (lastMessage.copytrading_list) {
+                setTraders(lastMessage.copytrading_list.traders)
+                setCopiers(lastMessage.copytrading_list.copiers)
                 setIsLoading(false)
                 setError(null)
             }
         }
-    }, [wsResponse])
+    }, [lastMessage])
 
     return {
         traders,
         copiers,
         isLoading,
         error,
-        refreshList: () => sendRequest({ copytrading_list: 1 })
+        refreshList: fetchList
     }
 }
 
