@@ -3,23 +3,12 @@ name: Request PR Review
 on:
   pull_request:
     types: [opened, synchronize]
-  pull_request_target:
-    types: [opened, synchronize]
 
 jobs:
-  request-review:
+  add-reviewer:
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
     steps:
-      - name: Request Review
-        uses: actions/github-script@v6
+      - uses: AveryCameronUofR/add-reviewer-gh-action@1.0.3
         with:
+          reviewers: "review-deriv"
           token: ${{ secrets.REVIEW_TOKEN }}
-          script: |
-            await github.rest.pulls.requestReviewers({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number,
-              reviewers: ['review-deriv']
-            });
