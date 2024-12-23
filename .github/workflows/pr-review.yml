@@ -8,65 +8,37 @@ on:
       - main
       - master
 
-permissions:
-  contents: write
-  pull-requests: write
-
 jobs:
   request-review:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       
-      - name: Auto Request Review
-        uses: necojackarc/auto-request-review@v0.12.0
+      - name: Request Review
+        uses: rowi1de/auto-assign-review@v1.2.5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          config: |
-            reviewers:
-              defaults:
-                - review-deriv
+          repo-token: ${{ secrets.REVIEW_TOKEN }}
+          reviewers: review-deriv
+          max-num-of-reviewers: 1
 
       # Fallback for push events to create PR if needed
       - name: Create Pull Request
         if: github.event_name == 'push'
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            try {
-              const currentBranch = context.ref.replace('refs/heads/', '');
-              
-              // Get default branch
-              const { data: repo } = await github.rest.repos.get({
-                owner: context.repo.owner,
-                repo: context.repo.name
-              });
-              
-              // Check for existing PR
-              const { data: prs } = await github.rest.pulls.list({
-                owner: context.repo.owner,
-                repo: context.repo.name,
-                head: `${context.repo.owner}:${currentBranch}`,
-                base: repo.default_branch,
-                state: 'open'
-              });
-              
-              if (prs.length === 0) {
-                console.log('No existing PR found. Creating new PR...');
-                const { data: newPr } = await github.rest.pulls.create({
-                  owner: context.repo.owner,
-                  repo: context.repo.name,
-                  title: `Review requested for ${currentBranch}`,
-                  head: currentBranch,
-                  base: repo.default_branch,
-                  body: 'Automated pull request for review'
-                });
-                console.log(`Created PR #${newPr.number}`);
-              } else {
-                console.log(`Found existing PR #${prs[0].number}`);
-              }
-            } catch (error) {
-              console.error('Error:', error.message);
-              core.setFailed(error.message);
-            }
+        env:
+          GH_TOKEN: ${{ secrets.REVIEW_TOKEN }}
+        run: |
+          current_branch=$(git rev-parse --abbrev-ref HEAD)
+          default_branch=$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name)
+          
+          # Check for existing PR
+          existing_pr=$(gh pr list --head "$current_branch" --state open --json number --jq '.[0].number')
+          
+          if [ -z "$existing_pr" ]; then
+            echo "Creating new PR..."
+            gh pr create --title "Review requested for $current_branch" \
+                        --body "Automated pull request for review" \
+                        --base "$default_branch" \
+                        --head "$current_branch"
+          else
+            echo "PR already exists: #$existing_pr"
+          fi
