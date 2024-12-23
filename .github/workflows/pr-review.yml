@@ -8,22 +8,8 @@ jobs:
   re-request-review:
     runs-on: ubuntu-latest
     steps:
-      - uses: octokit/request-action@v2.x
+      - uses: madrapps/add-reviewers@v1
         with:
-          route: DELETE /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          pull_number: ${{ github.event.pull_request.number }}
-          reviewers: '["review-deriv"]'
-        env:
-          GITHUB_TOKEN: ${{ secrets.REVIEW_TOKEN }}
-      
-      - uses: octokit/request-action@v2.x
-        with:
-          route: POST /repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          pull_number: ${{ github.event.pull_request.number }}
-          reviewers: '["review-deriv"]'
-        env:
-          GITHUB_TOKEN: ${{ secrets.REVIEW_TOKEN }}
+          token: ${{ secrets.REVIEW_TOKEN }}
+          reviewers: review-deriv
+          re-request: true
