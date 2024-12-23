@@ -1,0 +1,17 @@
+name: Re-request Reviewers
+
+on:
+  push:
+    branches:
+      - main  # Target branch
+
+jobs:
+  re_request_reviews:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Re-request reviews
+        uses: hmarr/auto-assign-action@v2
+        with:
+          add-reviewers: 'team-name' # Replace with code owner usernames
+          github-token: ${{ secrets.GITHUB_TOKEN }}
