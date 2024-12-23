@@ -1,0 +1,152 @@
+import { useState, useEffect, useCallback } from 'react';
+
+// Singleton WebSocket instance
+let wsInstance = null;
+let wsUrl = null;
+let subscribers = new Set();
+let messageHandlers = new Map();
+let currentReqId = 1;
+let pingInterval = null;
+
+// Ping interval in milliseconds (30 seconds)
+const PING_INTERVAL = 30000;
+
+const sendPing = () => {
+    if (wsInstance?.readyState === WebSocket.OPEN) {
+        const reqId = generateReqId();
+        wsInstance.send(JSON.stringify({ ping: 1, req_id: reqId }));
+    }
+};
+
+const generateReqId = () => {
+    return currentReqId++;
+};
+
+const createWebSocket = (url) => {
+    if (wsInstance && wsUrl === url) {
+        return wsInstance;
+    }
+
+    wsUrl = url;
+    wsInstance = new WebSocket(url);
+
+    wsInstance.onopen = () => {
+        subscribers.forEach(subscriber => subscriber.onOpen?.());
+        // Start ping interval
+        if (pingInterval) {
+            clearInterval(pingInterval);
+        }
+        pingInterval = setInterval(sendPing, PING_INTERVAL);
+    };
+
+    wsInstance.onclose = () => {
+        subscribers.forEach(subscriber => subscriber.onClose?.());
+        wsInstance = null;
+        messageHandlers.clear();
+        // Clear ping interval
+        if (pingInterval) {
+            clearInterval(pingInterval);
+            pingInterval = null;
+        }
+    };
+
+    wsInstance.onerror = (error) => {
+        subscribers.forEach(subscriber => subscriber.onError?.(error));
+    };
+
+    wsInstance.onmessage = (event) => {
+        try {
+            const response = JSON.parse(event.data);
+            const reqId = response.req_id;
+
+            // Handle specific message handler if exists
+            if (reqId && messageHandlers.has(reqId)) {
+                messageHandlers.get(reqId)(response);
+                messageHandlers.delete(reqId);
+            }
+
+            // Broadcast to all subscribers
+            subscribers.forEach(subscriber => subscriber.onMessage?.(response));
+        } catch (error) {
+            console.error('Failed to parse WebSocket message:', error);
+        }
+    };
+
+    return wsInstance;
+};
+
+const useWebSocket = (url) => {
+    const [isConnected, setIsConnected] = useState(false);
+    const [error, setError] = useState(null);
+    const [lastMessage, setLastMessage] = useState(null);
+
+    useEffect(() => {
+        const subscriber = {
+            onOpen: () => {
+                setIsConnected(true);
+                setError(null);
+            },
+            onClose: () => {
+                setIsConnected(false);
+            },
+            onError: (error) => {
+                setError(error);
+                setIsConnected(false);
+            },
+            onMessage: (message) => {
+                setLastMessage(message);
+            }
+        };
+
+        subscribers.add(subscriber);
+        const ws = createWebSocket(url);
+
+        // If WebSocket is already open when hook is initialized
+        if (ws.readyState === WebSocket.OPEN) {
+            setIsConnected(true);
+        }
+
+        return () => {
+            subscribers.delete(subscriber);
+            if (subscribers.size === 0 && wsInstance) {
+                wsInstance.close();
+                wsInstance = null;
+            }
+        };
+    }, [url]);
+
+    const sendMessage = useCallback((message, callback) => {
+        if (!wsInstance || wsInstance.readyState !== WebSocket.OPEN) {
+            throw new Error('WebSocket is not connected');
+        }
+
+        const reqId = generateReqId();
+        const messageWithId = {
+            ...message,
+            req_id: reqId
+        };
+
+        if (callback) {
+            messageHandlers.set(reqId, callback);
+        }
+
+        wsInstance.send(JSON.stringify(messageWithId));
+        return reqId;
+    }, []);
+
+    const close = useCallback(() => {
+        if (wsInstance) {
+            wsInstance.close();
+        }
+    }, []);
+
+    return {
+        isConnected,
+        error,
+        lastMessage,
+        sendMessage,
+        close
+    };
+};
+
+export default useWebSocket;
