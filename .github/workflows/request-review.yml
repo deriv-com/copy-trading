@@ -3,7 +3,7 @@ name: Re-request Reviewers
 on:
   push:
     branches:
-      - auto-request-review  # Target branch
+      - 'auto-request-review'  # Target branch
 
 jobs:
   re_request_reviews:
