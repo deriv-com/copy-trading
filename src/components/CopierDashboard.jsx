@@ -7,8 +7,20 @@ import TraderCard from "./TraderCard";
 
 const CopierDashboard = () => {
     const { sendRequest, wsResponse } = useDerivWebSocket();
-    const { traders: apiTraders, isLoading } = useCopyTradersList();
-    const [localTraders, setLocalTraders] = useState([]);
+    const {
+        traders: apiTraders,
+        isLoading,
+        error,
+        refreshList,
+    } = useCopyTradersList();
+
+    useEffect(() => {
+        console.log("CopierDashboard - Traders:", {
+            apiTraders,
+            isLoading,
+            error,
+        });
+    }, [apiTraders, isLoading, error]);
     const [processingTrader, setProcessingTrader] = useState(null);
     const [copiedTrader, setCopiedTrader] = useState(null);
     const [failedCopyTrader, setFailedCopyTrader] = useState(null);
@@ -17,43 +29,6 @@ const CopierDashboard = () => {
         message: "",
         status: "neutral",
     });
-
-    // Load traders from localStorage and API
-    useEffect(() => {
-        const storedTraders = JSON.parse(
-            localStorage.getItem("traders") || "[]"
-        );
-
-        if (apiTraders?.length) {
-            // Convert API traders to our format
-            const formattedApiTraders = apiTraders.map((trader) => ({
-                id: trader.loginid,
-                name: trader.name || `Trader ${trader.loginid}`, // Fallback name if not provided
-            }));
-
-            // Merge API traders with stored traders, avoiding duplicates
-            const mergedTraders = [...storedTraders];
-
-            formattedApiTraders.forEach((apiTrader) => {
-                const existingIndex = mergedTraders.findIndex(
-                    (local) => local.id === apiTrader.id
-                );
-
-                if (existingIndex === -1) {
-                    // Add new trader if not exists
-                    mergedTraders.push(apiTrader);
-                }
-            });
-
-            // Update localStorage and state
-            localStorage.setItem("traders", JSON.stringify(mergedTraders));
-            setLocalTraders(mergedTraders);
-
-            console.log("Merged traders:", mergedTraders);
-        } else {
-            setLocalTraders(storedTraders);
-        }
-    }, [apiTraders]);
 
     useEffect(() => {
         if (!wsResponse || !processingTrader) return;
@@ -110,6 +85,8 @@ const CopierDashboard = () => {
                         message: `Stopped copying ${trader.name}`,
                         status: "neutral",
                     });
+                    // Refresh traders list after successfully stopping copy trading
+                    refreshList();
                 }
             }
         };
@@ -139,32 +116,19 @@ const CopierDashboard = () => {
 
     const handleAddTrader = (trader) => {
         console.log("New trader added:", trader);
-        setLocalTraders((prev) => [...prev, trader]);
+        // Refresh the traders list from API
+        refreshList();
     };
 
     const handleRemoveTrader = (trader) => {
-        // Get current traders from localStorage
-        const storedTraders = JSON.parse(
-            localStorage.getItem("traders") || "[]"
-        );
-
-        // Remove the trader
-        const updatedTraders = storedTraders.filter(
-            (t) => t.token !== trader.token
-        );
-
-        // Update localStorage
-        localStorage.setItem("traders", JSON.stringify(updatedTraders));
-
-        // Update state
-        setLocalTraders(updatedTraders);
-
         // Show feedback
         setSnackbar({
             isVisible: true,
             message: `Removed ${trader.name}`,
             status: "neutral",
         });
+        // Refresh the traders list from API
+        refreshList();
     };
 
     return (
@@ -182,18 +146,23 @@ const CopierDashboard = () => {
 
             {isLoading ? (
                 <div className="text-center py-8">Loading traders...</div>
+            ) : error ? (
+                <div className="text-center py-8 text-red-600">
+                    Error loading traders: {error}
+                </div>
+            ) : !apiTraders?.length ? (
+                <div className="text-center py-8">No traders available</div>
             ) : (
                 <div className="grid gap-6">
-                    {localTraders.map((trader, index) => (
+                    {apiTraders.map((trader) => (
                         <TraderCard
-                            key={trader.id || index}
-                            trader={trader}
-                            onCopyClick={handleCopyClick}
+                            key={trader.loginid}
+                            trader={{
+                                id: trader.loginid,
+                                name: trader.name || `Trader ${trader.loginid}`,
+                                token: trader.token,
+                            }}
                             onStopCopy={handleStopCopy}
-                            isCopying={copiedTrader?.id === trader.id}
-                            isProcessing={processingTrader?.id === trader.id}
-                            copyFailed={failedCopyTrader?.id === trader.id}
-                            onRemove={handleRemoveTrader}
                         />
                     ))}
                 </div>
