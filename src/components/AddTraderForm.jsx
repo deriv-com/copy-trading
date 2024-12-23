@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Text, Button, TextField } from "@deriv-com/quill-ui";
 import PropTypes from "prop-types";
+import useDerivWebSocket from "../hooks/useDerivWebSocket";
 
 const AddTraderForm = ({ onAddTrader }) => {
     const [traderData, setTraderData] = useState({
@@ -8,18 +9,16 @@ const AddTraderForm = ({ onAddTrader }) => {
         isCopying: false,
     });
 
+    const { sendRequest } = useDerivWebSocket();
+
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // Get existing traders from localStorage or initialize empty array
-        const existingTraders = JSON.parse(
-            localStorage.getItem("traders") || "[]"
-        );
+        sendRequest({
+            copy_start: traderData.token,
+        });
 
-        const updatedTraders = [...existingTraders, traderData];
-        localStorage.setItem("traders", JSON.stringify(updatedTraders));
         onAddTrader?.(traderData);
-
         // Clear form after submission
         setTraderData({ token: "", isCopying: false });
     };

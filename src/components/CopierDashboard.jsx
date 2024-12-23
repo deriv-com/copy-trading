@@ -85,6 +85,8 @@ const CopierDashboard = () => {
                         message: `Stopped copying ${trader.name}`,
                         status: "neutral",
                     });
+                    // Refresh traders list after successfully stopping copy trading
+                    refreshList();
                 }
             }
         };
