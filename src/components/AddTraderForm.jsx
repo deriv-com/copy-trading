@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { Text, Button, TextField, Snackbar } from "@deriv-com/quill-ui";
 import PropTypes from "prop-types";
-import useDerivWebSocket from "../hooks/useDerivWebSocket";
+import useWebSocket from "../hooks/useWebSocket";
+import useAuthorize from "../hooks/useAuthorize";
 
 const AddTraderForm = ({ onAddTrader }) => {
     const [traderData, setTraderData] = useState({
         token: "",
     });
 
-    const { sendRequest, wsResponse } = useDerivWebSocket();
+    const { sendMessage, lastMessage } = useWebSocket();
+    const { isAuthorized, isConnected } = useAuthorize();
     const [isProcessing, setIsProcessing] = useState(false);
     const [snackbar, setSnackbar] = useState({
         isVisible: false,
@@ -17,16 +19,16 @@ const AddTraderForm = ({ onAddTrader }) => {
     });
 
     useEffect(() => {
-        if (!wsResponse || !isProcessing) return;
+        if (!lastMessage || !isProcessing) return;
 
-        if (wsResponse.msg_type === "copy_start") {
+        if (lastMessage.msg_type === "copy_start") {
             setIsProcessing(false);
 
-            if (wsResponse.error) {
+            if (lastMessage.error) {
                 setSnackbar({
                     isVisible: true,
                     message:
-                        wsResponse.error.message ||
+                        lastMessage.error.message ||
                         "Failed to start copy trading",
                     status: "fail",
                 });
@@ -40,12 +42,20 @@ const AddTraderForm = ({ onAddTrader }) => {
                 });
             }
         }
-    }, [wsResponse, isProcessing, onAddTrader, traderData]);
+    }, [lastMessage, isProcessing, onAddTrader, traderData]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        if (!isConnected || !isAuthorized) {
+            setSnackbar({
+                isVisible: true,
+                message: "Not connected to server",
+                status: "fail",
+            });
+            return;
+        }
         setIsProcessing(true);
-        sendRequest({
+        sendMessage({
             copy_start: traderData.token,
         });
     };

@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { Text, Snackbar } from "@deriv-com/quill-ui";
-import useDerivWebSocket from "../hooks/useDerivWebSocket";
+import useWebSocket from "../hooks/useWebSocket";
+import useAuthorize from "../hooks/useAuthorize";
 import useCopyTradersList from "../hooks/useCopyTradersList";
 import AddTraderForm from "./AddTraderForm";
 import TraderCard from "./TraderCard";
 
 const CopierDashboard = () => {
-    const { sendRequest, wsResponse } = useDerivWebSocket();
+    const { sendMessage, isConnected } = useWebSocket();
+    const { isAuthorized } = useAuthorize();
+    const [wsResponse, setWsResponse] = useState(null);
     const {
         traders: apiTraders,
         isLoading,
@@ -100,17 +103,33 @@ const CopierDashboard = () => {
 
     const handleCopyClick = (trader) => {
         console.log("Copy clicked for trader:", trader);
+        if (!isConnected || !isAuthorized) {
+            setSnackbar({
+                isVisible: true,
+                message: "Connection not ready. Please try again.",
+                status: "fail",
+            });
+            return;
+        }
         setProcessingTrader(trader);
-        sendRequest({
-            copy_start: trader.token,
+        sendMessage({ copy_start: trader.token }, (response) => {
+            setWsResponse(response);
         });
     };
 
     const handleStopCopy = (trader) => {
         console.log("Stop copy clicked for trader:", trader);
+        if (!isConnected || !isAuthorized) {
+            setSnackbar({
+                isVisible: true,
+                message: "Connection not ready. Please try again.",
+                status: "fail",
+            });
+            return;
+        }
         setProcessingTrader(trader);
-        sendRequest({
-            copy_stop: trader.token,
+        sendMessage({ copy_stop: trader.token }, (response) => {
+            setWsResponse(response);
         });
     };
 
@@ -162,7 +181,11 @@ const CopierDashboard = () => {
                                 name: trader.name || `Trader ${trader.loginid}`,
                                 token: trader.token,
                             }}
+                            onCopyClick={handleCopyClick}
                             onStopCopy={handleStopCopy}
+                            onRemoveTrader={handleRemoveTrader}
+                            isCopied={copiedTrader?.id === trader.loginid}
+                            hasFailed={failedCopyTrader?.id === trader.loginid}
                         />
                     ))}
                 </div>
