@@ -14,6 +14,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
+      - name: Install GitHub CLI
+        run: |
+          type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+          && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+          && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+          && sudo apt update \
+          && sudo apt install gh -y
+      
       - name: Handle PR and Review
         env:
           GH_TOKEN: ${{ secrets.REVIEW_TOKEN }}
@@ -23,8 +32,11 @@ jobs:
             echo "Requesting review for PR #${{ github.event.pull_request.number }}"
             gh pr edit ${{ github.event.pull_request.number }} --add-reviewer $REVIEWER
           else
-            current_branch=$(git rev-parse --abbrev-ref HEAD)
+            current_branch="${{ github.ref_name }}"
             default_branch=$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name)
+            
+            echo "Current branch: $current_branch"
+            echo "Default branch: $default_branch"
             
             # Check for existing PR
             existing_pr=$(gh pr list --head "$current_branch" --state open --json number --jq '.[0].number')
