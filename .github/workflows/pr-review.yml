@@ -1,0 +1,75 @@
+name: Auto Request Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - '**'
+      - '!main'  # Exclude main branch to avoid noise
+      - '!master'
+
+jobs:
+  request-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request Review
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const reviewer = 'review-deriv';
+            
+            if (context.eventName === 'pull_request') {
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.name,
+                pull_number: context.payload.pull_request.number,
+                reviewers: [reviewer]
+              });
+            } else if (context.eventName === 'push' && !context.ref.endsWith('main') && !context.ref.endsWith('master')) {
+              // For push events, create a pull request if one doesn't exist
+              const branches = await github.rest.repos.listBranches({
+                owner: context.repo.owner,
+                repo: context.repo.name
+              });
+              
+              const defaultBranch = branches.data.find(b => b.default)?.name || 'main';
+              
+              // Try to find an existing PR
+              const prs = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.name,
+                head: context.ref.replace('refs/heads/', ''),
+                base: defaultBranch,
+                state: 'open'
+              });
+              
+              if (prs.data.length === 0) {
+                // Create a new PR
+                const newPr = await github.rest.pulls.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.name,
+                  title: `Review requested for ${context.ref.replace('refs/heads/', '')}`,
+                  head: context.ref.replace('refs/heads/', ''),
+                  base: defaultBranch,
+                  body: 'Automated pull request for review'
+                });
+                
+                // Request review on the new PR
+                await github.rest.pulls.requestReviewers({
+                  owner: context.repo.owner,
+                  repo: context.repo.name,
+                  pull_number: newPr.data.number,
+                  reviewers: [reviewer]
+                });
+              } else {
+                // Request review on existing PR
+                await github.rest.pulls.requestReviewers({
+                  owner: context.repo.owner,
+                  repo: context.repo.name,
+                  pull_number: prs.data[0].number,
+                  reviewers: [reviewer]
+                });
+              }
+            }
