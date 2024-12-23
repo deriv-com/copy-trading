@@ -15,11 +15,10 @@ jobs:
       - uses: actions/checkout@v3
       
       - name: Request Review
-        uses: rowi1de/auto-assign-review@v1.2.5
+        uses: reviewdog/action-request-review@v1
         with:
-          repo-token: ${{ secrets.REVIEW_TOKEN }}
+          github_token: ${{ secrets.REVIEW_TOKEN }}
           reviewers: review-deriv
-          max-num-of-reviewers: 1
 
       # Fallback for push events to create PR if needed
       - name: Create Pull Request
