@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback } from 'react'
 import useWebSocket from './useWebSocket'
-import useAuthorize from './useAuthorize'
+import useAuth from '../contexts/AuthContext'
 
 const useCopyTradersList = () => {
     const { sendMessage, lastMessage } = useWebSocket()
-    const { isAuthorized, isConnected } = useAuthorize()
+    const { isAuthorized, isConnected } = useAuth()
     const [traders, setTraders] = useState([])
     const [copiers, setCopiers] = useState([])
     const [isLoading, setIsLoading] = useState(true)

@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
-import { Text, Snackbar } from "@deriv-com/quill-ui";
-import useWebSocket from "../hooks/useWebSocket";
-import useAuthorize from "../hooks/useAuthorize";
+import { Text, Snackbar, Spinner } from "@deriv-com/quill-ui";
 import useCopyTradersList from "../hooks/useCopyTradersList";
+import useCopyStart from "../hooks/useCopyStart";
+import useCopyStop from "../hooks/useCopyStop";
 import AddTraderForm from "./AddTraderForm";
 import TraderCard from "./TraderCard";
 
 const CopierDashboard = () => {
-    const { sendMessage, isConnected } = useWebSocket();
-    const { isAuthorized } = useAuthorize();
-    const [wsResponse, setWsResponse] = useState(null);
+    const { startCopyTrading, processingTrader: copyStartProcessingTrader } =
+        useCopyStart();
+    const { stopCopyTrading, processingTrader: copyStopProcessingTrader } =
+        useCopyStop();
     const {
         traders: apiTraders,
         isLoading,
@@ -24,92 +25,56 @@ const CopierDashboard = () => {
             error,
         });
     }, [apiTraders, isLoading, error]);
-    const [processingTrader, setProcessingTrader] = useState(null);
+    const isProcessing = copyStartProcessingTrader || copyStopProcessingTrader;
     const [snackbar, setSnackbar] = useState({
         isVisible: false,
         message: "",
         status: "neutral",
     });
 
-    useEffect(() => {
-        if (!wsResponse || !processingTrader) return;
-
-        const handleResponse = () => {
-            console.log("WebSocket Response:", wsResponse);
-            console.log("Processing Trader:", processingTrader);
-
-            if (wsResponse.msg_type === "copy_start") {
-                if (wsResponse.error) {
-                    console.log(
-                        "Showing error snackbar:",
-                        wsResponse.error.message
-                    );
-                    setSnackbar({
-                        isVisible: true,
-                        message:
-                            wsResponse.error.message ||
-                            "Error starting copy trade",
-                        status: "fail",
-                    });
-                    setProcessingTrader(null);
-                } else {
-                    const trader = processingTrader;
-                    console.log(
-                        "Showing success snackbar for trader:",
-                        trader.name
-                    );
-                    setProcessingTrader(null);
-                    setSnackbar({
-                        isVisible: true,
-                        message: `Successfully started copying ${trader.id}`,
-                        status: "neutral",
-                    });
-                }
-            } else if (wsResponse.msg_type === "copy_stop") {
-                if (wsResponse.error) {
-                    setSnackbar({
-                        isVisible: true,
-                        message:
-                            wsResponse.error.message ||
-                            "Error stopping copy trade",
-                        status: "fail",
-                    });
-                    setProcessingTrader(null);
-                } else {
-                    const trader = processingTrader;
-                    setProcessingTrader(null);
-                    setSnackbar({
-                        isVisible: true,
-                        message: `Stopped copying ${trader.name}`,
-                        status: "neutral",
-                    });
-                    // Refresh traders list after successfully stopping copy trading
-                    refreshList();
-                }
-            }
-        };
-
-        handleResponse();
-    }, [wsResponse]);
-
     const handleSnackbarClose = () => {
         setSnackbar((prev) => ({ ...prev, isVisible: false }));
     };
 
+    const handleStartCopy = (trader) => {
+        startCopyTrading(
+            trader,
+            (trader) => {
+                setSnackbar({
+                    isVisible: true,
+                    message: `Successfully started copying ${trader.id}`,
+                    status: "neutral",
+                });
+            },
+            (errorMessage) => {
+                setSnackbar({
+                    isVisible: true,
+                    message: errorMessage,
+                    status: "fail",
+                });
+            }
+        );
+    };
+
     const handleStopCopy = (trader) => {
-        console.log("Stop copy clicked for trader:", trader);
-        if (!isConnected || !isAuthorized) {
-            setSnackbar({
-                isVisible: true,
-                message: "Connection not ready. Please try again.",
-                status: "fail",
-            });
-            return;
-        }
-        setProcessingTrader(trader);
-        sendMessage({ copy_stop: trader.token }, (response) => {
-            setWsResponse(response);
-        });
+        stopCopyTrading(
+            trader,
+            (trader) => {
+                setSnackbar({
+                    isVisible: true,
+                    message: `Stopped copying ${trader.name}`,
+                    status: "neutral",
+                });
+                refreshList();
+            },
+            (errorMessage) => {
+                setSnackbar({
+                    isVisible: true,
+                    message: errorMessage,
+                    status: "fail",
+                });
+            }
+        );
     };
 
     const handleAddTrader = (trader) => {
@@ -132,7 +97,10 @@ const CopierDashboard = () => {
             <AddTraderForm onAddTrader={handleAddTrader} />
 
             {isLoading ? (
-                <div className="text-center py-8">Loading traders...</div>
+                <div className="text-center py-8 flex items-center justify-center gap-2">
+                    <Spinner size="sm" />
+                    <span>Loading traders</span>
+                </div>
             ) : error ? (
                 <div className="text-center py-8 text-red-600">
                     Error loading traders: {error}
@@ -149,7 +117,9 @@ const CopierDashboard = () => {
                                 name: trader.name || `Trader ${trader.loginid}`,
                                 token: trader.token,
                             }}
+                            onStartCopy={handleStartCopy}
                             onStopCopy={handleStopCopy}
+                            isProcessing={isProcessing}
                         />
                     ))}
                 </div>
