@@ -11,7 +11,7 @@ const Header = () => {
 
     const handleLogout = () => {
         clearAccounts();
-        window.location.href = "/";
+        window.location.href = "/copy-trading/#/";
     };
 
     const handleDerivLogin = () => {
