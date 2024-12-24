@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import useWebSocket from './useWebSocket';
-import useAuthorize from './useAuthorize';
+import useAuth from '../contexts/AuthContext';
 
 const useSettings = () => {
     const [settings, setSettings] = useState(null);
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const { isAuthorized } = useAuthorize();
-    const { isConnected, sendMessage } = useWebSocket();
+    const { isAuthorized, isConnected } = useAuth();
+    const { sendMessage } = useWebSocket();
 
     // Fetch settings when authorized
     useEffect(() => {

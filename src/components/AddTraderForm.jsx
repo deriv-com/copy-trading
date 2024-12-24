@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Text, Button, TextField, Snackbar } from "@deriv-com/quill-ui";
 import PropTypes from "prop-types";
 import useWebSocket from "../hooks/useWebSocket";
-import useAuthorize from "../hooks/useAuthorize";
+import useAuth from "../contexts/AuthContext";
 
 const AddTraderForm = ({ onAddTrader }) => {
     const [traderData, setTraderData] = useState({
@@ -10,7 +10,7 @@ const AddTraderForm = ({ onAddTrader }) => {
     });
 
     const { sendMessage, lastMessage } = useWebSocket();
-    const { isAuthorized, isConnected } = useAuthorize();
+    const { isAuthorized, isConnected } = useAuth();
     const [isProcessing, setIsProcessing] = useState(false);
     const [snackbar, setSnackbar] = useState({
         isVisible: false,

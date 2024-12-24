@@ -1,44 +1,50 @@
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider, SnackbarProvider, Spinner } from "@deriv-com/quill-ui";
-import useWebSocket from "./hooks/useWebSocket";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Login from "./components/Login";
 import Header from "./components/Header";
 import Dashboard from "./components/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
-    const { isConnected } = useWebSocket();
+    return (
+        <ThemeProvider theme="light" persistent>
+            <SnackbarProvider>
+                <AuthProvider>
+                    <AppContent />
+                </AuthProvider>
+            </SnackbarProvider>
+        </ThemeProvider>
+    );
+}
+
+function AppContent() {
+    const { isConnected } = useAuth();
 
     if (!isConnected) {
         return (
-            <ThemeProvider theme="light" persistent>
-                <div className="flex justify-center items-center h-screen">
-                    <Spinner size="lg" />
-                </div>
-            </ThemeProvider>
+            <div className="flex justify-center items-center h-screen">
+                <Spinner size="lg" />
+            </div>
         );
     }
 
     return (
-        <ThemeProvider theme="light" persistent>
-            <SnackbarProvider>
-                <Router>
-                    <Header />
-                    <Routes>
-                        <Route path="/" element={<Login />} />
-                        <Route
-                            path="/dashboard"
-                            element={
-                                <ProtectedRoute>
-                                    <Dashboard />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route path="/*" element={<Login />} />
-                    </Routes>
-                </Router>
-            </SnackbarProvider>
-        </ThemeProvider>
+        <Router>
+            <Header />
+            <Routes>
+                <Route path="/" element={<Login />} />
+                <Route
+                    path="/dashboard"
+                    element={
+                        <ProtectedRoute>
+                            <Dashboard />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route path="/*" element={<Login />} />
+            </Routes>
+        </Router>
     );
 }
 

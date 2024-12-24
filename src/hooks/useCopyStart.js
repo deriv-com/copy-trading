@@ -1,10 +1,10 @@
 import { useState } from "react";
 import useWebSocket from "./useWebSocket";
-import useAuthorize from "./useAuthorize";
+import useAuth from "../contexts/AuthContext";
 
 const useCopyStart = () => {
-    const { sendMessage, isConnected } = useWebSocket();
-    const { isAuthorized } = useAuthorize();
+    const { sendMessage } = useWebSocket();
+    const { isAuthorized, isConnected } = useAuth();
     const [processingTrader, setProcessingTrader] = useState(null);
 
     const startCopyTrading = (trader, onSuccess, onError) => {
