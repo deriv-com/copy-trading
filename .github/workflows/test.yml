@@ -18,18 +18,12 @@ jobs:
       with:
         node-version: '20'
         cache: 'npm'
-        registry-url: 'https://npm.deriv.com'
     
     - name: Install dependencies
       run: npm ci
-      env:
-        NODE_OPTIONS: "--max-old-space-size=4096"
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       
     - name: Run tests
       run: npm test
-      env:
-        NODE_OPTIONS: "--max-old-space-size=4096"
       
     - name: Upload test results
       if: always()

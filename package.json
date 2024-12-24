@@ -8,12 +8,11 @@
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "test": "NODE_OPTIONS='--max-old-space-size=4096' vitest run",
-    "test:watch": "NODE_OPTIONS='--max-old-space-size=4096' vitest watch",
-    "test:coverage": "NODE_OPTIONS='--max-old-space-size=4096' vitest run --coverage"
+    "test": "vitest run --pool=forks --poolOptions.forks.singleFork",
+    "test:watch": "vitest watch --pool=forks --poolOptions.forks.singleFork",
+    "test:coverage": "vitest run --coverage --pool=forks --poolOptions.forks.singleFork"
   },
   "dependencies": {
-    "@deriv/quill-design": "0.1.0-rc.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.21.1"

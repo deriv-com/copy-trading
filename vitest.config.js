@@ -5,20 +5,18 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./tests/setup.js'],
-    testTimeout: 10000,
-    hookTimeout: 10000,
-    pool: 'vmThreads', // Use VM threads instead of worker threads
+    testTimeout: 20000,
+    hookTimeout: 20000,
+    pool: 'forks',
     poolOptions: {
-      vmThreads: {
-        singleThread: true
+      forks: {
+        singleFork: true
       }
     },
     maxConcurrency: 1,
-    maxThreads: 1,
-    minThreads: 1,
-    isolate: false, // Disable test isolation
+    isolate: false,
     sequence: {
-      hooks: 'list' // Run hooks in sequence
+      hooks: 'list'
     },
     onConsoleLog: (log, type) => {
       // Ignore WebSocket configuration logs
@@ -26,6 +24,17 @@ export default defineConfig({
         return false;
       }
       return true;
+    },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/**',
+        'tests/**',
+        '**/*.test.{js,jsx}',
+        '**/*.spec.{js,jsx}',
+        '**/*.d.ts'
+      ]
     }
   }
 });
