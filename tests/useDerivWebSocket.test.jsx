@@ -1,10 +1,10 @@
 import { renderHook, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import useDerivWebSocket from '../src/hooks/useDerivWebSocket';
 import useDerivAccounts from '../src/hooks/useDerivAccounts';
 import { getConfig } from '../src/config';
 
-// Define WebSocket constants if not available in test environment
+// Define WebSocket constants
 const WS_CONSTANTS = {
   CONNECTING: 0,
   OPEN: 1,
@@ -24,15 +24,21 @@ class MockWebSocket {
     
     // Simulate connection after creation
     setTimeout(() => {
-      this.readyState = WS_CONSTANTS.OPEN;
-      this.onopen?.();
+      if (this.readyState !== WS_CONSTANTS.CLOSED) {
+        this.readyState = WS_CONSTANTS.OPEN;
+        this.onopen?.();
+      }
     }, 0);
   }
 
   send(data) {
+    if (this.readyState !== WS_CONSTANTS.OPEN) return;
+    
     this.lastSentMessage = JSON.parse(data);
     // Simulate responses based on the message type
     setTimeout(() => {
+      if (this.readyState === WS_CONSTANTS.CLOSED) return;
+      
       if (this.lastSentMessage.authorize) {
         this.onmessage?.({
           data: JSON.stringify({
@@ -78,22 +84,28 @@ vi.mock('../src/config', () => ({
   })
 }));
 
-// Mock WebSocket globally
-global.WebSocket = MockWebSocket;
-
 describe('useDerivWebSocket', () => {
+  let originalWebSocket;
+  let mockInstance;
+
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset global state
-    vi.mock('../src/hooks/useDerivWebSocket', async () => {
-      const actual = await vi.importActual('../src/hooks/useDerivWebSocket');
-      return {
-        ...actual,
-        globalWs: null,
-        isAuthorizedGlobal: false,
-        responseHandlers: new Set()
-      };
-    });
+    originalWebSocket = global.WebSocket;
+    global.WebSocket = class extends MockWebSocket {
+      constructor(...args) {
+        super(...args);
+        mockInstance = this;
+      }
+    };
+  });
+
+  afterEach(() => {
+    global.WebSocket = originalWebSocket;
+    if (mockInstance) {
+      mockInstance.close();
+      mockInstance = null;
+    }
+    vi.restoreAllMocks();
   });
 
   it('should initialize with default values', () => {
@@ -113,8 +125,7 @@ describe('useDerivWebSocket', () => {
       expect(result.current.isConnected).toBe(true);
     });
 
-    expect(result.current.socket).toBeDefined();
-    expect(result.current.socket.lastSentMessage).toEqual({
+    expect(mockInstance.lastSentMessage).toEqual({
       authorize: 'test-token'
     });
   });
@@ -144,7 +155,7 @@ describe('useDerivWebSocket', () => {
     
     // Simulate authorization failure
     await act(async () => {
-      result.current.socket.onmessage?.({
+      mockInstance.onmessage?.({
         data: JSON.stringify({
           msg_type: 'authorize',
           error: {
@@ -160,7 +171,7 @@ describe('useDerivWebSocket', () => {
 
     // Simulate second failure
     await act(async () => {
-      result.current.socket.onmessage?.({
+      mockInstance.onmessage?.({
         data: JSON.stringify({
           msg_type: 'authorize',
           error: {
@@ -186,7 +197,7 @@ describe('useDerivWebSocket', () => {
 
     // Simulate connection close
     await act(async () => {
-      result.current.socket.close();
+      mockInstance.close();
     });
 
     expect(result.current.isConnected).toBe(false);
@@ -205,6 +216,6 @@ describe('useDerivWebSocket', () => {
       result.current.sendRequest({ ping: 1 });
     });
 
-    expect(result.current.socket.lastSentMessage).toEqual({ ping: 1 });
+    expect(mockInstance.lastSentMessage).toEqual({ ping: 1 });
   });
 });
