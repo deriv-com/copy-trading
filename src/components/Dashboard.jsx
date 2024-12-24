@@ -17,10 +17,10 @@ const Dashboard = () => {
                         }}
                         options={[
                             {
-                                label: "Copier",
+                                label: "Copy",
                             },
                             {
-                                label: "Trader",
+                                label: "Trade",
                             },
                         ]}
                         selectedItemIndex={userType === "copier" ? 0 : 1}
