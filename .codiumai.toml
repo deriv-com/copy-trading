@@ -1,0 +1,33 @@
+[tests]
+framework = "Vitest"
+utility_library = "Testing Library"
+use_mocks = true
+num_desired_tests = 4
+
+plan_instructions = """
+1. Tests should use React Testing Library best practices
+2. Mock external dependencies when needed
+3. Test both success and failure scenarios
+4. Include clear test descriptions
+"""
+
+example_test = """
+import { renderHook } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+
+describe('useHook', () => {
+  it('should handle success case', async () => {
+    // given
+    const mockFn = vi.fn();
+    
+    // when
+    const { result } = renderHook(() => useHook());
+    
+    // then
+    expect(result.current).toBeDefined();
+  });
+});
+"""
+
+[tests.javascript]
+overrideTestRunScript = "npx vitest run --runTestsByPath TEST_FILEPATH"
