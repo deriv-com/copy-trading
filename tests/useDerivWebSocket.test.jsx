@@ -85,8 +85,8 @@ vi.mock('../src/config', () => ({
 }));
 
 describe('useDerivWebSocket', () => {
-  let originalWebSocket;
   let mockInstance;
+  let originalWebSocket;
 
   beforeEach(() => {
     vi.clearAllMocks();
