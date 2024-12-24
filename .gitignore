@@ -5,6 +5,7 @@ node_modules
 
 # Testing
 /coverage
+.vitest/
 
 # Production
 /dist
@@ -12,6 +13,11 @@ node_modules
 
 # Misc
 .DS_Store
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Logs
 npm-debug.log*
@@ -46,3 +52,9 @@ logs
 # Yarn Integrity file
 .yarn-integrity
 
+# Local Netlify folder
+.netlify
+
+# Vitest coverage
+coverage/
+html/

@@ -1,48 +1,46 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import useWebSocket from './useWebSocket';
 import useDerivAccounts from './useDerivAccounts';
 
-// Singleton state
-let isAuthorizedGlobal = false;
-let authErrorGlobal = null;
-
 const useAuthorize = () => {
+    const [isAuthorized, setIsAuthorized] = useState(false);
+    const [authError, setAuthError] = useState(null);
     const { defaultAccount, clearAccounts } = useDerivAccounts();
     const { isConnected, sendMessage, close } = useWebSocket();
 
     // Handle authorization
     useEffect(() => {
-        if (isConnected && defaultAccount?.token && !isAuthorizedGlobal) {
+        if (isConnected && defaultAccount?.token && !isAuthorized) {
             console.log('Sending authorize request');
             sendMessage(
                 { authorize: defaultAccount.token },
                 (response) => {
                     if (response.error) {
                         console.error('Authorization failed:', response.error);
-                        authErrorGlobal = response.error;
-                        isAuthorizedGlobal = false;
+                        setAuthError(response.error);
+                        setIsAuthorized(false);
                         clearAccounts();
                         close();
                     } else {
                         console.log('Authorization successful');
-                        authErrorGlobal = null;
-                        isAuthorizedGlobal = true;
+                        setAuthError(null);
+                        setIsAuthorized(true);
                     }
                 }
             );
         }
-    }, [isConnected, defaultAccount, sendMessage, clearAccounts, close]);
+    }, [isConnected, defaultAccount, sendMessage, clearAccounts, close, isAuthorized]);
 
     // Reset auth state when connection is lost
     useEffect(() => {
         if (!isConnected) {
-            isAuthorizedGlobal = false;
+            setIsAuthorized(false);
         }
     }, [isConnected]);
 
     return {
-        isAuthorized: isAuthorizedGlobal,
-        authError: authErrorGlobal,
+        isAuthorized,
+        authError,
         isConnected,
     };
 };
