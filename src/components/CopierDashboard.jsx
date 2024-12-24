@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { Text, Snackbar } from "@deriv-com/quill-ui";
-import useDerivWebSocket from "../hooks/useDerivWebSocket";
+import useWebSocket from "../hooks/useWebSocket";
+import useAuthorize from "../hooks/useAuthorize";
 import useCopyTradersList from "../hooks/useCopyTradersList";
 import AddTraderForm from "./AddTraderForm";
 import TraderCard from "./TraderCard";
 
 const CopierDashboard = () => {
-    const { sendRequest, wsResponse } = useDerivWebSocket();
+    const { sendMessage, isConnected } = useWebSocket();
+    const { isAuthorized } = useAuthorize();
+    const [wsResponse, setWsResponse] = useState(null);
     const {
         traders: apiTraders,
         isLoading,
@@ -22,8 +25,6 @@ const CopierDashboard = () => {
         });
     }, [apiTraders, isLoading, error]);
     const [processingTrader, setProcessingTrader] = useState(null);
-    const [copiedTrader, setCopiedTrader] = useState(null);
-    const [failedCopyTrader, setFailedCopyTrader] = useState(null);
     const [snackbar, setSnackbar] = useState({
         isVisible: false,
         message: "",
@@ -50,7 +51,6 @@ const CopierDashboard = () => {
                             "Error starting copy trade",
                         status: "fail",
                     });
-                    setFailedCopyTrader(processingTrader);
                     setProcessingTrader(null);
                 } else {
                     const trader = processingTrader;
@@ -58,11 +58,10 @@ const CopierDashboard = () => {
                         "Showing success snackbar for trader:",
                         trader.name
                     );
-                    setCopiedTrader(trader);
                     setProcessingTrader(null);
                     setSnackbar({
                         isVisible: true,
-                        message: `Successfully started copying ${trader.name}`,
+                        message: `Successfully started copying ${trader.id}`,
                         status: "neutral",
                     });
                 }
@@ -78,7 +77,6 @@ const CopierDashboard = () => {
                     setProcessingTrader(null);
                 } else {
                     const trader = processingTrader;
-                    setCopiedTrader(null);
                     setProcessingTrader(null);
                     setSnackbar({
                         isVisible: true,
@@ -98,35 +96,24 @@ const CopierDashboard = () => {
         setSnackbar((prev) => ({ ...prev, isVisible: false }));
     };
 
-    const handleCopyClick = (trader) => {
-        console.log("Copy clicked for trader:", trader);
-        setProcessingTrader(trader);
-        sendRequest({
-            copy_start: trader.token,
-        });
-    };
-
     const handleStopCopy = (trader) => {
         console.log("Stop copy clicked for trader:", trader);
+        if (!isConnected || !isAuthorized) {
+            setSnackbar({
+                isVisible: true,
+                message: "Connection not ready. Please try again.",
+                status: "fail",
+            });
+            return;
+        }
         setProcessingTrader(trader);
-        sendRequest({
-            copy_stop: trader.token,
+        sendMessage({ copy_stop: trader.token }, (response) => {
+            setWsResponse(response);
         });
     };
 
     const handleAddTrader = (trader) => {
         console.log("New trader added:", trader);
-        // Refresh the traders list from API
-        refreshList();
-    };
-
-    const handleRemoveTrader = (trader) => {
-        // Show feedback
-        setSnackbar({
-            isVisible: true,
-            message: `Removed ${trader.name}`,
-            status: "neutral",
-        });
         // Refresh the traders list from API
         refreshList();
     };

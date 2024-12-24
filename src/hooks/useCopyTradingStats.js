@@ -1,42 +1,46 @@
 import { useState, useEffect } from 'react';
-import useDerivWebSocket from './useDerivWebSocket';
+import useWebSocket from './useWebSocket';
 
 const useCopyTradingStats = (traderId) => {
     const [stats, setStats] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const { sendRequest, wsResponse } = useDerivWebSocket();
+    const { sendMessage, lastMessage } = useWebSocket();
 
     useEffect(() => {
         if (!traderId) return;
 
         const fetchStats = () => {
             setIsLoading(true);
-            sendRequest({
+            sendMessage({
                 copytrading_statistics: 1,
                 trader_id: traderId,
+                passthrough: {
+                    trader_id: traderId
+                }
             });
         };
 
         fetchStats();
-    }, [traderId, sendRequest]);
+    }, [traderId, sendMessage]);
 
     useEffect(() => {
-        if (!wsResponse || !traderId) return;
+        if (!lastMessage || !traderId) return;
 
-        if (wsResponse.echo_req?.trader_id === traderId) {
-            if (wsResponse.error) {
-                setError(wsResponse.error.message);
+        // Check if this response is for the current trader
+        if (lastMessage.passthrough?.trader_id === traderId) {
+            if (lastMessage.error) {
+                setError(lastMessage.error.message);
                 setIsLoading(false);
                 return;
             }
 
-            if (wsResponse.msg_type === 'copytrading_statistics') {
-                setStats(wsResponse.copytrading_statistics);
+            if (lastMessage.msg_type === 'copytrading_statistics') {
+                setStats(lastMessage.copytrading_statistics);
                 setIsLoading(false);
             }
         }
-    }, [wsResponse, traderId]);
+    }, [lastMessage, traderId]);
 
     return {
         stats,
@@ -44,12 +48,15 @@ const useCopyTradingStats = (traderId) => {
         error,
         refetch: () => {
             setError(null);
-            sendRequest({
+            sendMessage({
                 copytrading_statistics: 1,
                 trader_id: traderId,
+                passthrough: {
+                    trader_id: traderId
+                }
             });
         },
     };
 };
 
-export default useCopyTradingStats; 
+export default useCopyTradingStats;

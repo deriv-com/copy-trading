@@ -10,9 +10,10 @@ console.log('WebSocket Configuration:', {
     FINAL_URL: WEBSOCKET_URL
 })
 
-// Singleton WebSocket instance
+// Singleton WebSocket instance and state
 let globalWs = null
 let responseHandlers = new Set()
+let isAuthorizedGlobal = false
 
 const useDerivWebSocket = () => {
     const [socket, setSocket] = useState(null)
@@ -56,6 +57,7 @@ const useDerivWebSocket = () => {
                 } else {
                     console.log('Authorization successful')
                     authRetryCountRef.current = 0 // Reset retry counter on success
+                    isAuthorizedGlobal = true
                     setIsConnected(true)
                     globalWs.send(JSON.stringify({
                         get_settings: 1
@@ -91,10 +93,12 @@ const useDerivWebSocket = () => {
                 globalWs.onopen = () => {
                     console.log('WebSocket connected, readyState:', globalWs.readyState)
                     setIsConnected(true)
-                    console.log('Sending authorize request with token:', defaultAccount.token)
-                    globalWs.send(JSON.stringify({
-                        authorize: defaultAccount.token
-                    }))
+                    if (!isAuthorizedGlobal) {
+                        console.log('Sending authorize request with token:', defaultAccount.token)
+                        globalWs.send(JSON.stringify({
+                            authorize: defaultAccount.token
+                        }))
+                    }
                 }
 
                 globalWs.onerror = (error) => {
@@ -104,6 +108,7 @@ const useDerivWebSocket = () => {
                 globalWs.onclose = () => {
                     console.log('WebSocket connection closed')
                     globalWs = null
+                    isAuthorizedGlobal = false
                     responseHandlers.forEach(handler => handler({ type: 'connection', status: 'disconnected' }))
                     setIsConnected(false)
                 }
@@ -118,7 +123,7 @@ const useDerivWebSocket = () => {
             responseHandlers.add(handleResponseRef.current)
             setSocket(globalWs)
 
-            if (globalWs.readyState === WebSocket.OPEN) {
+            if (globalWs.readyState === WebSocket.OPEN && !isAuthorizedGlobal) {
                 setIsConnected(true)
                 console.log('WebSocket already open, sending authorize request')
                 globalWs.send(JSON.stringify({
@@ -159,4 +164,4 @@ const useDerivWebSocket = () => {
     }
 }
 
-export default useDerivWebSocket 
+export default useDerivWebSocket

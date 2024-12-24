@@ -1,40 +1,23 @@
 import { useState } from "react";
-import {
-    Button,
-    Text,
-    SegmentedControlSingleChoice,
-} from "@deriv-com/quill-ui";
-import useDerivWebSocket from "../hooks/useDerivWebSocket";
+import { Button } from "@deriv-com/quill-ui";
+import useWebSocket from "../hooks/useWebSocket";
 import Header from "./Header";
 import TraderDashboard from "./TraderDashboard";
 import CopierDashboard from "./CopierDashboard";
 
 const Dashboard = () => {
-    const { settings, isLoading, sendRequest } = useDerivWebSocket();
-    const [userType, setUserType] = useState("trader");
-
-    const items = [
-        { label: "Trader", value: "trader" },
-        { label: "Copier", value: "copier" },
-    ];
+    const { isConnected } = useWebSocket();
+    const [userType, setUserType] = useState("copier");
 
     const handleBecomeTrader = () => {
-        sendRequest({
-            set_settings: 1,
-            allow_copiers: 1,
-        });
         setUserType("trader");
     };
 
     const handleBecomeCopier = () => {
-        sendRequest({
-            set_settings: 1,
-            allow_copiers: 0,
-        });
         setUserType("copier");
     };
 
-    if (isLoading) {
+    if (!isConnected) {
         return <div>Loading...</div>;
     }
 
@@ -46,6 +29,14 @@ const Dashboard = () => {
                 <div className="flex justify-center gap-4 mb-8">
                     <Button
                         variant={
+                            userType === "copier" ? "primary" : "secondary"
+                        }
+                        onClick={handleBecomeCopier}
+                    >
+                        Copier
+                    </Button>
+                    <Button
+                        variant={
                             userType === "trader" || userType === null
                                 ? "primary"
                                 : "secondary"
@@ -53,14 +44,6 @@ const Dashboard = () => {
                         onClick={handleBecomeTrader}
                     >
                         Trader
-                    </Button>
-                    <Button
-                        variant={
-                            userType === "copier" ? "primary" : "secondary"
-                        }
-                        onClick={handleBecomeCopier}
-                    >
-                        Copier
                     </Button>
                 </div>
 
@@ -70,7 +53,7 @@ const Dashboard = () => {
                 ) : userType === "copier" ? (
                     <CopierDashboard />
                 ) : (
-                    <TraderDashboard />
+                    <CopierDashboard />
                 )}
             </div>
         </div>
