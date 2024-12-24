@@ -1,12 +1,9 @@
 import { useState } from "react";
 import { Button } from "@deriv-com/quill-ui";
-import useWebSocket from "../hooks/useWebSocket";
-import Header from "./Header";
 import TraderDashboard from "./TraderDashboard";
 import CopierDashboard from "./CopierDashboard";
 
 const Dashboard = () => {
-    const { isConnected } = useWebSocket();
     const [userType, setUserType] = useState("copier");
 
     const handleBecomeTrader = () => {
@@ -17,13 +14,8 @@ const Dashboard = () => {
         setUserType("copier");
     };
 
-    if (!isConnected) {
-        return <div>Loading...</div>;
-    }
-
     return (
         <div className="min-h-screen bg-gray-50">
-            <Header />
             <div className="max-w-6xl mx-auto p-6">
                 {/* Top Buttons Section */}
                 <div className="flex justify-center gap-4 mb-8">

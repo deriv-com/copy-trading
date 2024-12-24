@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Text, Snackbar } from "@deriv-com/quill-ui";
+import { Text, Snackbar, Spinner } from "@deriv-com/quill-ui";
 import useWebSocket from "../hooks/useWebSocket";
 import useAuthorize from "../hooks/useAuthorize";
 import useCopyTradersList from "../hooks/useCopyTradersList";
@@ -132,7 +132,10 @@ const CopierDashboard = () => {
             <AddTraderForm onAddTrader={handleAddTrader} />
 
             {isLoading ? (
-                <div className="text-center py-8">Loading traders...</div>
+                <div className="text-center py-8 flex items-center justify-center gap-2">
+                    <Spinner size="sm" />
+                    <span>Loading traders</span>
+                </div>
             ) : error ? (
                 <div className="text-center py-8 text-red-600">
                     Error loading traders: {error}
