@@ -7,7 +7,7 @@ import CopierDashboard from "./CopierDashboard";
 
 const Dashboard = () => {
     const { isConnected } = useWebSocket();
-    const [userType, setUserType] = useState("trader");
+    const [userType, setUserType] = useState("copier");
 
     const handleBecomeTrader = () => {
         setUserType("trader");
@@ -29,6 +29,14 @@ const Dashboard = () => {
                 <div className="flex justify-center gap-4 mb-8">
                     <Button
                         variant={
+                            userType === "copier" ? "primary" : "secondary"
+                        }
+                        onClick={handleBecomeCopier}
+                    >
+                        Copier
+                    </Button>
+                    <Button
+                        variant={
                             userType === "trader" || userType === null
                                 ? "primary"
                                 : "secondary"
@@ -36,14 +44,6 @@ const Dashboard = () => {
                         onClick={handleBecomeTrader}
                     >
                         Trader
-                    </Button>
-                    <Button
-                        variant={
-                            userType === "copier" ? "primary" : "secondary"
-                        }
-                        onClick={handleBecomeCopier}
-                    >
-                        Copier
                     </Button>
                 </div>
 
@@ -53,7 +53,7 @@ const Dashboard = () => {
                 ) : userType === "copier" ? (
                     <CopierDashboard />
                 ) : (
-                    <TraderDashboard />
+                    <CopierDashboard />
                 )}
             </div>
         </div>
