@@ -1,13 +1,18 @@
 import { useState, useEffect } from "react";
 import { TextField, Button, Text } from "@deriv-com/quill-ui";
+import { LegacyDelete1pxIcon } from "@deriv/quill-icons";
 import useAPIToken from "../hooks/useAPIToken";
 
+const TOKEN_NAME_REGEX = /^[a-zA-Z0-9_]+$/;
+
 const TokenManagement = () => {
-    const { createToken, getTokens } = useAPIToken();
+    const { createToken, getTokens, deleteToken } = useAPIToken();
     const [tokens, setTokens] = useState([]);
     const [tokenName, setTokenName] = useState("");
     const [isCreating, setIsCreating] = useState(false);
     const [newToken, setNewToken] = useState(null);
+    const [error, setError] = useState("");
+    const [isValidInput, setIsValidInput] = useState(true);
 
     const fetchTokens = async () => {
         try {
@@ -33,21 +38,39 @@ const TokenManagement = () => {
 
         setIsCreating(true);
         setNewToken(null);
+        setError("");
 
         try {
             const response = await createToken(tokenName, ["read"]);
             if (response.api_token?.token) {
+                const tokenResponse = response.api_token.token;
+                await fetchTokens(); // Refresh token list immediately after success
                 setNewToken({
-                    token: response.api_token.token,
+                    token: tokenResponse,
                     display_name: tokenName,
                 });
                 setTokenName(""); // Clear form after successful creation
-                fetchTokens(); // Refresh token list
             }
         } catch (error) {
             console.error("Failed to create token:", error);
+            setError(
+                error.message || "Failed to create token. Please try again."
+            );
         } finally {
             setIsCreating(false);
+        }
+    };
+
+    const handleDeleteToken = async (token) => {
+        setError("");
+        try {
+            await deleteToken(token);
+            fetchTokens(); // Refresh token list after deletion
+        } catch (error) {
+            console.error("Failed to delete token:", error);
+            setError(
+                error.message || "Failed to delete token. Please try again."
+            );
         }
     };
 
@@ -59,22 +82,38 @@ const TokenManagement = () => {
             </Text>
 
             <div className="mb-6 rounded-md flex flex-col gap-4">
-                <div className="flex flex-col md:flex-row items-center gap-2">
+                <div className="flex flex-col md:flex-row items-start gap-2">
                     <TextField
                         label="Create New Token"
                         value={tokenName}
-                        onChange={(e) => setTokenName(e.target.value)}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            setTokenName(value);
+                            setIsValidInput(
+                                value === "" || TOKEN_NAME_REGEX.test(value)
+                            );
+                            if (value === "" || TOKEN_NAME_REGEX.test(value)) {
+                                setError("");
+                            }
+                        }}
                         placeholder="Enter token name"
-                        className=""
                         disabled={isCreating}
                         fullWidth
+                        status={!isValidInput || !!error ? "error" : undefined}
+                        message={
+                            !isValidInput
+                                ? "Only letters, numbers, and underscores are allowed"
+                                : error || ""
+                        }
                     />
                     <Button
                         onClick={handleCreateToken}
                         variant="primary"
                         size="lg"
                         isLoading={isCreating}
-                        disabled={isCreating || !tokenName.trim()}
+                        disabled={
+                            isCreating || !tokenName.trim() || !isValidInput
+                        }
                         className="w-full md:w-auto"
                     >
                         {isCreating ? "Creating..." : "Create"}
@@ -117,7 +156,7 @@ const TokenManagement = () => {
                     tokens.map((token, index) => (
                         <div
                             key={index}
-                            className="flex items-center gap-4 p-4 bg-gray-50 rounded-md"
+                            className="flex items-center gap-4 p-4 bg-gray-100/50 rounded-md"
                         >
                             <Text
                                 size="md"
@@ -129,6 +168,15 @@ const TokenManagement = () => {
                             <Text className="flex-1 font-mono break-all">
                                 {token.token}
                             </Text>
+                            <button
+                                className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                                onClick={() => handleDeleteToken(token.token)}
+                            >
+                                <LegacyDelete1pxIcon
+                                    fill="#FF7F50"
+                                    iconSize="xs"
+                                />
+                            </button>
                         </div>
                     ))
                 )}
