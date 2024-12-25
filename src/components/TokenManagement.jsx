@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { TextField, Button, Text } from "@deriv-com/quill-ui";
-import { LegacyDelete1pxIcon } from "@deriv/quill-icons";
+import TokenContainer from "./TokenContainer";
+import { DerivLightIcWarningIcon } from "@deriv/quill-icons";
 import useAPIToken from "../hooks/useAPIToken";
 
 const TOKEN_NAME_REGEX = /^[a-zA-Z0-9_]+$/;
@@ -10,7 +11,7 @@ const TokenManagement = () => {
     const [tokens, setTokens] = useState([]);
     const [tokenName, setTokenName] = useState("");
     const [isCreating, setIsCreating] = useState(false);
-    const [newToken, setNewToken] = useState(null);
+    const [lastCreatedToken, setLastCreatedToken] = useState(null);
     const [error, setError] = useState("");
     const [isValidInput, setIsValidInput] = useState(true);
 
@@ -18,7 +19,6 @@ const TokenManagement = () => {
         try {
             const response = await getTokens();
             if (response.api_token?.tokens) {
-                // Filter tokens with read scope
                 const readTokens = response.api_token.tokens.filter((token) =>
                     token.scopes?.includes("read")
                 );
@@ -37,19 +37,23 @@ const TokenManagement = () => {
         if (!tokenName.trim()) return;
 
         setIsCreating(true);
-        setNewToken(null);
         setError("");
 
         try {
             const response = await createToken(tokenName, ["read"]);
-            if (response.api_token?.token) {
-                const tokenResponse = response.api_token.token;
-                await fetchTokens(); // Refresh token list immediately after success
-                setNewToken({
-                    token: tokenResponse,
-                    display_name: tokenName,
-                });
-                setTokenName(""); // Clear form after successful creation
+            if (response.api_token?.tokens) {
+                const readTokens = response.api_token.tokens.filter((token) =>
+                    token.scopes?.includes("read")
+                );
+                // Find the newly created token by matching the name
+                const newlyCreated = readTokens.find(
+                    (token) => token.display_name === tokenName
+                );
+                setTokens(readTokens);
+                if (newlyCreated) {
+                    setLastCreatedToken(newlyCreated);
+                    setTokenName(""); // Clear form only after successful token creation
+                }
             }
         } catch (error) {
             console.error("Failed to create token:", error);
@@ -125,23 +129,23 @@ const TokenManagement = () => {
                 </Text>
             </div>
 
-            {/* New Token Section */}
-            {newToken && (
+            {/* New Token Display */}
+            {lastCreatedToken && (
                 <div className="mb-6">
                     <div className="mb-2 flex items-center gap-2">
-                        <Text bold>New Token</Text>
+                        <DerivLightIcWarningIcon height="20px" width="20px" />
+                        <Text bold>New Token:</Text>
                         <Text className="text-yellow-600 text-sm">
-                            ⚠️ You won&apos;t see this token again. Copy it now!
+                            Make sure to copy your{" "}
+                            {lastCreatedToken.display_name} token now. You
+                            won&apos;t be able to see it again!
                         </Text>
                     </div>
-                    <div className="flex items-center gap-4 p-4 bg-yellow-50 rounded-md border border-yellow-200">
-                        <Text size="md" bold className="min-w-[150px] truncate">
-                            {newToken.display_name}
-                        </Text>
-                        <Text className="flex-1 font-mono break-all">
-                            {newToken.token}
-                        </Text>
-                    </div>
+                    <TokenContainer
+                        tokenData={lastCreatedToken}
+                        isNew={true}
+                        onDelete={handleDeleteToken}
+                    />
                 </div>
             )}
 
@@ -153,32 +157,32 @@ const TokenManagement = () => {
                         No tokens available. Create one to share with copiers.
                     </Text>
                 ) : (
-                    tokens.map((token, index) => (
-                        <div
-                            key={index}
-                            className="flex items-center gap-4 p-4 bg-gray-100/50 rounded-md"
-                        >
-                            <Text
-                                size="md"
-                                bold
-                                className="min-w-[150px] truncate"
-                            >
-                                {token.display_name}
-                            </Text>
-                            <Text className="flex-1 font-mono break-all">
-                                {token.token}
-                            </Text>
-                            <button
-                                className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-                                onClick={() => handleDeleteToken(token.token)}
-                            >
-                                <LegacyDelete1pxIcon
-                                    fill="#FF7F50"
-                                    iconSize="xs"
-                                />
-                            </button>
-                        </div>
-                    ))
+                    // Sort tokens to show newly created token first
+                    [...tokens]
+                        .sort((a, b) => {
+                            if (
+                                a.display_name ===
+                                lastCreatedToken?.display_name
+                            )
+                                return -1;
+                            if (
+                                b.display_name ===
+                                lastCreatedToken?.display_name
+                            )
+                                return 1;
+                            return 0;
+                        })
+                        .map((token, index) => (
+                            <TokenContainer
+                                key={index}
+                                tokenData={token}
+                                isNew={
+                                    token.display_name ===
+                                    lastCreatedToken?.display_name
+                                }
+                                onDelete={handleDeleteToken}
+                            />
+                        ))
                 )}
             </div>
         </div>
