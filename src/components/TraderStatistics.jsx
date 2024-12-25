@@ -1,124 +1,134 @@
-import { useEffect, useState, useCallback } from 'react'
-import { Text } from '@deriv-com/quill-ui'
-import useDerivWebSocket from '../hooks/useDerivWebSocket'
-import useDerivAccounts from '../hooks/useDerivAccounts'
+import { Text } from "@deriv-com/quill-ui";
+import useDerivAccounts from "../hooks/useDerivAccounts";
+import useCopyTradingStats from "../hooks/useCopyTradingStats";
+import StatCard from "./StatCard";
 
 const TraderStatistics = () => {
-    const [statistics, setStatistics] = useState(null)
-    const { socket, isConnected } = useDerivWebSocket()
-    const { defaultAccount } = useDerivAccounts()
+    const { defaultAccount } = useDerivAccounts();
+    const { stats, isLoading, error } = useCopyTradingStats(
+        defaultAccount?.account
+    );
 
-    const getStatistics = useCallback(() => {
-        if (isConnected && defaultAccount?.account) {
-            const request = {
-                copytrading_statistics: 1,
-                trader_id: defaultAccount.account
-            }
-            console.log('Sending statistics request:', request)
-            socket.send(JSON.stringify(request))
-        } else {
-            console.log('Cannot send request:', {
-                socketConnected: isConnected,
-                hasAccount: Boolean(defaultAccount?.account),
-                account: defaultAccount?.account
-            })
-        }
-    }, [socket, isConnected, defaultAccount])
+    if (error) {
+        return (
+            <div className="text-red-500">
+                Error loading statistics: {error}
+            </div>
+        );
+    }
 
-    useEffect(() => {
-        if (isConnected) {
-            console.log('Setting up WebSocket listener for statistics')
-            const handleMessage = (msg) => {
-                const response = JSON.parse(msg.data)
-                console.log('WebSocket message in TraderStatistics:', response)
-
-                if (response.msg_type === 'copytrading_statistics') {
-                    if (response.error) {
-                        console.error('Statistics error:', response.error)
-                    } else {
-                        console.log('Received statistics:', response.copytrading_statistics)
-                        setStatistics(response.copytrading_statistics)
-                    }
-                }
-            }
-
-            socket.addEventListener('message', handleMessage)
-            console.log('Requesting initial statistics')
-            getStatistics()
-
-            return () => {
-                console.log('Cleaning up WebSocket listener')
-                socket.removeEventListener('message', handleMessage)
-            }
-        }
-    }, [isConnected, getStatistics])
-
-    if (!statistics) {
-        return <div>Loading statistics...</div>
+    if (isLoading || !stats) {
+        return <div>Loading statistics...</div>;
     }
 
     const statisticsData = [
         {
-            label: 'Active Copiers',
-            value: statistics.active_copiers ?? '-'
+            label: "Average Duration",
+            value: `${stats.avg_duration ?? 0} seconds`,
         },
         {
-            label: 'Total Profit',
-            value: statistics.total_profit != null
-                ? `${statistics.total_profit.toFixed(2)} ${defaultAccount?.currency || 'USD'}`
-                : '-'
+            label: "Average Loss",
+            value: stats.avg_loss?.toFixed(2) ?? "0.00",
         },
         {
-            label: 'Performance Fee',
-            value: statistics.performance_fee != null
-                ? `${statistics.performance_fee}%`
-                : '-'
+            label: "Average Profit",
+            value: stats.avg_profit?.toFixed(2) ?? "0.00",
         },
         {
-            label: 'Total Trades',
-            value: statistics.total_trades ?? '-'
+            label: "Current Copiers",
+            value: stats.copiers ?? 0,
         },
         {
-            label: 'Successful Trades',
-            value: statistics.successful_trades != null && statistics.total_trades != null
-                ? `${statistics.successful_trades} (${((statistics.successful_trades / statistics.total_trades) * 100).toFixed(1)}%)`
-                : '-'
-        }
-    ]
+            label: "Last 12 Months Profitable Trades",
+            value: stats.last_12months_profitable_trades ?? 0,
+        },
+        {
+            label: "Performance Probability",
+            value: `${(stats.performance_probability * 100).toFixed(1)}%`,
+        },
+        {
+            label: "Total Trades",
+            value: stats.total_trades ?? 0,
+        },
+        {
+            label: "Profitable Trades",
+            value: stats.trades_profitable ?? 0,
+        },
+    ];
 
     return (
         <div className="mt-8 p-6 bg-white rounded-lg shadow-sm">
-            <Text size="2xl" bold className="mb-6">
-                Trading Statistics
-            </Text>
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Metric
-                            </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Value
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {statisticsData.map((item, index) => (
-                            <tr key={index}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {item.label}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                    {item.value}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+            <div className="flex items-center mb-8 pb-6 border-b border-gray-200">
+                <Text
+                    size="xl"
+                    bold
+                    className="text-gray-800 font-extrabold tracking-tight"
+                >
+                    My Trading Statistics
+                </Text>
+            </div>
+            <div className="space-y-8">
+                {/* General Statistics */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {statisticsData.map((item, index) => (
+                        <StatCard
+                            key={index}
+                            label={item.label}
+                            value={item.value}
+                        />
+                    ))}
+                </div>
+
+                {/* Monthly Profitable Trades */}
+                {Object.keys(stats.monthly_profitable_trades).length > 0 && (
+                    <div>
+                        <Text size="lg" bold className="mb-4 text-gray-800">
+                            Monthly Profitable Trades
+                        </Text>
+                        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                            {Object.entries(
+                                stats.monthly_profitable_trades
+                            ).map(([month, value]) => {
+                                const [year, monthNum] = month.split("-");
+                                const monthName = new Date(
+                                    `${year}-${monthNum}-01`
+                                ).toLocaleString("default", { month: "short" });
+                                return (
+                                    <StatCard
+                                        key={month}
+                                        label={`${monthName} ${year}`}
+                                        value={value}
+                                        compact
+                                    />
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {/* Yearly Profitable Trades */}
+                {Object.keys(stats.yearly_profitable_trades).length > 0 && (
+                    <div>
+                        <Text size="lg" bold className="mb-4 text-gray-800">
+                            Yearly Profitable Trades
+                        </Text>
+                        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                            {Object.entries(stats.yearly_profitable_trades).map(
+                                ([year, value]) => (
+                                    <StatCard
+                                        key={year}
+                                        label={year}
+                                        value={value}
+                                        compact
+                                    />
+                                )
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default TraderStatistics 
+export default TraderStatistics;

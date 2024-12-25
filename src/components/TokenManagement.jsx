@@ -1,131 +1,151 @@
-import { useState, useEffect } from 'react'
-import { TextField, Button, Text } from '@deriv-com/quill-ui'
+import { useState, useEffect } from "react";
+import { TextField, Button, Text } from "@deriv-com/quill-ui";
+import TokenContainer from "./TokenContainer";
+import { DerivLightIcWarningIcon } from "@deriv/quill-icons";
+import useAPIToken from "../hooks/useAPIToken";
 
-const TokenManagement = ({ sendRequest, wsResponse }) => {
-    const [tokens, setTokens] = useState([])
-    const [tokenName, setTokenName] = useState('')
-    const [isCreating, setIsCreating] = useState(false)
-    const [newToken, setNewToken] = useState(null)
+const TOKEN_NAME_REGEX = /^[a-zA-Z0-9_]+$/;
 
-    useEffect(() => {
-        // Initial token fetch
-        sendRequest({
-            api_token: 1
-        })
-    }, [sendRequest])
+const TokenManagement = () => {
+    const { createToken, getTokens, deleteToken } = useAPIToken();
+    const [tokens, setTokens] = useState([]);
+    const [tokenName, setTokenName] = useState("");
+    const [isCreating, setIsCreating] = useState(false);
+    const [lastCreatedToken, setLastCreatedToken] = useState(null);
+    const [error, setError] = useState("");
+    const [isValidInput, setIsValidInput] = useState(true);
 
-    useEffect(() => {
-        if (!wsResponse) return
-
-        if (wsResponse.msg_type === 'api_token') {
-            if (wsResponse.api_token?.token) {
-                // Handle newly created token
-                setNewToken({
-                    token: wsResponse.api_token.token,
-                    display_name: tokenName
-                })
-                // Request updated token list
-                sendRequest({
-                    api_token: 1
-                })
+    const fetchTokens = async () => {
+        try {
+            const response = await getTokens();
+            if (response.api_token?.tokens) {
+                const readTokens = response.api_token.tokens.filter((token) =>
+                    token.scopes?.includes("read")
+                );
+                setTokens(readTokens);
             }
-            else if (wsResponse.api_token?.tokens) {
-                // Filter tokens with read scope
-                const readTokens = wsResponse.api_token.tokens.filter(token =>
-                    token.scopes?.includes('read')
-                )
-                setTokens(readTokens)
-                setIsCreating(false)
-                setTokenName('') // Clear form after successful creation
-            }
-
-            if (wsResponse.error) {
-                console.error('API token error:', wsResponse.error.message)
-                setIsCreating(false)
-                setNewToken(null)
-            }
+        } catch (error) {
+            console.error("Failed to fetch tokens:", error);
         }
-    }, [wsResponse, tokenName])
+    };
 
-    const handleCreateToken = () => {
-        if (!tokenName.trim()) return
+    useEffect(() => {
+        fetchTokens();
+    }, []);
 
-        setIsCreating(true)
-        setNewToken(null)
-        sendRequest({
-            api_token: 1,
-            new_token: tokenName,
-            new_token_scopes: ["read"],
-            valid_for_current_ip_only: 0
-        })
-    }
+    const handleCreateToken = async () => {
+        if (!tokenName.trim()) return;
 
-    const handleCopyToken = (token) => {
-        navigator.clipboard.writeText(token)
-    }
+        setIsCreating(true);
+        setError("");
 
-    const canCopyToken = (token) => {
-        return !token.includes('***')
-    }
+        try {
+            const response = await createToken(tokenName, ["read"]);
+            if (response.api_token?.tokens) {
+                const readTokens = response.api_token.tokens.filter((token) =>
+                    token.scopes?.includes("read")
+                );
+                // Find the newly created token by matching the name
+                const newlyCreated = readTokens.find(
+                    (token) => token.display_name === tokenName
+                );
+                setTokens(readTokens);
+                if (newlyCreated) {
+                    setLastCreatedToken(newlyCreated);
+                    setTokenName(""); // Clear form only after successful token creation
+                }
+            }
+        } catch (error) {
+            console.error("Failed to create token:", error);
+            setError(
+                error.message || "Failed to create token. Please try again."
+            );
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
+    const handleDeleteToken = async (token) => {
+        setError("");
+        try {
+            await deleteToken(token);
+            fetchTokens(); // Refresh token list after deletion
+        } catch (error) {
+            console.error("Failed to delete token:", error);
+            setError(
+                error.message || "Failed to delete token. Please try again."
+            );
+        }
+    };
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
+        <div className="bg-white p-6 rounded-lg shadow-sm mb-8 flex flex-col gap-4">
             {/* Token Creation Form */}
             <Text size="xl" bold className="mb-4">
                 API Tokens
             </Text>
 
-            <div className="mb-6 p-4 bg-gray-50 rounded-md">
-                <Text bold className="mb-2">Create New Token</Text>
-                <div className="flex gap-2">
+            <div className="mb-6 rounded-md flex flex-col gap-4">
+                <div className="flex flex-col md:flex-row items-start gap-2">
                     <TextField
+                        label="Create New Token"
                         value={tokenName}
-                        onChange={(e) => setTokenName(e.target.value)}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            setTokenName(value);
+                            setIsValidInput(
+                                value === "" || TOKEN_NAME_REGEX.test(value)
+                            );
+                            if (value === "" || TOKEN_NAME_REGEX.test(value)) {
+                                setError("");
+                            }
+                        }}
                         placeholder="Enter token name"
-                        className="flex-1"
                         disabled={isCreating}
+                        fullWidth
+                        status={!isValidInput || !!error ? "error" : undefined}
+                        message={
+                            !isValidInput
+                                ? "Only letters, numbers, and underscores are allowed"
+                                : error || ""
+                        }
                     />
                     <Button
                         onClick={handleCreateToken}
                         variant="primary"
+                        size="lg"
                         isLoading={isCreating}
-                        disabled={isCreating || !tokenName.trim()}
+                        disabled={
+                            isCreating || !tokenName.trim() || !isValidInput
+                        }
+                        className="w-full md:w-auto"
                     >
-                        {isCreating ? 'Creating...' : 'Create'}
+                        {isCreating ? "Creating..." : "Create"}
                     </Button>
                 </div>
                 <Text className="mt-2 text-gray-600 text-sm">
-                    This token will have read-only access for copy trading purposes.
+                    This token will have read-only access for copy trading
+                    purposes.
                 </Text>
             </div>
 
-            {/* New Token Section */}
-            {newToken && (
+            {/* New Token Display */}
+            {lastCreatedToken && (
                 <div className="mb-6">
                     <div className="mb-2 flex items-center gap-2">
-                        <Text bold>New Token</Text>
+                        <DerivLightIcWarningIcon height="20px" width="20px" />
+                        <Text bold>New Token:</Text>
                         <Text className="text-yellow-600 text-sm">
-                            ⚠️ You won't see this token again. Copy it now!
+                            Make sure to copy your{" "}
+                            {lastCreatedToken.display_name} token now. You
+                            won&apos;t be able to see it again!
                         </Text>
                     </div>
-                    <div className="flex items-center gap-4 p-4 bg-yellow-50 rounded-md border border-yellow-200">
-                        <Text size="md" bold className="min-w-[150px] truncate">
-                            {newToken.display_name}
-                        </Text>
-                        <TextField
-                            value={newToken.token}
-                            readOnly
-                            onClick={(e) => e.target.select()}
-                            className="flex-1 font-mono"
-                        />
-                        <Button
-                            onClick={() => handleCopyToken(newToken.token)}
-                            variant="primary"
-                            size="sm"
-                        >
-                            Copy Token
-                        </Button>
-                    </div>
+                    <TokenContainer
+                        tokenData={lastCreatedToken}
+                        isNew={true}
+                        onDelete={handleDeleteToken}
+                    />
                 </div>
             )}
 
@@ -133,34 +153,40 @@ const TokenManagement = ({ sendRequest, wsResponse }) => {
             <div className="space-y-4">
                 <Text bold>Available Tokens</Text>
                 {tokens.length === 0 ? (
-                    <Text className="text-gray-600">No tokens available. Create one to share with copiers.</Text>
+                    <Text className="text-gray-600">
+                        No tokens available. Create one to share with copiers.
+                    </Text>
                 ) : (
-                    tokens.map((token, index) => (
-                        <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-md">
-                            <Text size="md" bold className="min-w-[150px] truncate">
-                                {token.display_name}
-                            </Text>
-                            <TextField
-                                value={token.token}
-                                readOnly
-                                onClick={(e) => e.target.select()}
-                                className="flex-1 font-mono"
+                    // Sort tokens to show newly created token first
+                    [...tokens]
+                        .sort((a, b) => {
+                            if (
+                                a.display_name ===
+                                lastCreatedToken?.display_name
+                            )
+                                return -1;
+                            if (
+                                b.display_name ===
+                                lastCreatedToken?.display_name
+                            )
+                                return 1;
+                            return 0;
+                        })
+                        .map((token, index) => (
+                            <TokenContainer
+                                key={index}
+                                tokenData={token}
+                                isNew={
+                                    token.display_name ===
+                                    lastCreatedToken?.display_name
+                                }
+                                onDelete={handleDeleteToken}
                             />
-                            {canCopyToken(token.token) && (
-                                <Button
-                                    onClick={() => handleCopyToken(token.token)}
-                                    variant="secondary"
-                                    size="sm"
-                                >
-                                    Copy
-                                </Button>
-                            )}
-                        </div>
-                    ))
+                        ))
                 )}
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default TokenManagement
+export default TokenManagement;

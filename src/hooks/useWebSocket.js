@@ -8,8 +8,8 @@ let messageHandlers = new Map();
 let currentReqId = 1;
 let pingInterval = null;
 
-// Ping interval in milliseconds (30 seconds)
-const PING_INTERVAL = 30000;
+// Ping interval in milliseconds (10 seconds)
+const PING_INTERVAL = 10000;
 
 const sendPing = () => {
     if (wsInstance?.readyState === WebSocket.OPEN) {
