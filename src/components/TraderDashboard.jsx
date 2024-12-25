@@ -2,6 +2,7 @@ import useSettings from "../hooks/useSettings";
 import TraderStatistics from "./TraderStatistics";
 import StartTrader from "./StartTrader";
 import TokenManagement from "./TokenManagement";
+import { Spinner } from "@deriv-com/quill-ui";
 
 const TraderDashboard = () => {
     const { settings, isLoading, updateSettings } = useSettings();
@@ -14,13 +15,16 @@ const TraderDashboard = () => {
         }
     };
 
-    if (!settings?.allow_copiers) {
+    if (isLoading) {
         return (
-            <StartTrader
-                onStartTrading={handleStartTrading}
-                isLoading={isLoading}
-            />
+            <div className="flex justify-center items-center min-h-[200px]">
+                <Spinner />
+            </div>
         );
+    }
+
+    if (!settings?.allow_copiers) {
+        return <StartTrader onStartTrading={handleStartTrading} />;
     }
 
     return (
