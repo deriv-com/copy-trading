@@ -51,38 +51,31 @@ const TokenManagement = () => {
         }
     };
 
-    const handleCopyToken = (token) => {
-        navigator.clipboard.writeText(token);
-    };
-
-    const canCopyToken = (token) => {
-        return !token.includes("***");
-    };
-
     return (
-        <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
+        <div className="bg-white p-6 rounded-lg shadow-sm mb-8 flex flex-col gap-4">
             {/* Token Creation Form */}
             <Text size="xl" bold className="mb-4">
                 API Tokens
             </Text>
 
-            <div className="mb-6 p-4 bg-gray-50 rounded-md">
-                <Text bold className="mb-2">
-                    Create New Token
-                </Text>
-                <div className="flex gap-2">
+            <div className="mb-6 rounded-md flex flex-col gap-4">
+                <div className="flex flex-col md:flex-row items-center gap-2">
                     <TextField
+                        label="Create New Token"
                         value={tokenName}
                         onChange={(e) => setTokenName(e.target.value)}
                         placeholder="Enter token name"
-                        className="flex-1"
+                        className=""
                         disabled={isCreating}
+                        fullWidth
                     />
                     <Button
                         onClick={handleCreateToken}
                         variant="primary"
+                        size="lg"
                         isLoading={isCreating}
                         disabled={isCreating || !tokenName.trim()}
+                        className="w-full md:w-auto"
                     >
                         {isCreating ? "Creating..." : "Create"}
                     </Button>
@@ -106,19 +99,9 @@ const TokenManagement = () => {
                         <Text size="md" bold className="min-w-[150px] truncate">
                             {newToken.display_name}
                         </Text>
-                        <TextField
-                            value={newToken.token}
-                            readOnly
-                            onClick={(e) => e.target.select()}
-                            className="flex-1 font-mono"
-                        />
-                        <Button
-                            onClick={() => handleCopyToken(newToken.token)}
-                            variant="primary"
-                            size="sm"
-                        >
-                            Copy Token
-                        </Button>
+                        <Text className="flex-1 font-mono break-all">
+                            {newToken.token}
+                        </Text>
                     </div>
                 </div>
             )}
@@ -143,21 +126,9 @@ const TokenManagement = () => {
                             >
                                 {token.display_name}
                             </Text>
-                            <TextField
-                                value={token.token}
-                                readOnly
-                                onClick={(e) => e.target.select()}
-                                className="flex-1 font-mono"
-                            />
-                            {canCopyToken(token.token) && (
-                                <Button
-                                    onClick={() => handleCopyToken(token.token)}
-                                    variant="secondary"
-                                    size="sm"
-                                >
-                                    Copy
-                                </Button>
-                            )}
+                            <Text className="flex-1 font-mono break-all">
+                                {token.token}
+                            </Text>
                         </div>
                     ))
                 )}
