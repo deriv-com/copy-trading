@@ -1,11 +1,13 @@
-import { Text, Button } from "@deriv-com/quill-ui";
+import { Text, Button, Skeleton } from "@deriv-com/quill-ui";
 import AccountSelector from "./AccountSelector";
 import useDerivAccounts from "../hooks/useDerivAccounts";
 import { getConfig } from "../config";
 import derivIcon from "../assets/deriv-icon.svg";
+import useAuth from "../contexts/AuthContext";
 
 const Header = () => {
     const { defaultAccount, otherAccounts, clearAccounts } = useDerivAccounts();
+    const { isAuthorized, isLoading } = useAuth();
     const config = getConfig();
     const handleLogout = () => {
         clearAccounts();
@@ -28,29 +30,50 @@ const Header = () => {
                     </div>
 
                     <div className="flex items-center space-x-4">
-                        {defaultAccount && (
-                            <AccountSelector
-                                defaultAccount={defaultAccount}
-                                otherAccounts={otherAccounts}
-                            />
-                        )}
-                        {defaultAccount ? (
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                onClick={handleLogout}
-                                color="black"
-                            >
-                                Log out
-                            </Button>
+                        {isLoading ? (
+                            <>
+                                <div className="w-40 h-8">
+                                    <Skeleton.Square
+                                        active
+                                        rounded
+                                        width="100%"
+                                    />
+                                </div>
+                                <div className="w-20 h-8">
+                                    <Skeleton.Square
+                                        active
+                                        rounded
+                                        width="100%"
+                                    />
+                                </div>
+                            </>
                         ) : (
-                            <Button
-                                variant="primary"
-                                size="sm"
-                                onClick={handleDerivLogin}
-                            >
-                                Log in
-                            </Button>
+                            <>
+                                {isAuthorized && (
+                                    <AccountSelector
+                                        defaultAccount={defaultAccount}
+                                        otherAccounts={otherAccounts}
+                                    />
+                                )}
+                                {isAuthorized ? (
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={handleLogout}
+                                        color="black"
+                                    >
+                                        Log out
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        variant="primary"
+                                        size="sm"
+                                        onClick={handleDerivLogin}
+                                    >
+                                        Log in
+                                    </Button>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>
