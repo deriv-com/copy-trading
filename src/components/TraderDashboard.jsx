@@ -1,21 +1,30 @@
 import useSettings from "../hooks/useSettings";
+import useCopyTradersList from "../hooks/useCopyTradersList";
 import TraderStatistics from "./TraderStatistics";
 import StartTrader from "./StartTrader";
 import TokenManagement from "./TokenManagement";
 import { Spinner } from "@deriv-com/quill-ui";
+import ErrorMessage from "./ErrorMessage";
 
 const TraderDashboard = () => {
-    const { settings, isLoading, updateSettings } = useSettings();
+    const {
+        settings,
+        isLoading: settingsLoading,
+        updateSettings,
+        fetchSettings,
+    } = useSettings();
+    const { traders, isLoading: tradersLoading } = useCopyTradersList();
 
     const handleStartTrading = async () => {
         try {
             await updateSettings({ allow_copiers: 1 });
+            fetchSettings();
         } catch (error) {
             console.error("Failed to update settings:", error);
         }
     };
 
-    if (isLoading) {
+    if (settingsLoading || tradersLoading) {
         return (
             <div className="flex justify-center items-center min-h-[200px]">
                 <Spinner />
@@ -23,14 +32,24 @@ const TraderDashboard = () => {
         );
     }
 
-    if (!settings?.allow_copiers) {
-        return <StartTrader onStartTrading={handleStartTrading} />;
-    }
-
     return (
         <div className="max-w-6xl mx-auto p-6">
-            <TokenManagement />
-            <TraderStatistics />
+            {settings?.allow_copiers ? (
+                <>
+                    <TokenManagement />
+                    <TraderStatistics />
+                </>
+            ) : (
+                <>
+                    {traders.length > 0 && (
+                        <ErrorMessage message="Copiers are not permitted to trade. To become a trader, you must stop copying all your current traders." />
+                    )}
+                    <StartTrader
+                        onStartTrading={handleStartTrading}
+                        disabled={traders.length > 0}
+                    />
+                </>
+            )}
         </div>
     );
 };

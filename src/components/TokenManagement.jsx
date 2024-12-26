@@ -102,7 +102,6 @@ const TokenManagement = () => {
                         }}
                         placeholder="Enter token name"
                         disabled={isCreating}
-                        fullWidth
                         status={!isValidInput || !!error ? "error" : undefined}
                         message={
                             !isValidInput

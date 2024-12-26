@@ -9,26 +9,35 @@ const useSettings = () => {
     const { isAuthorized, isConnected } = useAuth();
     const { sendMessage } = useWebSocket();
 
+    const fetchSettings = useCallback(() => {
+        if (!isConnected || !isAuthorized) {
+            return;
+        }
+
+        setIsLoading(true);
+        console.log('Fetching user settings');
+        sendMessage(
+            { get_settings: 1 },
+            (response) => {
+                if (response.error) {
+                    console.error('Failed to fetch settings:', response.error);
+                    setError(response.error);
+                } else {
+                    console.log('Settings received:', response.get_settings);
+                    setSettings(response.get_settings);
+                    setError(null);
+                }
+                setIsLoading(false);
+            }
+        );
+    }, [isConnected, isAuthorized, sendMessage]);
+
     // Fetch settings when authorized
     useEffect(() => {
         if (isConnected && isAuthorized && !settings) {
-            console.log('Fetching user settings');
-            sendMessage(
-                { get_settings: 1 },
-                (response) => {
-                    if (response.error) {
-                        console.error('Failed to fetch settings:', response.error);
-                        setError(response.error);
-                    } else {
-                        console.log('Settings received:', response.get_settings);
-                        setSettings(response.get_settings);
-                        setError(null);
-                    }
-                    setIsLoading(false);
-                }
-            );
+            fetchSettings();
         }
-    }, [isConnected, isAuthorized, settings, sendMessage]);
+    }, [isConnected, isAuthorized, settings, fetchSettings]);
 
     // Reset settings when connection is lost
     useEffect(() => {
@@ -66,7 +75,8 @@ const useSettings = () => {
         settings,
         error,
         isLoading,
-        updateSettings
+        updateSettings,
+        fetchSettings
     };
 };
 
