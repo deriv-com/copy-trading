@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import useWebSocket from './useWebSocket'
-import useAuth from '../contexts/AuthContext'
+import { useAuth } from '../hooks/useAuth.jsx'
 
 const useCopyTradersList = () => {
     const { sendMessage, lastMessage } = useWebSocket()

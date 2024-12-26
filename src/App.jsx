@@ -1,6 +1,6 @@
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider, SnackbarProvider, Spinner } from "@deriv-com/quill-ui";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./hooks/useAuth.jsx";
 import Login from "./components/Login";
 import Header from "./components/Header";
 import Dashboard from "./components/Dashboard";
