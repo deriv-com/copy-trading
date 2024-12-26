@@ -103,16 +103,23 @@ const TokenManagement = () => {
                                     const value = e.target.value;
                                     setTokenName(value);
                                     setIsValidInput(
-                                        value === "" || TOKEN_NAME_REGEX.test(value)
+                                        value === "" ||
+                                            TOKEN_NAME_REGEX.test(value)
                                     );
-                                    if (value === "" || TOKEN_NAME_REGEX.test(value)) {
+                                    if (
+                                        value === "" ||
+                                        TOKEN_NAME_REGEX.test(value)
+                                    ) {
                                         setError("");
                                     }
                                 }}
                                 placeholder="Enter token name"
                                 disabled={isCreating}
-                                fullWidth
-                                status={!isValidInput || !!error ? "error" : undefined}
+                                status={
+                                    !isValidInput || !!error
+                                        ? "error"
+                                        : undefined
+                                }
                                 message={
                                     !isValidInput
                                         ? "Only letters, numbers, and underscores are allowed"
@@ -125,7 +132,9 @@ const TokenManagement = () => {
                                 size="lg"
                                 isLoading={isCreating}
                                 disabled={
-                                    isCreating || !tokenName.trim() || !isValidInput
+                                    isCreating ||
+                                    !tokenName.trim() ||
+                                    !isValidInput
                                 }
                                 className="w-full md:w-auto"
                             >
@@ -133,8 +142,8 @@ const TokenManagement = () => {
                             </Button>
                         </div>
                         <Text className="mt-2 text-gray-600 text-sm">
-                            This token will have read-only access for copy trading
-                            purposes.
+                            This token will have read-only access for copy
+                            trading purposes.
                         </Text>
                     </div>
 
@@ -142,12 +151,15 @@ const TokenManagement = () => {
                     {lastCreatedToken && (
                         <div className="mb-6">
                             <div className="mb-2 flex items-center gap-2">
-                                <DerivLightIcWarningIcon height="20px" width="20px" />
+                                <DerivLightIcWarningIcon
+                                    height="20px"
+                                    width="20px"
+                                />
                                 <Text bold>New Token:</Text>
                                 <Text className="text-yellow-600 text-sm">
                                     Make sure to copy your{" "}
-                                    {lastCreatedToken.display_name} token now. You
-                                    won&apos;t be able to see it again!
+                                    {lastCreatedToken.display_name} token now.
+                                    You won&apos;t be able to see it again!
                                 </Text>
                             </div>
                             <TokenContainer
@@ -163,10 +175,10 @@ const TokenManagement = () => {
                         <Text bold>Available Tokens</Text>
                         {tokens.length === 0 ? (
                             <Text className="text-gray-600">
-                                No tokens available. Create one to share with copiers.
+                                No tokens available. Create one to share with
+                                copiers.
                             </Text>
                         ) : (
-                            // Sort tokens to show newly created token first
                             [...tokens]
                                 .sort((a, b) => {
                                     if (

@@ -1,20 +1,33 @@
 import { Button, Text } from "@deriv-com/quill-ui";
+import { DerivLightTradeInAnyDirectionIcon } from "@deriv/quill-icons";
 import PropTypes from "prop-types";
 
-const StartTrader = ({ onStartTrading }) => {
+const StartTrader = ({ onStartTrading, disabled = false }) => {
     return (
-        <div className="max-w-6xl mx-auto p-6">
-            <div className="text-center bg-white p-8 rounded-lg shadow-sm">
-                <Text size="2xl" bold className="mb-4">
-                    Start Your Trading Journey
-                </Text>
-                <Text className="mb-6 text-gray-600">
-                    Enable copy trading to let others follow your trading
-                    strategy and earn additional income.
-                </Text>
-                <Button onClick={onStartTrading} variant="primary" size="lg">
-                    Start as Trader
-                </Button>
+        <div className="bg-white p-8 rounded-lg shadow-sm">
+            <div className="flex items-center gap-8">
+                <div className="flex-shrink-0">
+                    <DerivLightTradeInAnyDirectionIcon
+                        height="120px"
+                        width="120px"
+                    />
+                </div>
+                <div className="flex flex-col gap-4 w-fit">
+                    <Text size="xl" bold>
+                        Become a Trader
+                    </Text>
+                    <Text className="text-gray-600">
+                        Allow others to copy your strategy by becoming a trader.
+                    </Text>
+                    <Button
+                        onClick={onStartTrading}
+                        variant="primary"
+                        size="lg"
+                        disabled={disabled}
+                    >
+                        Start Trading
+                    </Button>
+                </div>
             </div>
         </div>
     );
@@ -22,6 +35,7 @@ const StartTrader = ({ onStartTrading }) => {
 
 StartTrader.propTypes = {
     onStartTrading: PropTypes.func.isRequired,
+    disabled: PropTypes.bool,
 };
 
 export default StartTrader;
