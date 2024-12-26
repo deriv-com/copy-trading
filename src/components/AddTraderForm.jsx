@@ -121,6 +121,18 @@ const AddTraderForm = ({ onAddTrader }) => {
                                 onChange={handleChange}
                                 placeholder="Enter minimum stake"
                                 required
+                                message={
+                                    traderData.minStake !== null &&
+                                    Number(traderData.minStake) <= 0
+                                        ? "Stake should be more than 0"
+                                        : ""
+                                }
+                                status={
+                                    traderData.minStake !== null &&
+                                    Number(traderData.minStake) <= 0
+                                        ? "error"
+                                        : undefined
+                                }
                             />
                         </div>
                         <div className="w-full flex-1">
