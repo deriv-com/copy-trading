@@ -7,8 +7,8 @@ import useAuth from "../contexts/AuthContext";
 const AddTraderForm = ({ onAddTrader }) => {
     const [traderData, setTraderData] = useState({
         token: "",
-        maxStake: "",
-        minStake: "",
+        maxStake: null,
+        minStake: null,
     });
 
     const { sendMessage, lastMessage } = useWebSocket();
@@ -38,8 +38,8 @@ const AddTraderForm = ({ onAddTrader }) => {
                 onAddTrader?.(traderData);
                 setTraderData({
                     token: "",
-                    maxStake: "",
-                    minStake: "",
+                    maxStake: null,
+                    minStake: null,
                 });
                 setSnackbar({
                     isVisible: true,
@@ -117,7 +117,7 @@ const AddTraderForm = ({ onAddTrader }) => {
                                 name="minStake"
                                 type="number"
                                 min="0"
-                                value={traderData.minStake}
+                                value={traderData.minStake ?? ""}
                                 onChange={handleChange}
                                 placeholder="Enter minimum stake"
                                 required
@@ -130,7 +130,7 @@ const AddTraderForm = ({ onAddTrader }) => {
                                 name="maxStake"
                                 type="number"
                                 min="0"
-                                value={traderData.maxStake}
+                                value={traderData.maxStake ?? ""}
                                 onChange={handleChange}
                                 placeholder="Enter maximum stake"
                                 required
