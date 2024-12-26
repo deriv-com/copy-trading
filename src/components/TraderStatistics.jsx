@@ -2,6 +2,7 @@ import { Text } from "@deriv-com/quill-ui";
 import { useAuth } from "../hooks/useAuth.jsx";
 import useCopyTradingStats from "../hooks/useCopyTradingStats";
 import StatCard from "./StatCard";
+import StatisticsShimmer from "./StatisticsShimmer";
 
 const TraderStatistics = () => {
     const { defaultAccount } = useAuth();
@@ -18,7 +19,11 @@ const TraderStatistics = () => {
     }
 
     if (isLoading || !stats) {
-        return <div>Loading statistics...</div>;
+        return (
+            <div className="mt-8 p-6 bg-white rounded-lg shadow-sm">
+                <StatisticsShimmer />
+            </div>
+        );
     }
 
     const statisticsData = [
