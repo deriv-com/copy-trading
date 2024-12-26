@@ -61,14 +61,17 @@ const createWebSocket = () => {
             const response = JSON.parse(event.data);
             const reqId = response.req_id;
 
-            // Handle specific message handler if exists
-            if (reqId && messageHandlers.has(reqId)) {
-                messageHandlers.get(reqId)(response);
-                messageHandlers.delete(reqId);
-            }
+            // Skip broadcasting ping messages
+            if (!response.ping) {
+                // Handle specific message handler if exists
+                if (reqId && messageHandlers.has(reqId)) {
+                    messageHandlers.get(reqId)(response);
+                    messageHandlers.delete(reqId);
+                }
 
-            // Broadcast to all subscribers
-            subscribers.forEach(subscriber => subscriber.onMessage?.(response));
+                // Broadcast to all subscribers (except ping)
+                subscribers.forEach(subscriber => subscriber.onMessage?.(response));
+            }
         } catch (error) {
             console.error('Failed to parse WebSocket message:', error);
         }
