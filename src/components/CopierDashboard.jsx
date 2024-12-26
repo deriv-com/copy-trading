@@ -85,16 +85,13 @@ const CopierDashboard = () => {
 
     return (
         <div className="max-w-6xl mx-auto p-6">
+            <AddTraderForm onAddTrader={handleAddTrader} />
+
             <div className="mb-8">
-                <Text size="3xl" bold className="mb-4">
-                    Copy Trading Dashboard
-                </Text>
-                <Text size="lg" className="text-gray-600">
-                    Available traders to copy
+                <Text size="lg" bold>
+                    Actively Copied Traders
                 </Text>
             </div>
-
-            <AddTraderForm onAddTrader={handleAddTrader} />
 
             {isLoading ? (
                 <div className="text-center py-8 flex items-center justify-center gap-2">
@@ -112,11 +109,7 @@ const CopierDashboard = () => {
                     {apiTraders.map((trader) => (
                         <TraderCard
                             key={trader.loginid}
-                            trader={{
-                                id: trader.loginid,
-                                name: trader.name || `Trader ${trader.loginid}`,
-                                token: trader.token,
-                            }}
+                            trader={trader}
                             onStartCopy={handleStartCopy}
                             onStopCopy={handleStopCopy}
                             isProcessing={isProcessing}
