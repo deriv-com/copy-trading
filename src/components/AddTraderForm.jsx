@@ -93,9 +93,9 @@ const AddTraderForm = ({ onAddTrader }) => {
 
     return (
         <>
-            <div className="bg-white p-6 rounded-lg border shadow-sm mb-8">
-                <Text size="xl" bold className="mb-4">
-                    Add New Trader
+            <div className="bg-white p-6 rounded-lg border shadow-sm mb-8 flex flex-col gap-4">
+                <Text size="sm" className="text-gray-600">
+                    Enter trading details to start copying a trader
                 </Text>
                 <form onSubmit={handleSubmit}>
                     <div className="flex flex-col md:flex-row items-center gap-4">
