@@ -7,6 +7,8 @@ import useAuth from "../contexts/AuthContext";
 const AddTraderForm = ({ onAddTrader }) => {
     const [traderData, setTraderData] = useState({
         token: "",
+        maxStake: "",
+        minStake: "",
     });
 
     const { sendMessage, lastMessage } = useWebSocket();
@@ -34,7 +36,11 @@ const AddTraderForm = ({ onAddTrader }) => {
                 });
             } else {
                 onAddTrader?.(traderData);
-                setTraderData({ token: "" });
+                setTraderData({
+                    token: "",
+                    maxStake: "",
+                    minStake: "",
+                });
                 setSnackbar({
                     isVisible: true,
                     message: "Successfully started copy trading",
@@ -54,9 +60,22 @@ const AddTraderForm = ({ onAddTrader }) => {
             });
             return;
         }
+        const { maxStake, minStake } = traderData;
+
+        if (minStake > maxStake) {
+            setSnackbar({
+                isVisible: true,
+                message: "Minimum stake cannot be greater than maximum stake",
+                status: "fail",
+            });
+            return;
+        }
+
         setIsProcessing(true);
         sendMessage({
             copy_start: traderData.token,
+            max_trade_stake: maxStake,
+            min_trade_stake: minStake,
         });
     };
 
@@ -91,12 +110,42 @@ const AddTraderForm = ({ onAddTrader }) => {
                                 required
                             />
                         </div>
+                        <div className="w-full flex-1">
+                            <TextField
+                                className="w-full"
+                                label="Minimum Stake"
+                                name="minStake"
+                                type="number"
+                                min="0"
+                                value={traderData.minStake}
+                                onChange={handleChange}
+                                placeholder="Enter minimum stake"
+                                required
+                            />
+                        </div>
+                        <div className="w-full flex-1">
+                            <TextField
+                                className="w-full"
+                                label="Maximum Stake"
+                                name="maxStake"
+                                type="number"
+                                min="0"
+                                value={traderData.maxStake}
+                                onChange={handleChange}
+                                placeholder="Enter maximum stake"
+                                required
+                            />
+                        </div>
                         <div className="w-full md:w-auto">
                             <Button
                                 className="w-full"
                                 type="submit"
                                 variant="primary"
-                                disabled={!traderData.token.trim()}
+                                disabled={
+                                    !traderData.token.trim() ||
+                                    !traderData.maxStake ||
+                                    !traderData.minStake
+                                }
                             >
                                 Start Copying
                             </Button>

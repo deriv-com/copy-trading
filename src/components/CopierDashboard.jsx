@@ -112,11 +112,7 @@ const CopierDashboard = () => {
                     {apiTraders.map((trader) => (
                         <TraderCard
                             key={trader.loginid}
-                            trader={{
-                                id: trader.loginid,
-                                name: trader.name || `Trader ${trader.loginid}`,
-                                token: trader.token,
-                            }}
+                            trader={trader}
                             onStartCopy={handleStartCopy}
                             onStopCopy={handleStopCopy}
                             isProcessing={isProcessing}

@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import useCopyTradingStats from "../hooks/useCopyTradingStats";
 
 const TraderCard = ({ trader, onStopCopy }) => {
-    const { stats, isLoading } = useCopyTradingStats(trader.id);
+    const { stats, isLoading } = useCopyTradingStats(trader.loginid);
 
     const handleStopCopy = () => {
         onStopCopy(trader);
@@ -13,11 +13,11 @@ const TraderCard = ({ trader, onStopCopy }) => {
         <div className="bg-white p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow">
             <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4">
                 <div>
-                    <Text size="xl" bold className="mb-2">
-                        {trader.name}
+                    <Text size="sm" className="text-gray-500">
+                        Trader
                     </Text>
-                    <Text className="text-green-600 font-medium">
-                        {trader.id}
+                    <Text size="xl" bold>
+                        {trader.loginid}
                     </Text>
                 </div>
                 <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
@@ -28,6 +28,25 @@ const TraderCard = ({ trader, onStopCopy }) => {
                     >
                         Stop Copying
                     </Button>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <Text size="sm" className="text-gray-500">
+                        Maximum Stake
+                    </Text>
+                    <Text size="lg" bold>
+                        {trader.max_trade_stake}
+                    </Text>
+                </div>
+                <div>
+                    <Text size="sm" className="text-gray-500">
+                        Minimum Stake
+                    </Text>
+                    <Text size="lg" bold>
+                        {trader.min_trade_stake}
+                    </Text>
                 </div>
             </div>
 
@@ -109,9 +128,10 @@ const TraderCard = ({ trader, onStopCopy }) => {
 
 TraderCard.propTypes = {
     trader: PropTypes.shape({
-        name: PropTypes.string.isRequired,
-        id: PropTypes.string.isRequired,
+        loginid: PropTypes.string.isRequired,
         token: PropTypes.string.isRequired,
+        max_trade_stake: PropTypes.number.isRequired,
+        min_trade_stake: PropTypes.number.isRequired,
     }).isRequired,
     onStopCopy: PropTypes.func.isRequired,
 };
