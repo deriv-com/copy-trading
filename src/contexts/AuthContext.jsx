@@ -14,10 +14,10 @@ export const AuthProvider = ({ children }) => {
     const { defaultAccount, clearAccounts } = useDerivAccounts();
     const { isConnected, sendMessage, close } = useWebSocket();
 
-    // Handle authorization
+    // Modify the authorization effect to handle both initial auth and account switching
     useEffect(() => {
-        if (isConnected && defaultAccount?.token && !isAuthorizedGlobal) {
-            console.log("Sending authorize request");
+        if (isConnected && defaultAccount?.token) {
+            console.log("Sending authorize request for account switch/initial auth");
             setIsLoading(true);
             sendMessage({ authorize: defaultAccount.token }, (response) => {
                 setIsLoading(false);
@@ -35,13 +35,6 @@ export const AuthProvider = ({ children }) => {
             });
         }
     }, [isConnected, defaultAccount, sendMessage, clearAccounts, close]);
-
-    // Reset auth state when connection is lost
-    useEffect(() => {
-        if (!isConnected) {
-            isAuthorizedGlobal = false;
-        }
-    }, [isConnected]);
 
     const authorize = async (token) => {
         if (!isConnected) {
