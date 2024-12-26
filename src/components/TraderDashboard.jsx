@@ -79,7 +79,7 @@ const TraderDashboard = () => {
                 </div>
 
                 {/* Mobile Bottom Navigation */}
-                <div className="md:hidden fixed bottom-0 left-0 right-0 bg-system-light-primary-background border-t border-system-light-secondary-background px-4 py-3">
+                <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-system-light-secondary-background px-4 py-3">
                     <div className="flex justify-around items-center max-w-6xl mx-auto">
                         <button
                             onClick={() => setSelectedMenu("statistics")}
