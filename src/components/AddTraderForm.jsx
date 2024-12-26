@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Text, Button, TextField, Snackbar } from "@deriv-com/quill-ui";
 import PropTypes from "prop-types";
 import useWebSocket from "../hooks/useWebSocket";
-import useAuth from "../contexts/AuthContext";
+import { useAuth } from "../hooks/useAuth.jsx";
 
 const AddTraderForm = ({ onAddTrader }) => {
     const [traderData, setTraderData] = useState({
@@ -123,13 +123,13 @@ const AddTraderForm = ({ onAddTrader }) => {
                                 required
                                 message={
                                     traderData.minStake !== null &&
-                                    Number(traderData.minStake) <= 0
+                                        Number(traderData.minStake) <= 0
                                         ? "Stake should be more than 0"
                                         : ""
                                 }
                                 status={
                                     traderData.minStake !== null &&
-                                    Number(traderData.minStake) <= 0
+                                        Number(traderData.minStake) <= 0
                                         ? "error"
                                         : undefined
                                 }

@@ -1,11 +1,11 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
-import useDerivAccounts from "../hooks/useDerivAccounts";
+import { useAuth } from "../hooks/useAuth.jsx";
 
 const AccountSelector = ({ defaultAccount, otherAccounts }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState(defaultAccount);
-    const { updateAccounts } = useDerivAccounts();
+    const { updateAccounts } = useAuth();
 
     const handleAccountSelect = (account) => {
         console.log("AccountSelector - Selecting account:", account);

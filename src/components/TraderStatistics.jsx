@@ -1,10 +1,10 @@
 import { Text } from "@deriv-com/quill-ui";
-import useDerivAccounts from "../hooks/useDerivAccounts";
+import { useAuth } from "../hooks/useAuth.jsx";
 import useCopyTradingStats from "../hooks/useCopyTradingStats";
 import StatCard from "./StatCard";
 
 const TraderStatistics = () => {
-    const { defaultAccount } = useDerivAccounts();
+    const { defaultAccount } = useAuth();
     const { stats, isLoading, error } = useCopyTradingStats(
         defaultAccount?.account
     );

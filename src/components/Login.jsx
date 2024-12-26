@@ -1,12 +1,12 @@
 import { Spinner } from "@deriv-com/quill-ui";
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import useDerivAccounts from "../hooks/useDerivAccounts";
+import { useAuth } from "../hooks/useAuth.jsx";
 
 const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { defaultAccount, isLoading, updateAccounts } = useDerivAccounts();
+    const { defaultAccount, isLoading, updateAccounts } = useAuth();
 
     useEffect(() => {
         // Handle OAuth redirect logic

@@ -1,8 +1,8 @@
 import { Navigate } from 'react-router-dom'
-import useDerivAccounts from '../hooks/useDerivAccounts'
+import { useAuth } from '../hooks/useAuth.jsx'
 
 const ProtectedRoute = ({ children }) => {
-    const { defaultAccount, isLoading } = useDerivAccounts()
+    const { defaultAccount, isLoading } = useAuth()
 
     console.log('ProtectedRoute - defaultAccount:', defaultAccount)
     console.log('ProtectedRoute - isLoading:', isLoading)
@@ -19,4 +19,4 @@ const ProtectedRoute = ({ children }) => {
     return children
 }
 
-export default ProtectedRoute 
+export default ProtectedRoute

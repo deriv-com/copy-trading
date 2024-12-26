@@ -1,6 +1,6 @@
 import { useState } from "react";
 import useWebSocket from "./useWebSocket";
-import useAuth from "../contexts/AuthContext";
+import { useAuth } from "../hooks/useAuth.jsx";
 
 const useCopyStop = () => {
     const { sendMessage } = useWebSocket();
