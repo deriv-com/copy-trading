@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import useWebSocket from './useWebSocket';
-import useAuth from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth.jsx';
 
 const useAPIToken = () => {
     const { sendMessage } = useWebSocket();

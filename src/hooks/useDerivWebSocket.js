@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import useDerivAccounts from './useDerivAccounts'
+import { useAuth } from './useAuth.jsx'
 import { getConfig } from '../config'
 
 const config = getConfig()
@@ -20,7 +20,7 @@ const useDerivWebSocket = () => {
     const [settings, setSettings] = useState(null)
     const [isLoading, setIsLoading] = useState(true)
     const [isConnected, setIsConnected] = useState(false)
-    const { defaultAccount, clearAccounts } = useDerivAccounts()
+    const { defaultAccount, clearAccounts } = useAuth()
     const [wsResponse, setWsResponse] = useState(null)
     const handleResponseRef = useRef(null)
     const authRetryCountRef = useRef(0) // Track authorization retry attempts

@@ -1,13 +1,11 @@
 import { Text, Button, Skeleton } from "@deriv-com/quill-ui";
 import AccountSelector from "./AccountSelector";
-import useDerivAccounts from "../hooks/useDerivAccounts";
 import { getConfig } from "../config";
 import derivIcon from "../assets/deriv-icon.svg";
-import useAuth from "../contexts/AuthContext";
+import { useAuth } from "../hooks/useAuth.jsx";
 
 const Header = () => {
-    const { defaultAccount, otherAccounts, clearAccounts } = useDerivAccounts();
-    const { isAuthorized, isLoading } = useAuth();
+    const { defaultAccount, otherAccounts, clearAccounts, isAuthorized, isLoading } = useAuth();
     const config = getConfig();
     const handleLogout = () => {
         clearAccounts();
