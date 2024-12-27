@@ -44,10 +44,6 @@ const TraderStatistics = () => {
             value: stats.copiers ?? 0,
         },
         {
-            label: "Last 12 Months Profitable Trades",
-            value: stats.last_12months_profitable_trades ?? 0,
-        },
-        {
             label: "Performance Probability",
             value: `${(stats.performance_probability * 100).toFixed(1)}%`,
         },
@@ -58,6 +54,10 @@ const TraderStatistics = () => {
         {
             label: "Profitable Trades",
             value: stats.trades_profitable ?? 0,
+        },
+        {
+            label: "12 Months Profitable Trades",
+            value: stats.last_12months_profitable_trades ?? 0,
         },
     ];
 

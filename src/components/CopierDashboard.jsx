@@ -120,7 +120,7 @@ const CopierDashboard = () => {
 
     return (
         <div className="max-w-6xl mx-auto p-6 relative">
-            {showCopierBanner && (
+            {showCopierBanner && !hasCopiers && (
                 <CopyTradingBanner onGetStarted={handleGetStarted} />
             )}
             {hasCopiers && (
