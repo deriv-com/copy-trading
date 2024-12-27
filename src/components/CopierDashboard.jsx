@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Text, Snackbar, Spinner } from "@deriv-com/quill-ui";
 import useCopyTradersList from "../hooks/useCopyTradersList";
+import useSettings from "../hooks/useSettings";
 import ErrorMessage from "./ErrorMessage";
 import useCopyStart from "../hooks/useCopyStart";
 import useCopyStop from "../hooks/useCopyStop";
@@ -8,6 +9,7 @@ import AddTraderForm from "./AddTraderForm";
 import TraderCard from "./TraderCard";
 
 const CopierDashboard = () => {
+    const { updateSettings } = useSettings();
     const { startCopyTrading, processingTrader: copyStartProcessingTrader } =
         useCopyStart();
     const { stopCopyTrading, processingTrader: copyStopProcessingTrader } =
@@ -20,6 +22,14 @@ const CopierDashboard = () => {
         refreshList,
     } = useCopyTradersList();
     const hasCopiers = copiers?.length > 0;
+
+    const didUpdateSettings = useRef(false);
+    useEffect(() => {
+        if (copiers && copiers.length === 0 && !didUpdateSettings.current) {
+            updateSettings({ allow_copiers: 0 });
+            didUpdateSettings.current = true;
+        }
+    }, [copiers, updateSettings]);
 
     useEffect(() => {
         console.log("CopierDashboard - Traders:", {
