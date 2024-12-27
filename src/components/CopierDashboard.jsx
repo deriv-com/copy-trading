@@ -1,6 +1,7 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Text, Snackbar, Spinner } from "@deriv-com/quill-ui";
 import useCopyTradersList from "../hooks/useCopyTradersList";
+import CopyTradingBanner from "./CopyTradingBanner";
 import useSettings from "../hooks/useSettings";
 import ErrorMessage from "./ErrorMessage";
 import useCopyStart from "../hooks/useCopyStart";
@@ -9,7 +10,13 @@ import AddTraderForm from "./AddTraderForm";
 import TraderCard from "./TraderCard";
 
 const CopierDashboard = () => {
-    const { updateSettings } = useSettings();
+    const {
+        settings,
+        updateSettings,
+        fetchSettings,
+        isLoading: isSettingsLoading,
+    } = useSettings();
+    const showCopierBanner = settings?.allow_copiers === 1;
     const { startCopyTrading, processingTrader: copyStartProcessingTrader } =
         useCopyStart();
     const { stopCopyTrading, processingTrader: copyStopProcessingTrader } =
@@ -22,14 +29,6 @@ const CopierDashboard = () => {
         refreshList,
     } = useCopyTradersList();
     const hasCopiers = copiers?.length > 0;
-
-    const didUpdateSettings = useRef(false);
-    useEffect(() => {
-        if (copiers && copiers.length === 0 && !didUpdateSettings.current) {
-            updateSettings({ allow_copiers: 0 });
-            didUpdateSettings.current = true;
-        }
-    }, [copiers, updateSettings]);
 
     useEffect(() => {
         console.log("CopierDashboard - Traders:", {
@@ -96,13 +95,39 @@ const CopierDashboard = () => {
         refreshList();
     };
 
+    const handleGetStarted = async () => {
+        try {
+            await updateSettings({ allow_copiers: 0 });
+            await fetchSettings();
+        } catch (error) {
+            setSnackbar({
+                isVisible: true,
+                message: error.message || "Failed to update settings",
+                status: "fail",
+            });
+        }
+    };
+
+    const isPageLoading = isLoading || isSettingsLoading;
+
+    if (isPageLoading) {
+        return (
+            <div className="flex justify-center items-center min-h-[200px]">
+                <Spinner />
+            </div>
+        );
+    }
+
     return (
         <div className="max-w-6xl mx-auto p-6 relative">
+            {showCopierBanner && !hasCopiers && (
+                <CopyTradingBanner onGetStarted={handleGetStarted} />
+            )}
             {hasCopiers && (
                 <ErrorMessage message="Traders are not permitted to copy other traders." />
             )}
             <div className="relative">
-                {hasCopiers && (
+                {(hasCopiers || showCopierBanner) && (
                     <div className="absolute inset-0 bg-gray-50/70 z-10" />
                 )}
                 <AddTraderForm onAddTrader={handleAddTrader} />
@@ -113,12 +138,7 @@ const CopierDashboard = () => {
                     </Text>
                 </div>
 
-                {isLoading ? (
-                    <div className="text-center py-8 flex items-center justify-center gap-2">
-                        <Spinner size="sm" />
-                        <span>Loading traders</span>
-                    </div>
-                ) : error ? (
+                {error ? (
                     <div className="text-center py-8 text-red-600">
                         Error loading traders: {error}
                     </div>
