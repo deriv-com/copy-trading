@@ -62,7 +62,7 @@ const TraderStatistics = () => {
     ];
 
     return (
-        <div className="mt-8 p-6 bg-white rounded-lg shadow-sm">
+        <div className="p-6 bg-white rounded-lg shadow-sm">
             <div className="flex items-center mb-8 pb-6 border-b border-gray-200">
                 <Text
                     size="xl"
