@@ -3,12 +3,14 @@ import { Text, Button, TextField, Snackbar } from "@deriv-com/quill-ui";
 import PropTypes from "prop-types";
 import useWebSocket from "../hooks/useWebSocket";
 import { useAuth } from "../hooks/useAuth.jsx";
+import ActiveSymbolsSelector from "./ActiveSymbolsSelector";
 
 const AddTraderForm = ({ onAddTrader }) => {
     const [traderData, setTraderData] = useState({
         token: "",
         maxStake: null,
         minStake: null,
+        selectedSymbols: [],
     });
 
     const { sendMessage, lastMessage } = useWebSocket();
@@ -40,6 +42,7 @@ const AddTraderForm = ({ onAddTrader }) => {
                     token: "",
                     maxStake: null,
                     minStake: null,
+                    selectedSymbols: [],
                 });
                 setSnackbar({
                     isVisible: true,
@@ -76,6 +79,7 @@ const AddTraderForm = ({ onAddTrader }) => {
             copy_start: traderData.token,
             max_trade_stake: maxStake,
             min_trade_stake: minStake,
+            assets: traderData.selectedSymbols.map((s) => s.symbol),
         });
     };
 
@@ -98,69 +102,83 @@ const AddTraderForm = ({ onAddTrader }) => {
                     Enter trading details to start copying a trader
                 </Text>
                 <form onSubmit={handleSubmit}>
-                    <div className="flex flex-col md:flex-row items-center gap-4">
-                        <div className="w-full flex-1">
-                            <TextField
-                                className="w-full"
-                                label="Trading Token"
-                                name="token"
-                                value={traderData.token}
-                                onChange={handleChange}
-                                placeholder="Enter trading token"
-                                required
-                            />
-                        </div>
-                        <div className="w-full flex-1">
-                            <TextField
-                                className="w-full"
-                                label="Minimum Stake"
-                                name="minStake"
-                                type="number"
-                                min="0"
-                                value={traderData.minStake ?? ""}
-                                onChange={handleChange}
-                                placeholder="Enter minimum stake"
-                                required
-                                message={
-                                    traderData.minStake !== null &&
+                    <div className="flex flex-col gap-4">
+                        <div className="flex flex-col md:flex-row items-center gap-4">
+                            <div className="w-full flex-1">
+                                <TextField
+                                    className="w-full"
+                                    label="Trading Token"
+                                    name="token"
+                                    value={traderData.token}
+                                    onChange={handleChange}
+                                    placeholder="Enter trading token"
+                                    required
+                                />
+                            </div>
+                            <div className="w-full flex-1">
+                                <TextField
+                                    className="w-full"
+                                    label="Minimum Stake"
+                                    name="minStake"
+                                    type="number"
+                                    min="0"
+                                    value={traderData.minStake ?? ""}
+                                    onChange={handleChange}
+                                    placeholder="Enter minimum stake"
+                                    required
+                                    message={
+                                        traderData.minStake !== null &&
                                         Number(traderData.minStake) <= 0
-                                        ? "Stake should be more than 0"
-                                        : ""
-                                }
-                                status={
-                                    traderData.minStake !== null &&
+                                            ? "Stake should be more than 0"
+                                            : ""
+                                    }
+                                    status={
+                                        traderData.minStake !== null &&
                                         Number(traderData.minStake) <= 0
-                                        ? "error"
-                                        : undefined
+                                            ? "error"
+                                            : undefined
+                                    }
+                                />
+                            </div>
+                            <div className="w-full flex-1">
+                                <TextField
+                                    className="w-full"
+                                    label="Maximum Stake"
+                                    name="maxStake"
+                                    type="number"
+                                    min="0"
+                                    value={traderData.maxStake ?? ""}
+                                    onChange={handleChange}
+                                    placeholder="Enter maximum stake"
+                                    required
+                                />
+                            </div>
+                            <div className="w-full md:w-auto">
+                                <Button
+                                    className="w-full"
+                                    type="submit"
+                                    variant="primary"
+                                    disabled={
+                                        !traderData.token.trim() ||
+                                        !traderData.maxStake ||
+                                        !traderData.minStake ||
+                                        traderData.selectedSymbols.length === 0
+                                    }
+                                >
+                                    Start Copying
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="w-full">
+                            <ActiveSymbolsSelector
+                                selectedSymbols={traderData.selectedSymbols}
+                                onChange={(symbols) =>
+                                    setTraderData((prev) => ({
+                                        ...prev,
+                                        selectedSymbols: symbols,
+                                    }))
                                 }
                             />
-                        </div>
-                        <div className="w-full flex-1">
-                            <TextField
-                                className="w-full"
-                                label="Maximum Stake"
-                                name="maxStake"
-                                type="number"
-                                min="0"
-                                value={traderData.maxStake ?? ""}
-                                onChange={handleChange}
-                                placeholder="Enter maximum stake"
-                                required
-                            />
-                        </div>
-                        <div className="w-full md:w-auto">
-                            <Button
-                                className="w-full"
-                                type="submit"
-                                variant="primary"
-                                disabled={
-                                    !traderData.token.trim() ||
-                                    !traderData.maxStake ||
-                                    !traderData.minStake
-                                }
-                            >
-                                Start Copying
-                            </Button>
                         </div>
                     </div>
                 </form>
