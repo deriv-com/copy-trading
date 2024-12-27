@@ -54,9 +54,7 @@ const ActiveSymbolsSelector = ({ selectedSymbols = [], onChange }) => {
 
     return (
         <div className="flex flex-col gap-4">
-            <Text size="lg" bold>
-                Markets
-            </Text>
+            <Text bold>Markets</Text>
             <Chip.SingleSelectDropdown
                 defaultOption={{
                     label: "Select a symbol",
