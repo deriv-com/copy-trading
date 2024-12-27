@@ -4,6 +4,7 @@ import PropTypes from "prop-types";
 import useWebSocket from "../hooks/useWebSocket";
 import { useAuth } from "../hooks/useAuth.jsx";
 import ActiveSymbolsSelector from "./ActiveSymbolsSelector";
+import TradeTypeSelector from "./TradeTypeSelector";
 
 const AddTraderForm = ({ onAddTrader }) => {
     const [traderData, setTraderData] = useState({
@@ -11,6 +12,7 @@ const AddTraderForm = ({ onAddTrader }) => {
         maxStake: null,
         minStake: null,
         selectedSymbols: [],
+        selectedContracts: [],
     });
 
     const { sendMessage, lastMessage } = useWebSocket();
@@ -43,6 +45,7 @@ const AddTraderForm = ({ onAddTrader }) => {
                     maxStake: null,
                     minStake: null,
                     selectedSymbols: [],
+                    selectedContracts: [],
                 });
                 setSnackbar({
                     isVisible: true,
@@ -80,6 +83,12 @@ const AddTraderForm = ({ onAddTrader }) => {
             max_trade_stake: maxStake,
             min_trade_stake: minStake,
             assets: traderData.selectedSymbols.map((s) => s.symbol),
+            trade_types: traderData.selectedContracts.flatMap((contract) =>
+                // Get all contract types from the contract's sentiments
+                Object.values(contract.sentiments).map(
+                    (sentiment) => sentiment.contract_type
+                )
+            ),
         });
     };
 
@@ -98,6 +107,9 @@ const AddTraderForm = ({ onAddTrader }) => {
     return (
         <>
             <div className="bg-white p-6 rounded-lg border shadow-sm mb-8 flex flex-col gap-4">
+                <Text size="xl" bold className="text-gray-600">
+                    Copy a trader
+                </Text>
                 <Text size="sm" className="text-gray-600">
                     Enter trading details to start copying a trader
                 </Text>
@@ -162,20 +174,32 @@ const AddTraderForm = ({ onAddTrader }) => {
                                         !traderData.token.trim() ||
                                         !traderData.maxStake ||
                                         !traderData.minStake ||
-                                        traderData.selectedSymbols.length === 0
+                                        traderData.selectedSymbols.length ===
+                                            0 ||
+                                        traderData.selectedContracts.length ===
+                                            0
                                     }
                                 >
                                     Start Copying
                                 </Button>
                             </div>
                         </div>
-                        <div className="w-full">
+                        <div className="w-full flex flex-col gap-4">
                             <ActiveSymbolsSelector
                                 selectedSymbols={traderData.selectedSymbols}
                                 onChange={(symbols) =>
                                     setTraderData((prev) => ({
                                         ...prev,
                                         selectedSymbols: symbols,
+                                    }))
+                                }
+                            />
+                            <TradeTypeSelector
+                                selectedContracts={traderData.selectedContracts}
+                                onChange={(contracts) =>
+                                    setTraderData((prev) => ({
+                                        ...prev,
+                                        selectedContracts: contracts,
                                     }))
                                 }
                             />
