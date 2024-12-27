@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Text, Snackbar, Spinner } from "@deriv-com/quill-ui";
 import useCopyTradersList from "../hooks/useCopyTradersList";
+import ErrorMessage from "./ErrorMessage";
 import useCopyStart from "../hooks/useCopyStart";
 import useCopyStop from "../hooks/useCopyStop";
 import AddTraderForm from "./AddTraderForm";
@@ -12,11 +13,13 @@ const CopierDashboard = () => {
     const { stopCopyTrading, processingTrader: copyStopProcessingTrader } =
         useCopyStop();
     const {
+        copiers,
         traders: apiTraders,
         isLoading,
         error,
         refreshList,
     } = useCopyTradersList();
+    const hasCopiers = copiers?.length > 0;
 
     useEffect(() => {
         console.log("CopierDashboard - Traders:", {
@@ -84,39 +87,47 @@ const CopierDashboard = () => {
     };
 
     return (
-        <div className="max-w-6xl mx-auto p-6">
-            <AddTraderForm onAddTrader={handleAddTrader} />
-
-            <div className="mb-8">
-                <Text size="lg" bold>
-                    Actively Copied Traders
-                </Text>
-            </div>
-
-            {isLoading ? (
-                <div className="text-center py-8 flex items-center justify-center gap-2">
-                    <Spinner size="sm" />
-                    <span>Loading traders</span>
-                </div>
-            ) : error ? (
-                <div className="text-center py-8 text-red-600">
-                    Error loading traders: {error}
-                </div>
-            ) : !apiTraders?.length ? (
-                <div className="text-center py-8">No traders available</div>
-            ) : (
-                <div className="grid gap-6">
-                    {apiTraders.map((trader) => (
-                        <TraderCard
-                            key={trader.loginid}
-                            trader={trader}
-                            onStartCopy={handleStartCopy}
-                            onStopCopy={handleStopCopy}
-                            isProcessing={isProcessing}
-                        />
-                    ))}
-                </div>
+        <div className="max-w-6xl mx-auto p-6 relative">
+            {hasCopiers && (
+                <ErrorMessage message="Traders are not permitted to copy other traders." />
             )}
+            <div className="relative">
+                {hasCopiers && (
+                    <div className="absolute inset-0 bg-gray-50/70 z-10" />
+                )}
+                <AddTraderForm onAddTrader={handleAddTrader} />
+
+                <div className="mb-8">
+                    <Text size="lg" bold>
+                        Actively Copied Traders
+                    </Text>
+                </div>
+
+                {isLoading ? (
+                    <div className="text-center py-8 flex items-center justify-center gap-2">
+                        <Spinner size="sm" />
+                        <span>Loading traders</span>
+                    </div>
+                ) : error ? (
+                    <div className="text-center py-8 text-red-600">
+                        Error loading traders: {error}
+                    </div>
+                ) : !apiTraders?.length ? (
+                    <div className="text-center py-8">No traders available</div>
+                ) : (
+                    <div className="grid gap-6">
+                        {apiTraders.map((trader) => (
+                            <TraderCard
+                                key={trader.loginid}
+                                trader={trader}
+                                onStartCopy={handleStartCopy}
+                                onStopCopy={handleStopCopy}
+                                isProcessing={isProcessing}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
 
             <div className="fixed top-0 left-0 right-0 flex justify-center pt-4 z-50">
                 <Snackbar
