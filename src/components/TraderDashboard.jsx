@@ -1,7 +1,7 @@
 import useSettings from "../hooks/useSettings";
 import useCopyTradersList from "../hooks/useCopyTradersList";
 import TraderStatistics from "./TraderStatistics";
-import StartTrader from "./StartTrader";
+import TraderBanner from "./TraderBanner";
 import TokenManagement from "./TokenManagement";
 import { Spinner } from "@deriv-com/quill-ui";
 import ErrorMessage from "./ErrorMessage";
@@ -63,7 +63,7 @@ const TraderDashboard = () => {
                     {traders.length > 0 && (
                         <ErrorMessage message="Copiers are not permitted to trade. To become a trader, you must stop copying all your current traders." />
                     )}
-                    <StartTrader
+                    <TraderBanner
                         onStartTrading={handleStartTrading}
                         disabled={traders.length > 0}
                     />
