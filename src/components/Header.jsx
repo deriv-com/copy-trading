@@ -65,7 +65,7 @@ const Header = () => {
                                 ) : (
                                     <Button
                                         variant="primary"
-                                        size="sm"
+                                        size="md"
                                         onClick={handleDerivLogin}
                                     >
                                         Log in
