@@ -1,12 +1,14 @@
-import { Spinner } from "@deriv-com/quill-ui";
+import { Spinner, Text, Button } from "@deriv-com/quill-ui";
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.jsx";
+import { getConfig } from "../config";
 
 const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { defaultAccount, isLoading, updateAccounts } = useAuth();
+    const config = getConfig();
 
     useEffect(() => {
         // Handle OAuth redirect logic
@@ -79,13 +81,30 @@ const Login = () => {
             window.location.hash.includes("acct")) &&
         !defaultAccount?.token;
 
-    if (!showSpinner) {
-        return null;
-    }
-
     return (
-        <div className="min-h-screen flex items-center justify-center">
-            <Spinner size="lg" />
+        <div className="min-h-screen">
+            {showSpinner ? (
+                <div className="flex items-center justify-center min-h-screen">
+                    <Spinner size="lg" />
+                </div>
+            ) : (
+                <div className="flex flex-col items-center justify-center min-h-screen px-4 md:px-8 lg:px-16 text-center">
+                    <Text as="h1" size="6xl" className="font-bold mb-6 max-w-3xl text-[2.5rem] md:text-[3.5rem] lg:text-[4rem]">
+                        Deriv: Where Smart Traders Copy Smarter
+                    </Text>
+                    <Text size="lg" className="mt-6 mb-12 max-w-2xl text-gray-600">
+                        Mirror the success of top traders automatically. Set up in minutes
+                    </Text>
+                    <Button 
+                        variant="primary"
+                        size="lg"
+                        className="mt-6"
+                        onClick={() => window.location.href = `${config.OAUTH_URL}/oauth2/authorize?app_id=${config.APP_ID}`}
+                    >
+                        Get started
+                    </Button>
+                </div>
+            )}
         </div>
     );
 };
