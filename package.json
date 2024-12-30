@@ -7,8 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "convert-icons": "node scripts/convert-icons.js"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@deriv-com/quill-ui": "^1.24.2",
@@ -29,9 +28,7 @@
     "eslint-plugin-react-refresh": "^0.4.14",
     "globals": "^15.12.0",
     "postcss": "^8.4.49",
-    "sharp": "^0.33.5",
     "tailwindcss": "^3.4.16",
-    "vite": "^6.0.1",
-    "vite-plugin-pwa": "^0.21.1"
+    "vite": "^6.0.1"
   }
 }
