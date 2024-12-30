@@ -1,18 +1,18 @@
-import { Button, Text, Tag } from "@deriv-com/quill-ui";
+import { Button, Text, SectionMessage } from "@deriv-com/quill-ui";
 import { DerivLightTradeInAnyDirectionIcon } from "@deriv/quill-icons";
 import PropTypes from "prop-types";
 
 const TraderBanner = ({ onStartTrading, disabled = false }) => {
     return (
         <div className="bg-white p-8 rounded-lg shadow-sm">
-            <div className="flex items-center gap-8">
-                <div className="flex-shrink-0">
+            <div className="flex flex-col md:flex-row items-center gap-8">
+                <div className="flex-shrink-0 flex justify-center">
                     <DerivLightTradeInAnyDirectionIcon
                         height="120px"
                         width="120px"
                     />
                 </div>
-                <div className="flex flex-col gap-4 w-fit">
+                <div className="flex flex-col items-center md:items-start gap-4 w-full md:w-fit text-center md:text-left">
                     <Text size="xl" bold>
                         Become a Trader
                     </Text>
@@ -27,14 +27,13 @@ const TraderBanner = ({ onStartTrading, disabled = false }) => {
                     >
                         Start Trading
                     </Button>
-                    <Tag
-                        color="warning"
-                        isBold
-                        label="You won't be able to copy others once you become a trader"
-                        showIcon
-                        size="md"
-                        variant="outline"
-                    />
+                    <div className="w-full max-w-[300px] md:max-w-none">
+                        <SectionMessage
+                            message="You won't be able to copy others once you become a trader"
+                            size="sm"
+                            status="warning"
+                        />
+                    </div>
                 </div>
             </div>
         </div>

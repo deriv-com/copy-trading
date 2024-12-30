@@ -6,14 +6,14 @@ const CopyTradingBanner = ({ onGetStarted }) => {
     return (
         <div className="mb-6">
             <div className="bg-white p-8 rounded-lg shadow-sm">
-                <div className="flex items-center gap-8">
-                    <div className="flex-shrink-0">
+                <div className="flex flex-col md:flex-row items-center gap-8">
+                    <div className="flex-shrink-0 flex justify-center">
                         <DerivLightTrustedPartnershipIcon
                             height="120px"
                             width="120px"
                         />
                     </div>
-                    <div className="flex flex-col gap-4 w-fit">
+                    <div className="flex flex-col items-center md:items-start gap-4 w-full md:w-fit text-center md:text-left">
                         <Text size="xl" bold>
                             Copy Trading
                         </Text>
