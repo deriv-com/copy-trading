@@ -1,10 +1,10 @@
 const CACHE_NAME = 'copy-trading-v1';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  '/copy-trading/',
+  '/copy-trading/index.html',
+  '/copy-trading/manifest.json',
+  '/copy-trading/icons/icon-192x192.png',
+  '/copy-trading/icons/icon-512x512.png'
 ];
 
 self.addEventListener('install', (event) => {

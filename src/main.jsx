@@ -6,7 +6,7 @@ import App from './App.jsx'
 // Register service worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('/copy-trading/sw.js')
       .then(registration => {
         console.log('ServiceWorker registration successful:', registration.scope)
       })
