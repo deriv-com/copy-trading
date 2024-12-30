@@ -2,6 +2,7 @@ import { Spinner } from "@deriv-com/quill-ui";
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.jsx";
+import { getOAuthURL } from "../config/oauth_config.js";
 
 const Login = () => {
     const navigate = useNavigate();
@@ -105,7 +106,7 @@ const Login = () => {
                             trading
                         </p>
                         <a
-                            href="https://oauth.deriv.com/oauth2/authorize?app_id=36545&l=en&brand=deriv&date_first_contact=2024-01-18&signup_device=desktop&utm_source=null"
+                            href={getOAuthURL()}
                             className="inline-block bg-brand-red hover:bg-red-700 text-white font-medium py-2 px-6 rounded-md transition-colors"
                         >
                             Log in
