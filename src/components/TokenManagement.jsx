@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { TextField, Button, Text } from "@deriv-com/quill-ui";
+import { TextField, Button, Text, SectionMessage } from "@deriv-com/quill-ui";
 import TokenContainer from "./TokenContainer";
-import { DerivLightIcWarningIcon } from "@deriv/quill-icons";
 import useAPIToken from "../hooks/useAPIToken";
 import TokenShimmer from "./TokenShimmer";
 
@@ -147,29 +146,6 @@ const TokenManagement = () => {
                         </Text>
                     </div>
 
-                    {/* New Token Display */}
-                    {lastCreatedToken && (
-                        <div className="mb-6">
-                            <div className="mb-2 flex items-center gap-2">
-                                <DerivLightIcWarningIcon
-                                    height="20px"
-                                    width="20px"
-                                />
-                                <Text bold>New Token:</Text>
-                                <Text className="text-yellow-600 text-sm">
-                                    Make sure to copy your{" "}
-                                    {lastCreatedToken.display_name} token now.
-                                    You won&apos;t be able to see it again!
-                                </Text>
-                            </div>
-                            <TokenContainer
-                                tokenData={lastCreatedToken}
-                                isNew={true}
-                                onDelete={handleDeleteToken}
-                            />
-                        </div>
-                    )}
-
                     {/* Available Tokens List */}
                     <div className="space-y-4">
                         <Text bold>Available Tokens</Text>
@@ -194,15 +170,26 @@ const TokenManagement = () => {
                                     return 0;
                                 })
                                 .map((token, index) => (
-                                    <TokenContainer
-                                        key={index}
-                                        tokenData={token}
-                                        isNew={
-                                            token.display_name ===
-                                            lastCreatedToken?.display_name
-                                        }
-                                        onDelete={handleDeleteToken}
-                                    />
+                                    <div key={index}>
+                                        {token.display_name ===
+                                            lastCreatedToken?.display_name && (
+                                            <div className="mb-2">
+                                                <SectionMessage
+                                                    status="warning"
+                                                    message={`Make sure to copy your ${token.display_name} token now. You won't be able to see it again!`}
+                                                />
+                                            </div>
+                                        )}
+                                        <TokenContainer
+                                            key={index}
+                                            tokenData={token}
+                                            isNew={
+                                                token.display_name ===
+                                                lastCreatedToken?.display_name
+                                            }
+                                            onDelete={handleDeleteToken}
+                                        />
+                                    </div>
                                 ))
                         )}
                     </div>
