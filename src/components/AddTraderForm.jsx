@@ -78,18 +78,28 @@ const AddTraderForm = ({ onAddTrader }) => {
         }
 
         setIsProcessing(true);
-        sendMessage({
+        const copyStartPayload = {
             copy_start: traderData.token,
             max_trade_stake: maxStake,
             min_trade_stake: minStake,
-            assets: traderData.selectedSymbols.map((s) => s.symbol),
-            trade_types: traderData.selectedContracts.flatMap((contract) =>
-                // Get all contract types from the contract's sentiments
-                Object.values(contract.sentiments).map(
-                    (sentiment) => sentiment.contract_type
-                )
-            ),
-        });
+        };
+
+        if (traderData.selectedSymbols.length > 0) {
+            copyStartPayload.assets = traderData.selectedSymbols.map(
+                (s) => s.symbol
+            );
+        }
+
+        if (traderData.selectedContracts.length > 0) {
+            copyStartPayload.trade_types = traderData.selectedContracts.flatMap(
+                (contract) =>
+                    Object.values(contract.sentiments).map(
+                        (sentiment) => sentiment.contract_type
+                    )
+            );
+        }
+
+        sendMessage(copyStartPayload);
     };
 
     const handleSnackbarClose = () => {
@@ -173,11 +183,7 @@ const AddTraderForm = ({ onAddTrader }) => {
                                     disabled={
                                         !traderData.token.trim() ||
                                         !traderData.maxStake ||
-                                        !traderData.minStake ||
-                                        traderData.selectedSymbols.length ===
-                                            0 ||
-                                        traderData.selectedContracts.length ===
-                                            0
+                                        !traderData.minStake
                                     }
                                 >
                                     Start Copying
