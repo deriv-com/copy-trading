@@ -1,6 +1,6 @@
 # Copy Trading React Application
 
-A React-based copy trading application built with modern tools and technologies.
+A React-based copy trading application built with modern tools and technologies. The application is also available as a Progressive Web App (PWA), allowing users to install it on their devices and use it offline.
 
 ## Tech Stack
 
@@ -8,6 +8,7 @@ A React-based copy trading application built with modern tools and technologies.
 - Vite
 - Tailwind CSS
 - Node.js
+- PWA Support (offline-capable)
 
 ## Prerequisites
 
@@ -32,7 +33,7 @@ npm install
 npm run dev
 ```
 
-4. Open your browser and visit `http://localhost:5173` (or the port shown in your terminal)
+4. Open your browser and visit [`http://localhost:5173`](http://localhost:5173) (or the port shown in your terminal)
 
 ## Available Scripts
 
@@ -42,7 +43,7 @@ npm run dev
 
 ## Project Structure
 
-```
+```plaintext
 copy-trading/
 ├── src/
 │   ├── App.jsx
@@ -67,4 +68,4 @@ copy-trading/
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

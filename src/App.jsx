@@ -5,6 +5,7 @@ import Login from "./components/Login";
 import Header from "./components/Header";
 import Dashboard from "./components/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
 
 function App() {
     return (
@@ -44,6 +45,7 @@ function AppContent() {
                 />
                 <Route path="/*" element={<Login />} />
             </Routes>
+            <PWAInstallPrompt />
         </Router>
     );
 }
