@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { Text, Snackbar, Spinner } from "@deriv-com/quill-ui";
+import { Text, Snackbar, Spinner, SectionMessage } from "@deriv-com/quill-ui";
 import useCopyTradersList from "../hooks/useCopyTradersList";
 import CopyTradingBanner from "./CopyTradingBanner";
 import useSettings from "../hooks/useSettings";
-import ErrorMessage from "./ErrorMessage";
 import useCopyStart from "../hooks/useCopyStart";
 import useCopyStop from "../hooks/useCopyStop";
 import AddTraderForm from "./AddTraderForm";
@@ -124,7 +123,11 @@ const CopierDashboard = () => {
                 <CopyTradingBanner onGetStarted={handleGetStarted} />
             )}
             {hasCopiers && (
-                <ErrorMessage message="Traders are not permitted to copy other traders." />
+                <SectionMessage
+                    message="Traders are not permitted to copy other traders."
+                    size="sm"
+                    status="danger"
+                />
             )}
             <div className="relative">
                 {(hasCopiers || showCopierBanner) && (
