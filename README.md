@@ -45,8 +45,13 @@ npm run dev
 
 ```plaintext
 copy-trading/
+├── public/
+│   ├── manifest.json
+│   └── sw.js
 ├── src/
 │   ├── App.jsx
+│   └── components/
+│       └── PWAInstallPrompt.jsx
 │   ├── main.jsx
 │   └── index.css
 ├── public/
