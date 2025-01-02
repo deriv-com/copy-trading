@@ -5,7 +5,13 @@ import derivIcon from "../assets/deriv-icon.svg";
 import { useAuth } from "../hooks/useAuth.jsx";
 
 const Header = () => {
-    const { defaultAccount, otherAccounts, clearAccounts, isAuthorized, isLoading } = useAuth();
+    const {
+        defaultAccount,
+        otherAccounts,
+        clearAccounts,
+        isAuthorized,
+        isLoading,
+    } = useAuth();
     const config = getConfig();
     const handleLogout = () => {
         clearAccounts();
@@ -17,7 +23,7 @@ const Header = () => {
     };
 
     return (
-        <header className="bg-white shadow-sm">
+        <header className="sticky top-0 z-50 bg-white shadow-sm">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
@@ -47,21 +53,12 @@ const Header = () => {
                             </>
                         ) : (
                             <>
-                                {isAuthorized && (
+                                {isAuthorized ? (
                                     <AccountSelector
                                         defaultAccount={defaultAccount}
                                         otherAccounts={otherAccounts}
+                                        onLogout={handleLogout}
                                     />
-                                )}
-                                {isAuthorized ? (
-                                    <Button
-                                        variant="secondary"
-                                        size="sm"
-                                        onClick={handleLogout}
-                                        color="black"
-                                    >
-                                        Log out
-                                    </Button>
                                 ) : (
                                     <Button
                                         variant="primary"

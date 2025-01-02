@@ -34,17 +34,17 @@ const TokenContainer = ({
 
     return (
         <div
-            className={`flex items-center gap-4 p-4 rounded-md ${
+            className={`flex sm:flex-row sm:items-center gap-2 sm:gap-4 p-4 rounded-md ${
                 isNew ? containerStyles.new : containerStyles.default
             } ${className}`}
         >
-            <Text size="md" bold className="min-w-[150px] truncate">
-                {tokenData.display_name}
-            </Text>
-            <Text className="flex-1 font-mono break-all">
-                {tokenData.token}
-            </Text>
-            <div className="flex gap-2">
+            <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                <Text size="md" bold className="truncate">
+                    {tokenData.display_name}
+                </Text>
+                <Text className="font-mono break-all">{tokenData.token}</Text>
+            </div>
+            <div className="flex gap-2 self-end sm:self-auto">
                 {isNew && (
                     <button
                         className="p-2 hover:bg-gray-200 rounded-full transition-colors"
