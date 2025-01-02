@@ -1,12 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SegmentedControlSingleChoice, Skeleton } from "@deriv-com/quill-ui";
 import { useAuth } from "../hooks/useAuth.jsx";
+import useSettings from "../hooks/useSettings.js";
 import TraderDashboard from "./TraderDashboard";
 import CopierDashboard from "./CopierDashboard";
 
 const Dashboard = () => {
-    const [userType, setUserType] = useState("copier");
-    const { isLoading } = useAuth();
+    const { isLoading: authLoading } = useAuth();
+    const { settings, isLoading: settingsLoading } = useSettings();
+    const [userType, setUserType] = useState(() => {
+        // Set initial state based on settings if available
+        return settings?.allow_copier ? "copier" : "trader";
+    });
+
+    useEffect(() => {
+        console.log("Settings updated:", settings);
+        if (settings) {
+            const newUserType = settings.allow_copier ? "copier" : "trader";
+            console.log("Setting userType to:", newUserType);
+            setUserType(newUserType);
+        }
+    }, [settings]);
+
+    const isLoading = authLoading || settingsLoading;
 
     return (
         <div className="min-h-screen">
