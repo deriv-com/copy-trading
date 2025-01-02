@@ -3,6 +3,7 @@ import useCopyTradersList from "../hooks/useCopyTradersList";
 import TraderStatistics from "./TraderStatistics";
 import TraderBanner from "./TraderBanner";
 import TokenManagement from "./TokenManagement";
+import Settings from "./Settings";
 import { Spinner, SectionMessage } from "@deriv-com/quill-ui";
 import { useState } from "react";
 import TraderDesktopNavigation from "./TraderDesktopNavigation";
@@ -47,8 +48,10 @@ const TraderDashboard = () => {
                     <div className="flex-1 pb-20 md:pb-0">
                         {selectedMenu === "statistics" ? (
                             <TraderStatistics />
-                        ) : (
+                        ) : selectedMenu === "tokens" ? (
                             <TokenManagement />
+                        ) : (
+                            <Settings />
                         )}
                     </div>
 
@@ -59,7 +62,7 @@ const TraderDashboard = () => {
                 </div>
             ) : (
                 <>
-                    {traders.length > 0 || (
+                    {traders.length > 0 && (
                         <SectionMessage
                             message="Copiers are not permitted to trade. To become a trader, you must stop copying all your current traders."
                             size="sm"
