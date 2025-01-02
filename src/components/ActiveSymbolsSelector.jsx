@@ -1,11 +1,16 @@
-import React from "react";
 import PropTypes from "prop-types";
 import { Chip, Text } from "@deriv-com/quill-ui";
 import useActiveSymbols from "../hooks/useActiveSymbols";
+import React from "react";
 
 const ActiveSymbolsSelector = ({ selectedSymbols = [], onChange }) => {
     const { symbols, error } = useActiveSymbols();
     const [selectedOption, setSelectedOption] = React.useState(null);
+
+    const options = symbols.map((symbol) => ({
+        label: symbol.display_name,
+        value: symbol.symbol,
+    }));
 
     const handleDropdownChange = (option) => {
         if (option?.value) {
@@ -34,16 +39,6 @@ const ActiveSymbolsSelector = ({ selectedSymbols = [], onChange }) => {
         );
     };
 
-    // Filter out already selected symbols from dropdown options
-    const availableSymbols = symbols
-        .filter(
-            (symbol) => !selectedSymbols.some((s) => s.symbol === symbol.symbol)
-        )
-        .map((symbol) => ({
-            label: `${symbol.symbol} (${symbol.display_name})`,
-            value: symbol.symbol,
-        }));
-
     if (error) {
         return (
             <Text size="sm" className="text-red-600">
@@ -53,32 +48,38 @@ const ActiveSymbolsSelector = ({ selectedSymbols = [], onChange }) => {
     }
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
             <Text bold>Markets</Text>
-            <Chip.SingleSelectDropdown
-                defaultOption={{
-                    label: "Select a symbol",
-                    value: "",
-                }}
-                reset={true}
-                value={selectedOption}
-                onSelectionChange={handleDropdownChange}
-                options={availableSymbols}
-                size="md"
-            />
-            <div className="flex flex-wrap gap-2">
-                {selectedSymbols.length === 0 ? (
-                    <Chip.Dismissible label="All" size="md" />
-                ) : (
-                    selectedSymbols.map((symbol) => (
-                        <Chip.Dismissible
-                            key={symbol.symbol}
-                            label={symbol.display_name}
-                            onDismiss={() => handleRemoveSymbol(symbol.symbol)}
-                            size="md"
-                        />
-                    ))
-                )}
+            <div className="flex gap-4">
+                <div className="flex flex-wrap gap-2">
+                    {selectedSymbols.length === 0 ? (
+                        <Chip.Dismissible label="All" size="md" />
+                    ) : (
+                        selectedSymbols.map((symbol) => (
+                            <Chip.Dismissible
+                                key={symbol.symbol}
+                                label={symbol.display_name}
+                                onDismiss={() =>
+                                    handleRemoveSymbol(symbol.symbol)
+                                }
+                                size="md"
+                            />
+                        ))
+                    )}
+                </div>
+                <div className="max-h-[32px] z-50">
+                    <Chip.SingleSelectDropdown
+                        defaultOption={{
+                            label: "Select a symbol",
+                            value: "",
+                        }}
+                        reset={true}
+                        value={selectedOption}
+                        onSelectionChange={handleDropdownChange}
+                        options={options}
+                        size="md"
+                    />
+                </div>
             </div>
         </div>
     );
