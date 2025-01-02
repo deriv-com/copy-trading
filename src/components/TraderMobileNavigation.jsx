@@ -6,23 +6,30 @@ const TraderMobileNavigation = ({ selectedMenu, onMenuSelect }) => {
             <div className="flex justify-around items-center max-w-6xl mx-auto">
                 <button
                     onClick={() => onMenuSelect("statistics")}
-                    className={`flex flex-col items-center px-4 py-2 rounded-lg w-32 ${
-                        selectedMenu === "statistics"
+                    className={`flex flex-col items-center px-4 py-2 rounded-lg w-32 ${selectedMenu === "statistics"
                             ? "text-solid-slate-1400 font-bold"
                             : "text-solid-slate-700"
-                    }`}
+                        }`}
                 >
                     <span className="text-sm">Statistics</span>
                 </button>
                 <button
                     onClick={() => onMenuSelect("tokens")}
-                    className={`flex flex-col items-center px-4 py-2 rounded-lg w-32 ${
-                        selectedMenu === "tokens"
+                    className={`flex flex-col items-center px-4 py-2 rounded-lg w-32 ${selectedMenu === "tokens"
                             ? "text-solid-slate-1400 font-bold"
                             : "text-solid-slate-700"
-                    }`}
+                        }`}
                 >
                     <span className="text-sm">API Tokens</span>
+                </button>
+                <button
+                    onClick={() => onMenuSelect("settings")}
+                    className={`flex flex-col items-center px-4 py-2 rounded-lg w-32 ${selectedMenu === "settings"
+                            ? "text-solid-slate-1400 font-bold"
+                            : "text-solid-slate-700"
+                        }`}
+                >
+                    <span className="text-sm">Settings</span>
                 </button>
             </div>
         </div>
@@ -30,7 +37,7 @@ const TraderMobileNavigation = ({ selectedMenu, onMenuSelect }) => {
 };
 
 TraderMobileNavigation.propTypes = {
-    selectedMenu: PropTypes.oneOf(["statistics", "tokens"]).isRequired,
+    selectedMenu: PropTypes.oneOf(["statistics", "tokens", "settings"]).isRequired,
     onMenuSelect: PropTypes.func.isRequired,
 };
 
