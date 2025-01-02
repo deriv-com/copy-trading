@@ -9,9 +9,8 @@ const TraderDesktopNavigation = ({ selectedMenu, onMenuSelect }) => {
                     <div
                         className="absolute transition-transform duration-200 ease-in-out bg-white rounded-xl shadow-sm h-12"
                         style={{
-                            transform: `translateY(${
-                                selectedMenu === "statistics" ? "0" : "48px"
-                            })`,
+                            transform: `translateY(${selectedMenu === "statistics" ? "0" : selectedMenu === "tokens" ? "48px" : "96px"
+                                })`,
                             width: "calc(100% - 8px)",
                             left: "4px",
                         }}
@@ -20,23 +19,30 @@ const TraderDesktopNavigation = ({ selectedMenu, onMenuSelect }) => {
                     {/* Buttons */}
                     <button
                         onClick={() => onMenuSelect("statistics")}
-                        className={`relative h-12 px-4 rounded-xl flex items-center justify-start transition-colors ${
-                            selectedMenu === "statistics"
+                        className={`relative h-12 px-4 rounded-xl flex items-center justify-start transition-colors ${selectedMenu === "statistics"
                                 ? "text-solid-slate-1400 font-bold"
                                 : "text-solid-slate-700 hover:text-solid-slate-1200"
-                        }`}
+                            }`}
                     >
                         Statistics
                     </button>
                     <button
                         onClick={() => onMenuSelect("tokens")}
-                        className={`relative h-12 px-4 rounded-xl flex items-center justify-start transition-colors ${
-                            selectedMenu === "tokens"
+                        className={`relative h-12 px-4 rounded-xl flex items-center justify-start transition-colors ${selectedMenu === "tokens"
                                 ? "text-solid-slate-1400 font-bold"
                                 : "text-solid-slate-700 hover:text-solid-slate-1200"
-                        }`}
+                            }`}
                     >
                         API Tokens
+                    </button>
+                    <button
+                        onClick={() => onMenuSelect("settings")}
+                        className={`relative h-12 px-4 rounded-xl flex items-center justify-start transition-colors ${selectedMenu === "settings"
+                                ? "text-solid-slate-1400 font-bold"
+                                : "text-solid-slate-700 hover:text-solid-slate-1200"
+                            }`}
+                    >
+                        Settings
                     </button>
                 </div>
             </div>
@@ -45,7 +51,7 @@ const TraderDesktopNavigation = ({ selectedMenu, onMenuSelect }) => {
 };
 
 TraderDesktopNavigation.propTypes = {
-    selectedMenu: PropTypes.oneOf(["statistics", "tokens"]).isRequired,
+    selectedMenu: PropTypes.oneOf(["statistics", "tokens", "settings"]).isRequired,
     onMenuSelect: PropTypes.func.isRequired,
 };
 
