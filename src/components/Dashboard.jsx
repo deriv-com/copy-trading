@@ -10,13 +10,13 @@ const Dashboard = () => {
     const { settings, isLoading: settingsLoading } = useSettings();
     const [userType, setUserType] = useState(() => {
         // Set initial state based on settings if available
-        return settings?.allow_copier ? "copier" : "trader";
+        return settings?.allow_copier ? "trader" : "copier";
     });
 
     useEffect(() => {
         console.log("Settings updated:", settings);
         if (settings) {
-            const newUserType = settings.allow_copier ? "copier" : "trader";
+            const newUserType = settings.allow_copier ? "trader" : "copier";
             console.log("Setting userType to:", newUserType);
             setUserType(newUserType);
         }
