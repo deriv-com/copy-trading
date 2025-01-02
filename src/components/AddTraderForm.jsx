@@ -68,7 +68,7 @@ const AddTraderForm = ({ onAddTrader }) => {
         }
         const { maxStake, minStake } = traderData;
 
-        if (minStake > maxStake) {
+        if (minStake && maxStake && minStake > maxStake) {
             setSnackbar({
                 isVisible: true,
                 message: "Minimum stake cannot be greater than maximum stake",
@@ -80,9 +80,15 @@ const AddTraderForm = ({ onAddTrader }) => {
         setIsProcessing(true);
         const copyStartPayload = {
             copy_start: traderData.token,
-            max_trade_stake: maxStake,
-            min_trade_stake: minStake,
         };
+
+        if (maxStake) {
+            copyStartPayload.max_trade_stake = maxStake;
+        }
+
+        if (minStake) {
+            copyStartPayload.min_trade_stake = minStake;
+        }
 
         if (traderData.selectedSymbols.length > 0) {
             copyStartPayload.assets = traderData.selectedSymbols.map(
@@ -126,9 +132,8 @@ const AddTraderForm = ({ onAddTrader }) => {
                 <form onSubmit={handleSubmit}>
                     <div className="flex flex-col gap-4">
                         <div className="flex flex-col gap-4">
-                            <div className="flex flex-col md:flex-row gap-4">
+                            <div className="flex flex-col md:flex-row gap-4 min-h-[56px]">
                                 <TextField
-                                    className="w-full md:flex-1"
                                     label="Trading Token"
                                     name="token"
                                     value={traderData.token}
@@ -137,14 +142,10 @@ const AddTraderForm = ({ onAddTrader }) => {
                                     required
                                 />
                                 <Button
-                                    className="w-full md:w-auto"
+                                    className="w-full md:w-auto md:p-7"
                                     type="submit"
                                     variant="primary"
-                                    disabled={
-                                        !traderData.token.trim() ||
-                                        !traderData.maxStake ||
-                                        !traderData.minStake
-                                    }
+                                    disabled={!traderData.token.trim()}
                                 >
                                     Start Copying
                                 </Button>
