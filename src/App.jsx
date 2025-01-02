@@ -32,20 +32,22 @@ function AppContent() {
 
     return (
         <Router>
-            <Header />
-            <Routes>
-                <Route path="/" element={<Login />} />
-                <Route
-                    path="/dashboard"
-                    element={
-                        <ProtectedRoute>
-                            <Dashboard />
-                        </ProtectedRoute>
-                    }
-                />
-                <Route path="/*" element={<Login />} />
-            </Routes>
-            <PWAInstallPrompt />
+            <div className="bg-gray-50">
+                <Header />
+                <Routes>
+                    <Route path="/" element={<Login />} />
+                    <Route
+                        path="/dashboard"
+                        element={
+                            <ProtectedRoute>
+                                <Dashboard />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route path="/*" element={<Login />} />
+                </Routes>
+                <PWAInstallPrompt />
+            </div>
         </Router>
     );
 }

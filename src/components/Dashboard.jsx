@@ -1,18 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SegmentedControlSingleChoice, Skeleton } from "@deriv-com/quill-ui";
 import { useAuth } from "../hooks/useAuth.jsx";
+import useSettings from "../hooks/useSettings.js";
 import TraderDashboard from "./TraderDashboard";
 import CopierDashboard from "./CopierDashboard";
 
 const Dashboard = () => {
-    const [userType, setUserType] = useState("copier");
-    const { isLoading } = useAuth();
+    const { isLoading: authLoading } = useAuth();
+    const { settings, isLoading: settingsLoading } = useSettings();
+    const [userType, setUserType] = useState(() => {
+        // Set initial state based on settings if available
+        return settings?.allow_copiers ? "trader" : "copier";
+    });
+
+    useEffect(() => {
+        console.log("Settings updated:", settings);
+        if (settings) {
+            const newUserType = settings.allow_copiers ? "trader" : "copier";
+            console.log("Setting userType to:", newUserType);
+            setUserType(newUserType);
+        }
+    }, [settings]);
+
+    const isLoading = authLoading || settingsLoading;
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-6xl mx-auto p-6">
+        <div className="min-h-screen">
+            <div className="md:max-w-6xl mx-auto md:p-6">
                 {/* User Type Selection */}
-                <div className="flex justify-center mb-8">
+                <div className="flex justify-center mt-4 md:mt-6 mb-8">
                     <SegmentedControlSingleChoice
                         onChange={(index) => {
                             setUserType(index === 0 ? "copier" : "trader");
@@ -34,23 +50,36 @@ const Dashboard = () => {
                 {isLoading ? (
                     <div className="space-y-4">
                         <div className="bg-white p-6 rounded-lg shadow">
-                            <Skeleton.Square active rounded width="100%" height="100px" />
+                            <Skeleton.Square
+                                active
+                                rounded
+                                width="100%"
+                                height="100px"
+                            />
                         </div>
                         <div className="bg-white p-6 rounded-lg shadow">
-                            <Skeleton.Square active rounded width="100%" height="200px" />
+                            <Skeleton.Square
+                                active
+                                rounded
+                                width="100%"
+                                height="200px"
+                            />
                         </div>
                         <div className="bg-white p-6 rounded-lg shadow">
-                            <Skeleton.Square active rounded width="100%" height="150px" />
+                            <Skeleton.Square
+                                active
+                                rounded
+                                width="100%"
+                                height="150px"
+                            />
                         </div>
                     </div>
+                ) : userType === "trader" ? (
+                    <TraderDashboard />
+                ) : userType === "copier" ? (
+                    <CopierDashboard />
                 ) : (
-                    userType === "trader" ? (
-                        <TraderDashboard />
-                    ) : userType === "copier" ? (
-                        <CopierDashboard />
-                    ) : (
-                        <CopierDashboard />
-                    )
+                    <CopierDashboard />
                 )}
             </div>
         </div>

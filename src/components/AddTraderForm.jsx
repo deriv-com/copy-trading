@@ -68,7 +68,7 @@ const AddTraderForm = ({ onAddTrader }) => {
         }
         const { maxStake, minStake } = traderData;
 
-        if (minStake > maxStake) {
+        if (minStake && maxStake && minStake > maxStake) {
             setSnackbar({
                 isVisible: true,
                 message: "Minimum stake cannot be greater than maximum stake",
@@ -78,18 +78,34 @@ const AddTraderForm = ({ onAddTrader }) => {
         }
 
         setIsProcessing(true);
-        sendMessage({
+        const copyStartPayload = {
             copy_start: traderData.token,
-            max_trade_stake: maxStake,
-            min_trade_stake: minStake,
-            assets: traderData.selectedSymbols.map((s) => s.symbol),
-            trade_types: traderData.selectedContracts.flatMap((contract) =>
-                // Get all contract types from the contract's sentiments
-                Object.values(contract.sentiments).map(
-                    (sentiment) => sentiment.contract_type
-                )
-            ),
-        });
+        };
+
+        if (maxStake) {
+            copyStartPayload.max_trade_stake = maxStake;
+        }
+
+        if (minStake) {
+            copyStartPayload.min_trade_stake = minStake;
+        }
+
+        if (traderData.selectedSymbols.length > 0) {
+            copyStartPayload.assets = traderData.selectedSymbols.map(
+                (s) => s.symbol
+            );
+        }
+
+        if (traderData.selectedContracts.length > 0) {
+            copyStartPayload.trade_types = traderData.selectedContracts.flatMap(
+                (contract) =>
+                    Object.values(contract.sentiments).map(
+                        (sentiment) => sentiment.contract_type
+                    )
+            );
+        }
+
+        sendMessage(copyStartPayload);
     };
 
     const handleSnackbarClose = () => {
@@ -115,10 +131,9 @@ const AddTraderForm = ({ onAddTrader }) => {
                 </Text>
                 <form onSubmit={handleSubmit}>
                     <div className="flex flex-col gap-4">
-                        <div className="flex flex-col md:flex-row items-center gap-4">
-                            <div className="w-full flex-1">
+                        <div className="flex flex-col gap-4">
+                            <div className="flex flex-col md:flex-row gap-4 min-h-[56px]">
                                 <TextField
-                                    className="w-full"
                                     label="Trading Token"
                                     name="token"
                                     value={traderData.token}
@@ -126,62 +141,61 @@ const AddTraderForm = ({ onAddTrader }) => {
                                     placeholder="Enter trading token"
                                     required
                                 />
-                            </div>
-                            <div className="w-full flex-1">
-                                <TextField
-                                    className="w-full"
-                                    label="Minimum Stake"
-                                    name="minStake"
-                                    type="number"
-                                    min="0"
-                                    value={traderData.minStake ?? ""}
-                                    onChange={handleChange}
-                                    placeholder="Enter minimum stake"
-                                    required
-                                    message={
-                                        traderData.minStake !== null &&
-                                        Number(traderData.minStake) <= 0
-                                            ? "Stake should be more than 0"
-                                            : ""
-                                    }
-                                    status={
-                                        traderData.minStake !== null &&
-                                        Number(traderData.minStake) <= 0
-                                            ? "error"
-                                            : undefined
-                                    }
-                                />
-                            </div>
-                            <div className="w-full flex-1">
-                                <TextField
-                                    className="w-full"
-                                    label="Maximum Stake"
-                                    name="maxStake"
-                                    type="number"
-                                    min="0"
-                                    value={traderData.maxStake ?? ""}
-                                    onChange={handleChange}
-                                    placeholder="Enter maximum stake"
-                                    required
-                                />
-                            </div>
-                            <div className="w-full md:w-auto">
                                 <Button
-                                    className="w-full"
+                                    className="w-full md:w-auto md:p-7"
                                     type="submit"
                                     variant="primary"
-                                    disabled={
-                                        !traderData.token.trim() ||
-                                        !traderData.maxStake ||
-                                        !traderData.minStake ||
-                                        traderData.selectedSymbols.length ===
-                                            0 ||
-                                        traderData.selectedContracts.length ===
-                                            0
-                                    }
+                                    disabled={!traderData.token.trim()}
                                 >
                                     Start Copying
                                 </Button>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <Text bold className="text-gray-600">
+                                    Stake
+                                </Text>
+                                <Text size="sm" className="text-gray-600">
+                                    Choose the minimum and maximum stake limits
+                                    for your trade.
+                                </Text>
+                                <div className="flex flex-col md:flex-row gap-4">
+                                    <div className="w-full md:flex-1">
+                                        <TextField
+                                            className="w-full"
+                                            label="Minimum Stake (Optional)"
+                                            name="minStake"
+                                            type="number"
+                                            min="0"
+                                            value={traderData.minStake ?? ""}
+                                            onChange={handleChange}
+                                            placeholder="Enter minimum stake"
+                                            message={
+                                                traderData.minStake !== null &&
+                                                Number(traderData.minStake) <= 0
+                                                    ? "Stake should be more than 0"
+                                                    : ""
+                                            }
+                                            status={
+                                                traderData.minStake !== null &&
+                                                Number(traderData.minStake) <= 0
+                                                    ? "error"
+                                                    : undefined
+                                            }
+                                        />
+                                    </div>
+                                    <div className="w-full md:flex-1">
+                                        <TextField
+                                            className="w-full"
+                                            label="Maximum Stake (Optional)"
+                                            name="maxStake"
+                                            type="number"
+                                            min="0"
+                                            value={traderData.maxStake ?? ""}
+                                            onChange={handleChange}
+                                            placeholder="Enter maximum stake"
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div className="w-full flex flex-col gap-4">
