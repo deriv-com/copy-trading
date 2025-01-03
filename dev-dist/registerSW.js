@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/copy-trading/dev-sw.js?dev-sw', { scope: '/copy-trading/', type: 'classic' })

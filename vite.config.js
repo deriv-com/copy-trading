@@ -17,69 +17,81 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+        includeAssets: ['icons/*'],
         manifest: {
-          name: 'Deriv Copy Trading',
-          short_name: 'Copy Trading',
-          description: 'Copy trades from expert traders on Deriv',
-          theme_color: '#ffffff',
-          background_color: '#ffffff',
-          display: 'standalone',
-          scope: '/copy-trading/',
-          start_url: '/copy-trading/',
+          name: "Deriv Copy Trading",
+          short_name: "Copy Trading",
+          description: "Copy trades from expert traders on Deriv",
+          start_url: "/copy-trading/",
+          display: "standalone",
+          background_color: "#ffffff",
+          theme_color: "#ff444f",
           icons: [
             {
-              src: 'icons/icon-72x72.png',
-              sizes: '72x72',
-              type: 'image/png',
-              purpose: 'any maskable'
+              src: "/copy-trading/assets/icons/icon-72x72.png",
+              sizes: "72x72",
+              type: "image/png",
+              purpose: "any"
             },
             {
-              src: 'icons/icon-96x96.png',
-              sizes: '96x96',
-              type: 'image/png',
-              purpose: 'any maskable'
+              src: "/copy-trading/assets/icons/icon-96x96.png",
+              sizes: "96x96",
+              type: "image/png",
+              purpose: "any"
             },
             {
-              src: 'icons/icon-128x128.png',
-              sizes: '128x128',
-              type: 'image/png',
-              purpose: 'any maskable'
+              src: "/copy-trading/assets/icons/icon-128x128.png",
+              sizes: "128x128",
+              type: "image/png",
+              purpose: "any"
             },
             {
-              src: 'icons/icon-144x144.png',
-              sizes: '144x144',
-              type: 'image/png',
-              purpose: 'any maskable'
+              src: "/copy-trading/assets/icons/icon-144x144.png",
+              sizes: "144x144",
+              type: "image/png",
+              purpose: "any"
             },
             {
-              src: 'icons/icon-152x152.png',
-              sizes: '152x152',
-              type: 'image/png',
-              purpose: 'any maskable'
+              src: "/copy-trading/assets/icons/icon-152x152.png",
+              sizes: "152x152",
+              type: "image/png",
+              purpose: "any"
             },
             {
-              src: 'icons/icon-192x192.png',
-              sizes: '192x192',
-              type: 'image/png',
-              purpose: 'any maskable'
+              src: "/copy-trading/assets/icons/icon-192x192.png",
+              sizes: "192x192",
+              type: "image/png",
+              purpose: "any"
             },
             {
-              src: 'icons/icon-384x384.png',
-              sizes: '384x384',
-              type: 'image/png',
-              purpose: 'any maskable'
+              src: "/copy-trading/assets/icons/icon-384x384.png",
+              sizes: "384x384",
+              type: "image/png",
+              purpose: "any"
             },
             {
-              src: 'icons/icon-512x512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'any maskable'
+              src: "/copy-trading/assets/icons/icon-512x512.png",
+              sizes: "512x512",
+              type: "image/png",
+              purpose: "any"
+            },
+            {
+              src: "/copy-trading/assets/icons/icon-192x192.png",
+              sizes: "192x192",
+              type: "image/png",
+              purpose: "maskable"
             }
           ]
         },
+        devOptions: {
+          enabled: true,
+          type: 'module'
+        },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
+          navigateFallbackAllowlist: [/^index.html$/],
+          skipWaiting: true,
+          clientsClaim: true,
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/api\.deriv\.com/,
@@ -102,6 +114,10 @@ export default defineConfig(({ mode }) => {
     ],
     server: {
       port: 8443,
+      headers: {
+        'Service-Worker-Allowed': '/',
+        'Cache-Control': 'no-store',
+      },
     },
     base: '/copy-trading/',
     define: {
