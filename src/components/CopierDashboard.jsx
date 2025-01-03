@@ -133,7 +133,7 @@ const CopierDashboard = () => {
                 {(hasCopiers || showCopierBanner) && (
                     <div className="absolute inset-0 bg-gray-50/70 z-10" />
                 )}
-                <AddTraderForm onAddTrader={handleAddTrader} />
+                <AddTraderForm onAddTrader={handleAddTrader} isTrader={hasCopiers} />
 
                 <div className="mb-8">
                     <Text size="lg" bold>

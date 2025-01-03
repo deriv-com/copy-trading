@@ -6,7 +6,7 @@ import { useAuth } from "../hooks/useAuth.jsx";
 import ActiveSymbolsSelector from "./ActiveSymbolsSelector";
 import TradeTypeSelector from "./TradeTypeSelector";
 
-const AddTraderForm = ({ onAddTrader }) => {
+const AddTraderForm = ({ onAddTrader, isTrader }) => {
     const [traderData, setTraderData] = useState({
         token: "",
         maxStake: null,
@@ -207,6 +207,7 @@ const AddTraderForm = ({ onAddTrader }) => {
                                         selectedSymbols: symbols,
                                     }))
                                 }
+                                isDisabled={isTrader}
                             />
                             <TradeTypeSelector
                                 selectedContracts={traderData.selectedContracts}
@@ -216,6 +217,7 @@ const AddTraderForm = ({ onAddTrader }) => {
                                         selectedContracts: contracts,
                                     }))
                                 }
+                                isDisabled={isTrader}
                             />
                         </div>
                     </div>
@@ -237,6 +239,7 @@ const AddTraderForm = ({ onAddTrader }) => {
 
 AddTraderForm.propTypes = {
     onAddTrader: PropTypes.func,
+    isTrader: PropTypes.bool,
 };
 
 export default AddTraderForm;
