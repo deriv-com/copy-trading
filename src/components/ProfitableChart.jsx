@@ -75,7 +75,14 @@ const ProfitableChart = ({ data = {}, type = "monthly" }) => {
         return key; // Year is already in correct format
     };
 
-    const sortedKeys = Object.keys(data).sort();
+    const sortedKeys = Object.keys(data).sort((a, b) => {
+        if (type === "monthly") {
+            const [ay, am] = a.split("-").map(Number);
+            const [by, bm] = b.split("-").map(Number);
+            return ay - by || am - bm;
+        }
+        return a.localeCompare(b); // For yearly data, string sort is fine
+    });
 
     const chartData = {
         labels: sortedKeys.map(formatLabel),
