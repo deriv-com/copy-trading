@@ -131,7 +131,7 @@ const CopierDashboard = () => {
             )}
             <div className="relative">
                 {(hasCopiers || showCopierBanner) && (
-                    <div className="absolute inset-0 bg-gray-50/70 z-10" />
+                    <div className="absolute inset-0 bg-gray-50/70 z-30" />
                 )}
                 <AddTraderForm onAddTrader={handleAddTrader} />
 
