@@ -67,7 +67,7 @@ const ActiveSymbolsSelector = ({ selectedSymbols = [], onChange }) => {
                         ))
                     )}
                 </div>
-                <div className="max-h-[32px] z-50">
+                <div className="max-h-[32px] z-20">
                     <Chip.SingleSelectDropdown
                         defaultOption={{
                             label: "Select a symbol",

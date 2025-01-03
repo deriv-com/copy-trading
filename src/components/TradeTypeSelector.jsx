@@ -88,7 +88,7 @@ const TradeTypeSelector = ({ selectedContracts = [], onChange }) => {
                         />
                     ))
                 )}
-                <div className="max-h-[32px] z-40">
+                <div className="max-h-[32px] z-10">
                     <Chip.SingleSelectDropdown
                         defaultOption={defaultOption}
                         value={defaultOption}
