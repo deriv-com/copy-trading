@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
 import { PROD_CONFIG } from './src/config'
 
 export default defineConfig(({ mode }) => {
@@ -12,9 +13,75 @@ export default defineConfig(({ mode }) => {
   })
 
   return {
-    plugins: [react()],
+    plugins: [
+      react(),
+      VitePWA({
+        registerType: 'prompt',
+        includeAssets: ['icons/*'],
+        strategies: 'generateSW',
+        manifest: {
+          id: '/copy-trading/',
+          name: "Deriv Copy Trading",
+          short_name: "Copy Trading",
+          description: "Copy trades from expert traders on Deriv",
+          start_url: "/copy-trading/",
+          display: "standalone",
+          scope: "/copy-trading/",
+          background_color: "#ffffff",
+          theme_color: "#ff444f",
+          icons: [
+            {
+              src: "/copy-trading/assets/icons/icon-192x192.png",
+              sizes: "192x192",
+              type: "image/png",
+              purpose: "any maskable"
+            },
+            {
+              src: "/copy-trading/assets/icons/icon-512x512.png",
+              sizes: "512x512",
+              type: "image/png",
+              purpose: "any"
+            }
+          ]
+        },
+        injectRegister: 'auto',
+        devOptions: {
+          enabled: true,
+          type: 'module'
+        },
+        workbox: {
+          cleanupOutdatedCaches: true,
+          sourcemap: true,
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
+          navigateFallbackAllowlist: [/^index.html$/],
+          skipWaiting: true,
+          clientsClaim: true,
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/api\.deriv\.com/,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'api-cache',
+                networkTimeoutSeconds: 5,
+                expiration: {
+                  maxEntries: 50,
+                  maxAgeSeconds: 5 * 60 // 5 minutes
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            }
+          ]
+        }
+      })
+    ],
     server: {
       port: 8443,
+      headers: {
+        'Service-Worker-Allowed': '/',
+        'Cache-Control': 'no-store',
+      },
     },
     base: '/copy-trading/',
     define: {
