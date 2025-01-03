@@ -73,7 +73,6 @@ const ActiveSymbolsSelector = ({ selectedSymbols = [], onChange }) => {
                             label: "Select a symbol",
                             value: "",
                         }}
-                        reset={true}
                         value={selectedOption}
                         onSelectionChange={handleDropdownChange}
                         options={options}

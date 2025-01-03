@@ -117,67 +117,80 @@ const TraderCard = ({ trader, onStopCopy }) => {
                             Loading statistics...
                         </Text>
                     ) : stats ? (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div>
-                                <Text size="sm" className="text-gray-500">
-                                    Active Since
-                                </Text>
-                                <Text size="lg" bold>
-                                    {stats.active_since
-                                        ? new Date(
-                                              stats.active_since * 1000
-                                          ).toLocaleDateString("en-US", {
-                                              month: "long",
-                                              year: "numeric",
-                                          })
-                                        : "-"}
-                                </Text>
+                        <>
+                            <Text size="lg" bold className="mb-4">
+                                Trader Performance
+                            </Text>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div>
+                                    <Text size="sm" className="text-gray-500">
+                                        Active Since
+                                    </Text>
+                                    <Text size="lg" bold>
+                                        {stats.active_since
+                                            ? new Date(
+                                                  stats.active_since * 1000
+                                              ).toLocaleDateString("en-US", {
+                                                  month: "long",
+                                                  year: "numeric",
+                                              })
+                                            : "-"}
+                                    </Text>
+                                </div>
+                                <div>
+                                    <Text size="sm" className="text-gray-500">
+                                        No. of profitable trades
+                                    </Text>
+                                    <Text size="lg" bold>
+                                        {stats.trades_profitable || 0}
+                                    </Text>
+                                </div>
+                                <div>
+                                    <Text size="sm" className="text-gray-500">
+                                        No. of copiers
+                                    </Text>
+                                    <Text size="lg" bold>
+                                        {stats.copiers || 0}
+                                    </Text>
+                                </div>
+                                <div>
+                                    <Text size="sm" className="text-gray-500">
+                                        Total Loss
+                                    </Text>
+                                    <Text
+                                        size="lg"
+                                        bold
+                                        className="text-red-600"
+                                    >
+                                        {stats.avg_loss || 0}
+                                    </Text>
+                                </div>
+                                <div>
+                                    <Text size="sm" className="text-gray-500">
+                                        Total Profit
+                                    </Text>
+                                    <Text
+                                        size="lg"
+                                        bold
+                                        className="text-green-600"
+                                    >
+                                        {stats.avg_profit || 0}
+                                    </Text>
+                                </div>
+                                <div>
+                                    <Text size="sm" className="text-gray-500">
+                                        Performance Probability
+                                    </Text>
+                                    <Text size="lg" bold>
+                                        {(
+                                            (stats.performance_probability ||
+                                                0) * 100
+                                        ).toFixed(1)}
+                                        %
+                                    </Text>
+                                </div>
                             </div>
-                            <div>
-                                <Text size="sm" className="text-gray-500">
-                                    No. of profitable trades
-                                </Text>
-                                <Text size="lg" bold>
-                                    {stats.trades_profitable || 0}
-                                </Text>
-                            </div>
-                            <div>
-                                <Text size="sm" className="text-gray-500">
-                                    No. of copiers
-                                </Text>
-                                <Text size="lg" bold>
-                                    {stats.copiers || 0}
-                                </Text>
-                            </div>
-                            <div>
-                                <Text size="sm" className="text-gray-500">
-                                    Total Loss
-                                </Text>
-                                <Text size="lg" bold className="text-red-600">
-                                    {stats.avg_loss || 0}
-                                </Text>
-                            </div>
-                            <div>
-                                <Text size="sm" className="text-gray-500">
-                                    Total Profit
-                                </Text>
-                                <Text size="lg" bold className="text-green-600">
-                                    {stats.avg_profit || 0}
-                                </Text>
-                            </div>
-                            <div>
-                                <Text size="sm" className="text-gray-500">
-                                    Performance Probability
-                                </Text>
-                                <Text size="lg" bold>
-                                    {(
-                                        (stats.performance_probability || 0) *
-                                        100
-                                    ).toFixed(1)}
-                                    %
-                                </Text>
-                            </div>
-                        </div>
+                        </>
                     ) : (
                         <Text className="text-center text-gray-500">
                             No statistics available
