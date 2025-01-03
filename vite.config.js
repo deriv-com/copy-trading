@@ -16,14 +16,17 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       VitePWA({
-        registerType: 'autoUpdate',
+        registerType: 'prompt',
         includeAssets: ['icons/*'],
+        strategies: 'generateSW',
         manifest: {
+          id: '/copy-trading/',
           name: "Deriv Copy Trading",
           short_name: "Copy Trading",
           description: "Copy trades from expert traders on Deriv",
           start_url: "/copy-trading/",
           display: "standalone",
+          scope: "/copy-trading/",
           background_color: "#ffffff",
           theme_color: "#ff444f",
           icons: [
@@ -83,11 +86,14 @@ export default defineConfig(({ mode }) => {
             }
           ]
         },
+        injectRegister: 'auto',
         devOptions: {
           enabled: true,
           type: 'module'
         },
         workbox: {
+          cleanupOutdatedCaches: true,
+          sourcemap: true,
           globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
           navigateFallbackAllowlist: [/^index.html$/],
           skipWaiting: true,
