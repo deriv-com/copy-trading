@@ -47,13 +47,28 @@ const TraderCard = ({ trader, onStopCopy }) => {
                 </div>
             </div>
 
-            <div className="mb-4">
-                <Text size="sm" className="text-gray-500">
-                    Assets Copied
-                </Text>
-                <Text size="lg" bold>
-                    {trader.assets?.join(", ") || "-"}
-                </Text>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <Text size="sm" className="text-gray-500">
+                        Assets Copied
+                    </Text>
+                    <Text size="lg" bold>
+                        {trader.assets?.length === 1 && trader.assets[0] === "*"
+                            ? "All"
+                            : trader.assets?.join(", ") || "-"}
+                    </Text>
+                </div>
+                <div>
+                    <Text size="sm" className="text-gray-500">
+                        Trade Types Copied
+                    </Text>
+                    <Text size="lg" bold>
+                        {trader.trade_types?.length === 1 &&
+                        trader.trade_types[0] === "*"
+                            ? "All"
+                            : trader.trade_types?.join(", ") || "-"}
+                    </Text>
+                </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-4">
@@ -189,6 +204,7 @@ TraderCard.propTypes = {
         max_trade_stake: PropTypes.number.isRequired,
         min_trade_stake: PropTypes.number.isRequired,
         assets: PropTypes.arrayOf(PropTypes.string),
+        trade_types: PropTypes.arrayOf(PropTypes.string),
     }).isRequired,
     onStopCopy: PropTypes.func.isRequired,
 };
