@@ -1,4 +1,5 @@
 import { Text } from "@deriv-com/quill-ui";
+import { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth.jsx";
 import useCopyTradingStats from "../hooks/useCopyTradingStats";
 import StatCard from "./StatCard";
@@ -7,9 +8,15 @@ import ProfitableTrades from "./ProfitableTrades";
 
 const TraderStatistics = () => {
     const { defaultAccount } = useAuth();
-    const { stats, isLoading, error } = useCopyTradingStats(
+    const { stats, isLoading, error, fetchStats } = useCopyTradingStats(
         defaultAccount?.account
     );
+
+    useEffect(() => {
+        if (defaultAccount?.account) {
+            fetchStats();
+        }
+    }, [defaultAccount?.account]);
 
     if (error) {
         return (

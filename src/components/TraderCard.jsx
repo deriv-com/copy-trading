@@ -1,9 +1,18 @@
 import { Text, Button } from "@deriv-com/quill-ui";
 import PropTypes from "prop-types";
+import { useEffect } from "react";
 import useCopyTradingStats from "../hooks/useCopyTradingStats";
 
 const TraderCard = ({ trader, onStopCopy }) => {
-    const { stats, isLoading } = useCopyTradingStats(trader.loginid);
+    const { stats, isLoading, fetchStats } = useCopyTradingStats(
+        trader.loginid
+    );
+
+    useEffect(() => {
+        if (trader.loginid) {
+            fetchStats();
+        }
+    }, [trader.loginid]);
 
     const handleStopCopy = () => {
         onStopCopy(trader);
