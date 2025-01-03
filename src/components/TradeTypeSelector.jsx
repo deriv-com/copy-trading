@@ -7,7 +7,7 @@ const defaultOption = {
     value: "",
 };
 
-const TradeTypeSelector = ({ selectedContracts = [], onChange }) => {
+const TradeTypeSelector = ({ selectedContracts = [], onChange, isDisabled }) => {
     const { contracts, isLoading, error } = useContractsForCompany();
 
     if (error) {
@@ -40,12 +40,12 @@ const TradeTypeSelector = ({ selectedContracts = [], onChange }) => {
         return {
             label: contract.contract_category_display,
             value: contractTypes,
-            disabled: isSelected,
+            disabled: isDisabled || isSelected,
         };
     });
 
     const handleSelect = (option) => {
-        if (!option || !option.value) return;
+        if (isDisabled || !option || !option.value) return;
 
         // Find the contract that matches the selected option
         const selectedContract = contracts.find(
@@ -62,29 +62,31 @@ const TradeTypeSelector = ({ selectedContracts = [], onChange }) => {
         }
     };
 
+    const handleDismiss = (contract) => {
+        if (isDisabled) return;
+        
+        const updatedContracts = selectedContracts.filter(
+            (c) =>
+                c.barrier_category !== contract.barrier_category ||
+                c.contract_category !== contract.contract_category
+        );
+        onChange?.(updatedContracts);
+    };
+
     return (
         <div className="flex flex-col gap-4">
             <Text bold>Trade Types</Text>
             <div className="flex gap-2">
                 {selectedContracts.length === 0 ? (
-                    <Chip.Dismissible label="All" size="md" />
+                    <Chip.Dismissible label="All" size="md" disabled={isDisabled} />
                 ) : (
                     selectedContracts.map((contract) => (
                         <Chip.Dismissible
                             key={`${contract.barrier_category}_${contract.contract_category}`}
                             label={contract.contract_category_display}
-                            onDismiss={() => {
-                                const updatedContracts =
-                                    selectedContracts.filter(
-                                        (c) =>
-                                            c.barrier_category !==
-                                                contract.barrier_category ||
-                                            c.contract_category !==
-                                                contract.contract_category
-                                    );
-                                onChange?.(updatedContracts);
-                            }}
+                            onDismiss={() => handleDismiss(contract)}
                             size="md"
+                            disabled={isDisabled}
                         />
                     ))
                 )}
@@ -95,6 +97,7 @@ const TradeTypeSelector = ({ selectedContracts = [], onChange }) => {
                         options={dropdownOptions}
                         onSelectionChange={handleSelect}
                         size="md"
+                        disabled={isDisabled}
                     />
                 </div>
             </div>
@@ -115,6 +118,7 @@ TradeTypeSelector.propTypes = {
         })
     ),
     onChange: PropTypes.func,
+    isDisabled: PropTypes.bool,
 };
 
 export default TradeTypeSelector;

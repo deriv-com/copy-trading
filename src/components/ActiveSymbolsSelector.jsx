@@ -3,16 +3,19 @@ import { Chip, Text } from "@deriv-com/quill-ui";
 import useActiveSymbols from "../hooks/useActiveSymbols";
 import React from "react";
 
-const ActiveSymbolsSelector = ({ selectedSymbols = [], onChange }) => {
+const ActiveSymbolsSelector = ({ selectedSymbols = [], onChange, isDisabled }) => {
     const { symbols, error } = useActiveSymbols();
     const [selectedOption, setSelectedOption] = React.useState(null);
 
     const options = symbols.map((symbol) => ({
         label: symbol.display_name,
         value: symbol.symbol,
+        disabled: isDisabled,
     }));
 
     const handleDropdownChange = (option) => {
+        if (isDisabled) return;
+        
         if (option?.value) {
             const selectedSymbol = symbols.find(
                 (s) => s.symbol === option.value
@@ -34,6 +37,8 @@ const ActiveSymbolsSelector = ({ selectedSymbols = [], onChange }) => {
     };
 
     const handleRemoveSymbol = (symbolToRemove) => {
+        if (isDisabled) return;
+        
         onChange?.(
             selectedSymbols.filter((symbol) => symbol.symbol !== symbolToRemove)
         );
@@ -53,7 +58,7 @@ const ActiveSymbolsSelector = ({ selectedSymbols = [], onChange }) => {
             <div className="flex gap-4">
                 <div className="flex flex-wrap gap-2">
                     {selectedSymbols.length === 0 ? (
-                        <Chip.Dismissible label="All" size="md" />
+                        <Chip.Dismissible label="All" size="md" disabled={isDisabled} />
                     ) : (
                         selectedSymbols.map((symbol) => (
                             <Chip.Dismissible
@@ -63,6 +68,7 @@ const ActiveSymbolsSelector = ({ selectedSymbols = [], onChange }) => {
                                     handleRemoveSymbol(symbol.symbol)
                                 }
                                 size="md"
+                                disabled={isDisabled}
                             />
                         ))
                     )}
@@ -73,11 +79,12 @@ const ActiveSymbolsSelector = ({ selectedSymbols = [], onChange }) => {
                             label: "Select a symbol",
                             value: "",
                         }}
-                        reset={true}
+                        reset={!isDisabled}
                         value={selectedOption}
                         onSelectionChange={handleDropdownChange}
                         options={options}
                         size="md"
+                        disabled={isDisabled}
                     />
                 </div>
             </div>
@@ -93,6 +100,7 @@ ActiveSymbolsSelector.propTypes = {
         })
     ),
     onChange: PropTypes.func,
+    isDisabled: PropTypes.bool,
 };
 
 export default ActiveSymbolsSelector;
