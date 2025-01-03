@@ -1,14 +1,22 @@
 import { Text } from "@deriv-com/quill-ui";
+import { useEffect } from "react";
 import { useAuth } from "../hooks/useAuth.jsx";
 import useCopyTradingStats from "../hooks/useCopyTradingStats";
 import StatCard from "./StatCard";
 import StatisticsShimmer from "./StatisticsShimmer";
+import ProfitableTrades from "./ProfitableTrades";
 
 const TraderStatistics = () => {
     const { defaultAccount } = useAuth();
-    const { stats, isLoading, error } = useCopyTradingStats(
+    const { stats, isLoading, error, fetchStats } = useCopyTradingStats(
         defaultAccount?.account
     );
+
+    useEffect(() => {
+        if (defaultAccount?.account) {
+            fetchStats();
+        }
+    }, [defaultAccount?.account]);
 
     if (error) {
         return (
@@ -84,52 +92,13 @@ const TraderStatistics = () => {
                     ))}
                 </div>
 
-                {/* Monthly Profitable Trades */}
-                {Object.keys(stats.monthly_profitable_trades).length > 0 && (
-                    <div>
-                        <Text size="lg" bold className="mb-4 text-gray-800">
-                            Monthly Profitable Trades
-                        </Text>
-                        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                            {Object.entries(
-                                stats.monthly_profitable_trades
-                            ).map(([month, value]) => {
-                                const [year, monthNum] = month.split("-");
-                                const monthName = new Date(
-                                    `${year}-${monthNum}-01`
-                                ).toLocaleString("default", { month: "short" });
-                                return (
-                                    <StatCard
-                                        key={month}
-                                        label={`${monthName} ${year}`}
-                                        value={value}
-                                        compact
-                                    />
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-
-                {/* Yearly Profitable Trades */}
-                {Object.keys(stats.yearly_profitable_trades).length > 0 && (
-                    <div>
-                        <Text size="lg" bold className="mb-4 text-gray-800">
-                            Yearly Profitable Trades
-                        </Text>
-                        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                            {Object.entries(stats.yearly_profitable_trades).map(
-                                ([year, value]) => (
-                                    <StatCard
-                                        key={year}
-                                        label={year}
-                                        value={value}
-                                        compact
-                                    />
-                                )
-                            )}
-                        </div>
-                    </div>
+                {/* Profitable Trades */}
+                {(Object.keys(stats.monthly_profitable_trades).length > 0 ||
+                    Object.keys(stats.yearly_profitable_trades).length > 0) && (
+                    <ProfitableTrades
+                        monthlyTrades={stats.monthly_profitable_trades}
+                        yearlyTrades={stats.yearly_profitable_trades}
+                    />
                 )}
             </div>
         </div>

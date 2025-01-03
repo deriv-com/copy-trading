@@ -7,22 +7,19 @@ const useCopyTradingStats = (traderId) => {
     const [error, setError] = useState(null);
     const { sendMessage, lastMessage } = useWebSocket();
 
-    useEffect(() => {
+    const fetchStats = () => {
         if (!traderId) return;
 
-        const fetchStats = () => {
-            setIsLoading(true);
-            sendMessage({
-                copytrading_statistics: 1,
-                trader_id: traderId,
-                passthrough: {
-                    trader_id: traderId
-                }
-            });
-        };
-
-        fetchStats();
-    }, [traderId, sendMessage]);
+        setIsLoading(true);
+        setError(null);
+        sendMessage({
+            copytrading_statistics: 1,
+            trader_id: traderId,
+            passthrough: {
+                trader_id: traderId
+            }
+        });
+    };
 
     useEffect(() => {
         if (!lastMessage || !traderId) return;
@@ -46,16 +43,7 @@ const useCopyTradingStats = (traderId) => {
         stats,
         isLoading,
         error,
-        refetch: () => {
-            setError(null);
-            sendMessage({
-                copytrading_statistics: 1,
-                trader_id: traderId,
-                passthrough: {
-                    trader_id: traderId
-                }
-            });
-        },
+        fetchStats,
     };
 };
 
