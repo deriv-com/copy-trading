@@ -6,7 +6,7 @@ import { PROD_CONFIG } from './src/config'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const isDev = mode === 'development'
-  const base = isDev ? '' : '/copy-trading/'
+  const base = '/copy-trading/'
 
   console.log('Loaded environment variables:', {
     APP_ID: env.VITE_APP_ID || PROD_CONFIG.APP_ID,
@@ -36,30 +36,30 @@ export default defineConfig(({ mode }) => {
           background_color: '#FFFFFF',
           display: 'standalone',
           orientation: 'portrait',
-          start_url: './',
-          scope: './',
+          start_url: base,
+          scope: base,
           categories: ['finance', 'trading'],
           icons: [
             {
-              src: './pwa-192x192.png',
+              src: 'pwa-192x192.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any'
             },
             {
-              src: './pwa-512x512.png',
+              src: 'pwa-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any'
             },
             {
-              src: './pwa-maskable-192x192.png',
+              src: 'pwa-maskable-192x192.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'maskable'
             },
             {
-              src: './pwa-maskable-512x512.png',
+              src: 'pwa-maskable-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable'
@@ -68,14 +68,14 @@ export default defineConfig(({ mode }) => {
           shortcuts: [
             {
               name: 'Dashboard',
-              url: './#/dashboard',
+              url: '#/dashboard',
               description: 'View your copy trading dashboard and monitor performance',
-              icons: [{ src: './pwa-192x192.png', sizes: '192x192' }]
+              icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
             }
           ],
           screenshots: [
             {
-              src: './pwa-512x512.png',
+              src: 'pwa-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               label: 'Copy Trading Dashboard'
@@ -110,7 +110,15 @@ export default defineConfig(({ mode }) => {
           type: 'module',
           navigateFallback: 'index.html',
           suppressWarnings: true
-        }
+        },
+        strategies: 'generateSW',
+        minify: true,
+        manifestFilename: 'manifest.webmanifest',
+        includeManifestIcons: true,
+        registerSW: true,
+        buildBase: base,
+        base: base,
+        scope: base
       })
     ],
     server: {
