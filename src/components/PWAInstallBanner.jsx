@@ -7,74 +7,44 @@ const PWAInstallBanner = () => {
     const [installable, setInstallable] = useState(false);
 
     useEffect(() => {
-        // Check if the app is already in standalone mode
+        // Check if app is already installed
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches 
             || window.navigator.standalone 
             || document.referrer.includes('android-app://');
-            
-        console.log('📱 Is app in standalone mode:', isStandalone);
 
         if (isStandalone) {
-            console.log('App is already installed, hiding banner');
-            setIsVisible(false);
+            console.log('📱 App is already installed');
             return;
         }
 
-        // Handle the beforeinstallprompt event first
-        const handleBeforeInstallPrompt = (e) => {
-            console.log('👋 beforeinstallprompt event was fired');
-            // Prevent the mini-infobar from appearing on mobile
-            e.preventDefault();
-            // Stash the event so it can be triggered later
-            setDeferredPrompt(e);
+        // Handle install prompt ready
+        const handleInstallReady = () => {
+            console.log('✅ Install prompt ready, showing banner');
+            setDeferredPrompt(window.deferredPrompt);
             setInstallable(true);
             setIsVisible(true);
         };
 
-        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-        // Check if the app is installable as a fallback
-        const checkInstallability = async () => {
-            // Don't show install prompt if we already captured beforeinstallprompt
-            if (deferredPrompt) return;
-
-            const supportsInstall = 'serviceWorker' in navigator;
-            
-            if (supportsInstall) {
-                console.log('✅ App has service worker support');
-                setInstallable(false); // Only set true when we have the actual prompt
-                setIsVisible(true); // Show banner with manual instructions
-            } else {
-                console.log('❌ App installation not supported');
-            }
-
-            // Check for related apps
-            if ('getInstalledRelatedApps' in navigator) {
-                const relatedApps = await navigator.getInstalledRelatedApps();
-                console.log('🔍 Related apps:', relatedApps);
-                
-                if (relatedApps.length > 0) {
-                    setIsVisible(false);
-                }
-            }
-        };
-
-        // Small delay to allow beforeinstallprompt to fire first
-        setTimeout(checkInstallability, 1000);
-
         // Handle successful installation
-        const handleAppInstalled = () => {
+        const handleInstalled = () => {
             console.log('🎉 PWA was installed');
             setIsVisible(false);
             setInstallable(false);
             setDeferredPrompt(null);
         };
 
-        window.addEventListener('appinstalled', handleAppInstalled);
+        // Check if we already have a deferred prompt
+        if (window.deferredPrompt) {
+            handleInstallReady();
+        }
+
+        // Listen for custom events from pwa-handler.js
+        window.addEventListener('pwaInstallReady', handleInstallReady);
+        window.addEventListener('pwaInstalled', handleInstalled);
 
         return () => {
-            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-            window.removeEventListener('appinstalled', handleAppInstalled);
+            window.removeEventListener('pwaInstallReady', handleInstallReady);
+            window.removeEventListener('pwaInstalled', handleInstalled);
         };
     }, []);
 
@@ -114,7 +84,7 @@ const PWAInstallBanner = () => {
                     <Heading.H4 className="mb-2">Install Deriv Copy Trading</Heading.H4>
                     <Text className="text-gray-600">
                         {installable ? (
-                            "Get instant access to your trading activities, faster loading times, and a seamless experience - even offline!"
+                            "Get instant access to your trading activities, faster loading times, and a seamless experience!"
                         ) : (
                             "Add to your home screen for quick access and enhanced features. Open this website in Chrome or Safari for the best experience."
                         )}

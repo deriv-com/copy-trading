@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'prompt',
-        injectRegister: 'auto',
+        injectRegister: 'inline',
         includeAssets: [
           'favicon.ico',
           'apple-touch-icon.png',
@@ -31,13 +31,12 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: 'Deriv Copy Trading',
           short_name: 'Copy Trading',
-          description: 'Copy successful traders and automatically replicate their trading strategies in real-time',
+          description: 'Copy successful traders and automatically replicate their trading strategies in real-time.',
           theme_color: '#FF444F',
           background_color: '#FFFFFF',
           display: 'standalone',
-          orientation: 'portrait',
-          start_url: base,
-          scope: base,
+          start_url: '/copy-trading/',
+          scope: '/copy-trading/',
           categories: ['finance', 'trading'],
           icons: [
             {
@@ -78,7 +77,22 @@ export default defineConfig(({ mode }) => {
               src: 'pwa-512x512.png',
               sizes: '512x512',
               type: 'image/png',
-              label: 'Copy Trading Dashboard'
+              label: 'Copy Trading Dashboard Mobile View',
+              form_factor: 'narrow'
+            },
+            {
+              src: 'desktop-screenshot.png',
+              sizes: '1128x635',
+              type: 'image/png',
+              label: 'Copy Trading Dashboard Desktop View',
+              form_factor: 'wide',
+              platform: 'web'
+            }
+          ],
+          protocol_handlers: [
+            {
+              protocol: 'web+copytrading',
+              url: '/copy-trading/handle-protocol?url=%s'
             }
           ]
         },
