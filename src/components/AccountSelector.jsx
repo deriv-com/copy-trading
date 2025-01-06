@@ -1,7 +1,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { useAuth } from "../hooks/useAuth.jsx";
-import { Button } from "@deriv-com/quill-ui";
+import { IconButton } from "@deriv-com/quill-ui";
 import { LegacyLogout1pxIcon } from "@deriv/quill-icons";
 
 const AccountSelector = ({ defaultAccount, otherAccounts, onLogout }) => {
@@ -71,20 +71,19 @@ const AccountSelector = ({ defaultAccount, otherAccounts, onLogout }) => {
                         ))}
                     </ul>
                     <div className="mt-2 flex justify-start">
-                        <Button
-                            onClick={onLogout}
-                            variant="secondary"
+                        <IconButton
                             color="black"
-                            size="sm"
                             icon={
                                 <LegacyLogout1pxIcon
                                     fill="#000000"
                                     iconSize="xs"
                                 />
                             }
-                        >
-                            Log out
-                        </Button>
+                            size="md"
+                            type="button"
+                            variant="secondary"
+                            onClick={onLogout}
+                        />
                     </div>
                 </div>
             )}
