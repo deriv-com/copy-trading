@@ -5,6 +5,8 @@ import { PROD_CONFIG } from './src/config'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  const isDev = mode === 'development'
+  const base = isDev ? '' : '/copy-trading/'
 
   console.log('Loaded environment variables:', {
     APP_ID: env.VITE_APP_ID || PROD_CONFIG.APP_ID,
@@ -13,56 +15,107 @@ export default defineConfig(({ mode }) => {
   })
 
   return {
+    base,
     plugins: [
       react(),
       VitePWA({
-        registerType: 'autoUpdate',
-        devOptions: {
-          enabled: true
-        },
-        includeAssets: ['favicon.ico', "apple-touch-icon.png"],
+        registerType: 'prompt',
+        injectRegister: 'auto',
+        includeAssets: [
+          'favicon.ico',
+          'apple-touch-icon.png',
+          'masked-icon.svg',
+          'pwa-192x192.png',
+          'pwa-512x512.png'
+        ],
         manifest: {
           name: 'Deriv Copy Trading',
           short_name: 'Copy Trading',
-          description: 'Copy trading application for Deriv',
-          display: 'standalone',
-          start_url: '/copy-trading/',
-          scope: '/copy-trading/',
-          background_color: '#FFFFFF',
+          description: 'Copy successful traders and automatically replicate their trading strategies in real-time',
           theme_color: '#FF444F',
+          background_color: '#FFFFFF',
+          display: 'standalone',
+          orientation: 'portrait',
+          start_url: './',
+          scope: './',
+          categories: ['finance', 'trading'],
           icons: [
             {
-              "src": "pwa-192x192.png",
-              "sizes": "192x192",
-              "type": "image/png",
-              "purpose": "any"
+              src: './pwa-192x192.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'any'
             },
             {
-              "src": "pwa-512x512.png",
-              "sizes": "512x512",
-              "type": "image/png",
-              "purpose": "any"
+              src: './pwa-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any'
             },
             {
-              "src": "pwa-maskable-192x192.png",
-              "sizes": "192x192",
-              "type": "image/png",
-              "purpose": "maskable"
+              src: './pwa-maskable-192x192.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'maskable'
             },
             {
-              "src": "pwa-maskable-512x512.png",
-              "sizes": "512x512",
-              "type": "image/png",
-              "purpose": "maskable"
+              src: './pwa-maskable-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable'
+            }
+          ],
+          shortcuts: [
+            {
+              name: 'Dashboard',
+              url: './#/dashboard',
+              description: 'View your copy trading dashboard and monitor performance',
+              icons: [{ src: './pwa-192x192.png', sizes: '192x192' }]
+            }
+          ],
+          screenshots: [
+            {
+              src: './pwa-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              label: 'Copy Trading Dashboard'
             }
           ]
+        },
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/api\.deriv\.com\/.*/i,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'api-cache',
+                expiration: {
+                  maxEntries: 50,
+                  maxAgeSeconds: 60 * 60 * 24
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            }
+          ],
+          cleanupOutdatedCaches: true,
+          skipWaiting: true,
+          clientsClaim: true,
+          sourcemap: true
+        },
+        devOptions: {
+          enabled: true,
+          type: 'module',
+          navigateFallback: 'index.html',
+          suppressWarnings: true
         }
       })
     ],
     server: {
-      port: 8443,
+      port: 8443
     },
-    base: '/copy-trading/',
     define: {
       'import.meta.env.VITE_APP_ID': JSON.stringify(env.VITE_APP_ID || PROD_CONFIG.APP_ID),
       'import.meta.env.VITE_WS_URL': JSON.stringify(env.VITE_WS_URL || PROD_CONFIG.WS_URL),

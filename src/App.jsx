@@ -5,6 +5,7 @@ import Login from "./components/Login";
 import Header from "./components/Header";
 import Dashboard from "./components/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PWAInstallBanner from "./components/PWAInstallBanner";
 
 function App() {
     return (
@@ -33,6 +34,7 @@ function AppContent() {
         <Router>
             <div className="bg-gray-50">
                 <Header />
+                <PWAInstallBanner />
                 <Routes>
                     <Route path="/" element={<Login />} />
                     <Route
