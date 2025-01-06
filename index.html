@@ -1,30 +1,35 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/src/assets/deriv-favicon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Copy Trading</title>
-    <meta name="description" content="Copy trading application for Deriv" />
-    <meta name="theme-color" content="#ff444f" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <meta name="apple-mobile-web-app-title" content="Copy Trading" />
-    <link rel="apple-touch-icon" href="/src/assets/deriv-favicon.png" />
-    <script>
-      // Redirect to hash router if accessing root without hash and no query params
-      (function() {
-        if (!window.location.hash && 
-            window.location.pathname === '/copy-trading/' && 
-            !window.location.search) {  // Only redirect if no query parameters
-          window.location.replace(window.location.origin + '/copy-trading/#/');
-        }
-      })();
-    </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Copy Trading</title>
+  <meta name="description" content="Copy trading application for Deriv" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="Copy Trading" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" href="/favicon.svg" sizes="any" type="image/svg+xml">
+  <link rel="manifest" href="/copy-trading/manifest.webmanifest">
+  <meta name="theme-color" content="#FF444F">
+  <script>
+    // Redirect to hash router if accessing root without hash and no query params
+    (function () {
+      if (!window.location.hash &&
+        window.location.pathname === '/copy-trading/' &&
+        !window.location.search) {  // Only redirect if no query parameters
+        window.location.replace(window.location.origin + '/copy-trading/#/');
+      }
+    })();
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>

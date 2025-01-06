@@ -17,28 +17,45 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.png'],
+        devOptions: {
+          enabled: true
+        },
+        includeAssets: ['favicon.ico', "apple-touch-icon.png"],
         manifest: {
           name: 'Deriv Copy Trading',
           short_name: 'Copy Trading',
           description: 'Copy trading application for Deriv',
-          theme_color: '#ff444f',
-          background_color: '#ffffff',
           display: 'standalone',
+          start_url: '/copy-trading/',
+          scope: '/copy-trading/',
+          background_color: '#FFFFFF',
+          theme_color: '#FF444F',
           icons: [
             {
-              src: 'favicon.png',
-              sizes: '192x192',
-              type: 'image/png'
+              "src": "pwa-192x192.png",
+              "sizes": "192x192",
+              "type": "image/png",
+              "purpose": "any"
             },
             {
-              src: 'favicon.png',
-              sizes: '512x512',
-              type: 'image/png'
+              "src": "pwa-512x512.png",
+              "sizes": "512x512",
+              "type": "image/png",
+              "purpose": "any"
+            },
+            {
+              "src": "pwa-maskable-192x192.png",
+              "sizes": "192x192",
+              "type": "image/png",
+              "purpose": "maskable"
+            },
+            {
+              "src": "pwa-maskable-512x512.png",
+              "sizes": "512x512",
+              "type": "image/png",
+              "purpose": "maskable"
             }
-          ],
-          start_url: '/copy-trading/',
-          scope: '/copy-trading/'
+          ]
         }
       })
     ],
