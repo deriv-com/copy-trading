@@ -75,8 +75,8 @@ export default defineConfig(({ mode }) => {
           ],
           screenshots: [
             {
-              src: 'pwa-512x512.png',
-              sizes: '512x512',
+              src: 'mobile-screenshot.png',
+              sizes: '880x1490',
               type: 'image/png',
               label: 'Copy Trading Dashboard Mobile View',
               form_factor: 'narrow'
