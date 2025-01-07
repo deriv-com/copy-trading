@@ -9,6 +9,7 @@ node_modules
 # Production
 /dist
 /build
+/dev-dist
 
 # Misc
 .DS_Store
@@ -45,4 +46,3 @@ logs
 
 # Yarn Integrity file
 .yarn-integrity
-
