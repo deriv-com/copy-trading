@@ -8,9 +8,13 @@ permissions:
   pull-requests: write
   statuses: write
 
-on:
+on: 
     issue_comment:
-        types: [created, edited, deleted]
+        types:
+            - created
+            - edited
+            - deleted
+    push:
 
 jobs:
     generate_app_id:
