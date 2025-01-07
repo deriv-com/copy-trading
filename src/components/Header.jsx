@@ -3,6 +3,7 @@ import AccountSelector from "./AccountSelector";
 import { getConfig } from "../config";
 import derivIcon from "../assets/deriv-icon.svg";
 import { useAuth } from "../hooks/useAuth.jsx";
+import useBalance from "../hooks/useBalance";
 
 const Header = () => {
     const {
@@ -12,6 +13,7 @@ const Header = () => {
         isAuthorized,
         isLoading,
     } = useAuth();
+    const balances = useBalance();
     const config = getConfig();
     const handleLogout = () => {
         clearAccounts();
@@ -58,6 +60,7 @@ const Header = () => {
                                         defaultAccount={defaultAccount}
                                         otherAccounts={otherAccounts}
                                         onLogout={handleLogout}
+                                        balances={balances}
                                     />
                                 ) : (
                                     <Button
