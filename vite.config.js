@@ -49,8 +49,7 @@ export default defineConfig(({ mode }) => {
       chunkSizeWarningLimit: 1000,
       // Generate source maps for production debugging
       sourcemap: true,
-      // Ensure manifest is generated for asset tracking
-      manifest: true,
+
     },
     define: {
       'import.meta.env.VITE_APP_ID': JSON.stringify(env.VITE_APP_ID || PROD_CONFIG.APP_ID),
