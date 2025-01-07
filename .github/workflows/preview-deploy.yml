@@ -118,6 +118,17 @@ jobs:
               body: `🚀 Preview URL: ${url}`
             });
 
+      - name: Check required secrets
+        run: |
+          if [ -z "${{ secrets.AUTOMAGICALLY_TOKEN }}" ]; then
+            echo "::error::Missing required secret: AUTOMAGICALLY_TOKEN"
+            exit 1
+          fi
+          if [ -z "${{ secrets.AUTOMAGICALLY_TEST_TARGET_ID }}" ]; then
+            echo "::error::Missing required secret: AUTOMAGICALLY_TEST_TARGET_ID"
+            exit 1
+          fi
+
       - name: Run E2E tests
         id: e2e
         uses: OctoMind-dev/automagically-action-execute@v2
