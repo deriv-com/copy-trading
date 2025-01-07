@@ -1,11 +1,10 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { useAuth } from "../hooks/useAuth.jsx";
-import { IconButton } from "@deriv-com/quill-ui";
+import { DropdownButton } from "@deriv-com/quill-ui";
 import { LegacyLogout1pxIcon } from "@deriv/quill-icons";
 
 const AccountSelector = ({ defaultAccount, otherAccounts, onLogout }) => {
-    const [isOpen, setIsOpen] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState(defaultAccount);
     const { updateAccounts } = useAuth();
 
@@ -20,73 +19,58 @@ const AccountSelector = ({ defaultAccount, otherAccounts, onLogout }) => {
             newOthers: filteredOtherAccounts,
         });
         updateAccounts(account, filteredOtherAccounts);
-        setIsOpen(false);
     };
 
     const allAccounts = [defaultAccount, ...otherAccounts];
 
-    return (
-        <div className="relative">
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center justify-between w-full px-4 py-2 text-sm bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-                <span>
-                    {selectedAccount.account}
-                    {selectedAccount.currency &&
-                        `(${selectedAccount.currency})`}
-                </span>
-                <svg
-                    className={`w-5 h-5 ml-2 transition-transform duration-200 ${
-                        isOpen ? "transform rotate-180" : ""
-                    }`}
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                >
-                    <path
-                        fillRule="evenodd"
-                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                    />
-                </svg>
-            </button>
+    const dropdownOptions = [
+        ...allAccounts.map((account) => ({
+            id: account.account,
+            label: `${account.account}${
+                account.currency ? ` (${account.currency})` : ""
+            }`,
+            value: account.account,
+            onClick: () => handleAccountSelect(account),
+        })),
+        {
+            id: "logout",
+            label: "",
+            value: "logout",
+            onClick: onLogout,
+            leftIcon: <LegacyLogout1pxIcon fill="#000000" iconSize="xs" />,
+        },
+    ];
 
-            {isOpen && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-2">
-                    <ul className="py-1 max-h-60 overflow-auto">
-                        {allAccounts.map((account) => (
-                            <li
-                                key={account.account}
-                                className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-100 ${
-                                    selectedAccount.account === account.account
-                                        ? "bg-gray-100 text-gray-900"
-                                        : "text-gray-700"
-                                }`}
-                                onClick={() => handleAccountSelect(account)}
-                            >
-                                {account.account}
-                                {account.currency && ` (${account.currency})`}
-                            </li>
-                        ))}
-                    </ul>
-                    <div className="mt-2 flex justify-start">
-                        <IconButton
-                            color="black"
-                            icon={
-                                <LegacyLogout1pxIcon
-                                    fill="#000000"
-                                    iconSize="xs"
-                                />
-                            }
-                            size="md"
-                            type="button"
-                            variant="secondary"
-                            onClick={onLogout}
-                        />
-                    </div>
-                </div>
-            )}
+    return (
+        <div>
+            <DropdownButton
+                actionSheetFooter={{
+                    primaryAction: {
+                        content: "Apply",
+                        onAction: () => {},
+                    },
+                }}
+                closeContentOnClick
+                color="black"
+                contentHeight="sm"
+                contentTitle=""
+                label={`${selectedAccount.account}${
+                    selectedAccount.currency
+                        ? ` (${selectedAccount.currency})`
+                        : ""
+                }`}
+                onClose={() => {}}
+                onOpen={() => {}}
+                onSelectionChange={(value) => {
+                    const account = allAccounts.find(
+                        (acc) => acc.account === value
+                    );
+                    if (account) handleAccountSelect(account);
+                }}
+                options={dropdownOptions}
+                size="md"
+                variant="secondary"
+            />
         </div>
     );
 };
