@@ -4,7 +4,12 @@ import { useAuth } from "../hooks/useAuth.jsx";
 import { DropdownButton } from "@deriv-com/quill-ui";
 import { LegacyLogout1pxIcon } from "@deriv/quill-icons";
 
-const AccountSelector = ({ defaultAccount, otherAccounts, onLogout }) => {
+const AccountSelector = ({
+    defaultAccount,
+    otherAccounts,
+    onLogout,
+    balances,
+}) => {
     const [selectedAccount, setSelectedAccount] = useState(defaultAccount);
     const { updateAccounts } = useAuth();
 
@@ -26,8 +31,12 @@ const AccountSelector = ({ defaultAccount, otherAccounts, onLogout }) => {
     const dropdownOptions = [
         ...allAccounts.map((account) => ({
             id: account.account,
-            label: `${account.account}${
-                account.currency ? ` (${account.currency})` : ""
+            label: `${account.account} | ${
+                balances[account.account]
+                    ? `${balances[account.account].balance.toFixed(2)} ${
+                          balances[account.account].currency
+                      }`
+                    : `0.00 ${account.currency}`
             }`,
             value: account.account,
             onClick: () => handleAccountSelect(account),
@@ -42,7 +51,7 @@ const AccountSelector = ({ defaultAccount, otherAccounts, onLogout }) => {
     ];
 
     return (
-        <div>
+        <div className="max-w-fit [&_*]:max-w-fit">
             <DropdownButton
                 actionSheetFooter={{
                     primaryAction: {
@@ -54,10 +63,12 @@ const AccountSelector = ({ defaultAccount, otherAccounts, onLogout }) => {
                 color="black"
                 contentHeight="sm"
                 contentTitle=""
-                label={`${selectedAccount.account}${
-                    selectedAccount.currency
-                        ? ` (${selectedAccount.currency})`
-                        : ""
+                label={`${selectedAccount.account} | ${
+                    balances[selectedAccount.account]
+                        ? `${balances[selectedAccount.account].balance.toFixed(
+                              2
+                          )} ${balances[selectedAccount.account].currency}`
+                        : `0.00 ${selectedAccount.currency}`
                 }`}
                 onClose={() => {}}
                 onOpen={() => {}}
@@ -87,6 +98,13 @@ AccountSelector.propTypes = {
         })
     ).isRequired,
     onLogout: PropTypes.func.isRequired,
+    balances: PropTypes.objectOf(
+        PropTypes.shape({
+            balance: PropTypes.number.isRequired,
+            currency: PropTypes.string.isRequired,
+            loginid: PropTypes.string.isRequired,
+        })
+    ).isRequired,
 };
 
 export default AccountSelector;
