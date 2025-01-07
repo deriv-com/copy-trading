@@ -9,7 +9,8 @@ permissions:
   statuses: write
 
 on:
-    push
+    issue_comment:
+        types: [created, edited, deleted]
 
 jobs:
     generate_app_id:
