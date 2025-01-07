@@ -1,41 +1,102 @@
-name: Deploy to GitHub Pages
+name: Deploy to Production
 
 on:
   push:
     branches: ['main']
-
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
 
 permissions:
   contents: read
   pages: write
   id-token: write
+  deployments: write
 
+# Prevent concurrent deployments
 concurrency:
-  group: 'pages'
-  cancel-in-progress: true
+  group: "pages"
+  cancel-in-progress: false  # Don't cancel production deployments
+
+env:
+  NODE_ENV: production
 
 jobs:
+  validate:
+    name: Validate Production Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+        id: npm-cache
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-prod-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-prod-${{ env.cache-name }}-
+            ${{ runner.os }}-prod-
+            ${{ runner.os }}-
+
+      - name: Production Build Test
+        run: npm run build
+        env:
+          VITE_APP_ENV: production
+          
+      - name: Run Tests
+        run: npm test -- --coverage
+        
+      - name: Cache build validation
+        uses: actions/cache@v3
+        with:
+          path: dist
+          key: ${{ runner.os }}-prod-build-${{ github.sha }}
+
   deploy:
+    name: Deploy to Production
+    needs: validate
     environment:
-      name: github-pages
+      name: ${{ github.event.inputs.environment || 'production' }}
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
       
-      - name: Set up Node
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
           cache: 'npm'
           
       - name: Install dependencies
-        run: npm install
+        run: npm ci
         
       - name: Build
         run: npm run build
+        env:
+          VITE_APP_ENV: production
+          NODE_ENV: production
         
       - name: Setup Pages
         uses: actions/configure-pages@v3
@@ -47,5 +108,39 @@ jobs:
           
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2 
+        uses: actions/deploy-pages@v2
 
+      - name: Create Deployment Status
+        if: always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const environment = '${{ github.event.inputs.environment || 'production' }}';
+            const run_url = `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`;
+            const status = `🚀 Deployment to ${environment} ${steps.deployment.outcome}`;
+            
+            await github.rest.repos.createDeploymentStatus({
+              owner: owner,
+              repo: repo,
+              deployment_id: context.payload.deployment?.id,
+              state: steps.deployment.outcome === 'success' ? 'success' : 'failure',
+              environment_url: '${{ steps.deployment.outputs.page_url }}',
+              log_url: run_url,
+              description: status
+            });
+
+      - name: Notify on Failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const run_url = `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`;
+            const issue = await github.rest.issues.create({
+              owner: owner,
+              repo: repo,
+              title: '❌ Production Deployment Failed',
+              body: `Deployment to production failed.\n\n[View Details](${run_url})`,
+              labels: ['deployment', 'bug']
+            });
