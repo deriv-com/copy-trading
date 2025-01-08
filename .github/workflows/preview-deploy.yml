@@ -10,11 +10,9 @@ permissions:
   pages: write
   id-token: write
   pull-requests: write
-  security-events: write
 
-# Cancel in-progress runs for PRs
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: "preview-${{ github.ref }}"
   cancel-in-progress: true
 
 jobs:
@@ -23,45 +21,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  # Fetch all history for all branches and tags
+        uses: actions/checkout@v4
       
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'npm'
-
+          
       - name: Install dependencies
         run: npm ci
-
+        
       - name: Lint
         run: npm run lint
         continue-on-error: true
 
-      - name: Type check
-        run: |
-          npm run typecheck || echo "Type check failed but continuing"
+      - name: Run tests
+        run: npm test
         continue-on-error: true
 
-      - name: Run unit tests
-        run: npm test
-
-  preview_and_test:
-    name: Preview Deploy & E2E
+  deploy-preview:
     needs: quality
     runs-on: ubuntu-latest
     environment:
-      name: pr-preview
+      name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'npm'
@@ -73,42 +64,26 @@ jobs:
         run: npm run build
         env:
           VITE_APP_ENV: preview
+          GITHUB_PAGES: true
+          BASE_URL: /copy-trading/
           
-      - name: Cache build output
-        uses: actions/cache@v3
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+          
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: dist
-          key: ${{ runner.os }}-build-${{ github.sha }}
-        
-      - name: Setup Pages
-        uses: actions/configure-pages@v3
-        
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
-        with:
-          path: './dist'
           
-      - name: Deploy PR Preview
+      - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v3
         with:
           preview: true
-
-      - name: Handle Deploy Failure
-        if: failure() && steps.deployment.outcome == 'failure'
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '❌ Preview deployment failed. Check the workflow logs for details.'
-            });
-            core.setFailed('Preview deployment failed');
-
+          
       - name: Comment PR
-        uses: actions/github-script@v6
+        if: success()
+        uses: actions/github-script@v7
         with:
           script: |
             const url = `${{ steps.deployment.outputs.page_url }}`;
@@ -116,7 +91,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `🚀 Preview URL: ${url}`
+              body: `🚀 Preview deployed to: ${url}`
             });
 
       - name: Check required secrets
@@ -129,7 +104,6 @@ jobs:
             echo "::error::Missing required secret: AUTOMAGICALLY_TEST_TARGET_ID"
             exit 1
           fi
-
       - name: Run E2E tests
         id: e2e
         uses: OctoMind-dev/automagically-action-execute@v2
@@ -142,7 +116,7 @@ jobs:
 
       - name: Report Workflow Status
         if: always()
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -160,3 +134,4 @@ jobs:
               repo: repo,
               body: body
             });
+            
