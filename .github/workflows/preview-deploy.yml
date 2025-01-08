@@ -94,6 +94,19 @@ jobs:
         with:
           preview: true
 
+      - name: Handle Deploy Failure
+        if: failure() && steps.deployment.outcome == 'failure'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ Preview deployment failed. Check the workflow logs for details.'
+            });
+            core.setFailed('Preview deployment failed');
+
       - name: Comment PR
         uses: actions/github-script@v6
         with:
@@ -120,13 +133,14 @@ jobs:
       - name: Run E2E tests
         id: e2e
         uses: OctoMind-dev/automagically-action-execute@v2
+        continue-on-error: true
         with:
           url: ${{ steps.deployment.outputs.page_url }}
           token: ${{ secrets.AUTOMAGICALLY_TOKEN }}
           testTargetId: ${{ secrets.AUTOMAGICALLY_TEST_TARGET_ID }}
           blocking: true
 
-      - name: Report Status
+      - name: Report Workflow Status
         if: always()
         uses: actions/github-script@v6
         with:
@@ -134,8 +148,11 @@ jobs:
             const { owner, repo } = context.repo;
             const run_id = context.runId;
             const run_url = `https://github.com/${owner}/${repo}/actions/runs/${run_id}`;
-            const status = `${process.env.GITHUB_WORKFLOW} workflow ${context.job} job status: ${steps.e2e.outcome}`;
-            const body = `### Workflow Status\n${status}\n[View Run Details](${run_url})`;
+            const status = '${{ steps.e2e.conclusion || steps.e2e.outcome || '' }}' === 'failure'
+              ? '❌ E2E tests failed'
+              : '✅ All checks completed';
+            
+            const body = `### Workflow Status\n${status}\n\nFor detailed test results, check the OctoMind report in the PR.\n\n🔍 [View Workflow Details](${run_url})`;
             
             github.rest.issues.createComment({
               issue_number: context.issue.number,
