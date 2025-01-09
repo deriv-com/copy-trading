@@ -46,3 +46,15 @@ logs
 
 # Yarn Integrity file
 .yarn-integrity
+
+# Android/TWA specific
+twa-build/app/build/
+twa-build/.gradle/
+twa-build/local.properties
+twa-build/*.keystore
+twa-build/*.aab
+twa-build/*.apk
+twa-build/*.idsig
+twa-build/app/release/
+twa-build/app-release-*
+twa-build/app/debug/
