@@ -142,6 +142,9 @@ export default defineConfig(({ mode }) => {
     build: {
       // Enable asset hashing for better cache control
       assetsDir: 'assets',
+      // Copy assetlinks.json to output directory
+      copyPublicDir: true,
+      outDir: 'dist',
       rollupOptions: {
         output: {
           // Ensure chunk filenames include content hash
