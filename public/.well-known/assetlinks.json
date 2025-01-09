@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.deriv.copytrading",
+      "sha256_cert_fingerprints": [
+        "40F6E7178BFBE83C9B9F83ADFC0A6CD35B40926D3DBEC28602C0C799A8B92023"
+      ]
+    }
+  }
+]
