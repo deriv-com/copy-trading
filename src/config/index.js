@@ -1,3 +1,5 @@
+const ENDPOINT_STORAGE_KEY = "deriv_endpoint_settings";
+
 // Production configuration
 export const PROD_CONFIG = {
     APP_ID: '66435',
@@ -13,13 +15,57 @@ export const DEV_CONFIG = {
     REDIRECT_URL: 'http://localhost:8443'
 }
 
-// Get configuration with fallback to production values
+// Get base configuration with fallback to production values
+const getBaseConfig = () => {
+    return import.meta.env.DEV ? DEV_CONFIG : PROD_CONFIG;
+}
+
+// Get stored endpoint settings if they exist
+export const getStoredEndpointSettings = () => {
+    const storedSettings = localStorage.getItem(ENDPOINT_STORAGE_KEY);
+    if (storedSettings) {
+        return JSON.parse(storedSettings);
+    }
+    return null;
+}
+
+// Store endpoint settings
+export const setEndpointSettings = (server, appId) => {
+    localStorage.setItem(
+        ENDPOINT_STORAGE_KEY,
+        JSON.stringify({ server, appId })
+    );
+}
+
+// Clear stored endpoint settings
+export const clearEndpointSettings = () => {
+    localStorage.removeItem(ENDPOINT_STORAGE_KEY);
+}
+
+// Get configuration with custom endpoint support
 export const getConfig = () => {
-    // Use development config if all dev env variables are present
-    if (import.meta.env.DEV) {
-        return DEV_CONFIG
+    const baseConfig = getBaseConfig();
+    const storedSettings = getStoredEndpointSettings();
+
+    if (storedSettings) {
+        const { server, appId } = storedSettings;
+        return {
+            ...baseConfig,
+            APP_ID: appId,
+            WS_URL: `wss://${server}/websockets/v3`
+        };
     }
 
-    // Fallback to production config
-    return PROD_CONFIG
+    return baseConfig;
+}
+
+// Get default server URL (without protocol and path)
+export const getDefaultServer = () => {
+    const { WS_URL } = getBaseConfig();
+    return WS_URL.replace(/^wss?:\/\//, "").replace(/\/websockets\/v3$/, "");
+}
+
+// Get default app ID
+export const getDefaultAppId = () => {
+    return getBaseConfig().APP_ID;
 }

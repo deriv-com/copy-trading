@@ -1,20 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TextField, Button, Text } from "@deriv-com/quill-ui";
-import { getConfig } from "../config";
+import {
+    getStoredEndpointSettings,
+    setEndpointSettings,
+    getDefaultServer,
+    getDefaultAppId,
+} from "../config";
 
 const EndpointSettings = () => {
-    const config = getConfig();
-    const [server, setServer] = useState("blue.derivws.com");
-    const [appId, setAppId] = useState(config.APP_ID);
+    const defaultServer = getDefaultServer();
+    const defaultAppId = getDefaultAppId();
+
+    const [server, setServer] = useState(defaultServer);
+    const [appId, setAppId] = useState(defaultAppId);
+
+    useEffect(() => {
+        const storedSettings = getStoredEndpointSettings();
+        if (storedSettings) {
+            setServer(storedSettings.server);
+            setAppId(storedSettings.appId);
+        } else {
+            setEndpointSettings(defaultServer, defaultAppId);
+        }
+    }, [defaultServer, defaultAppId]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Handle submission logic here
+        setEndpointSettings(server, appId);
     };
 
     const handleReset = () => {
-        setServer("blue.derivws.com");
-        setAppId(config.APP_ID);
+        setEndpointSettings(defaultServer, defaultAppId);
+        setServer(defaultServer);
+        setAppId(defaultAppId);
     };
 
     return (
