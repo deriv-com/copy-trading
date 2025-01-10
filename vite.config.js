@@ -6,8 +6,7 @@ import { PROD_CONFIG } from './src/config'
 export default defineConfig(({ mode }) => {
   const isProd = mode === 'production'
   const env = loadEnv(mode, process.cwd(), '')
-  const isDev = mode === 'development'
-  const base = '/copy-trading/'
+  const base = '/'
 
   console.log('Loaded environment variables:', {
     APP_ID: env.VITE_APP_ID || PROD_CONFIG.APP_ID,
@@ -36,8 +35,8 @@ export default defineConfig(({ mode }) => {
           theme_color: '#FF444F',
           background_color: '#FFFFFF',
           display: 'standalone',
-          start_url: '/copy-trading/',
-          scope: '/copy-trading/',
+          start_url: '/',
+          scope: '/',
           categories: ['finance', 'trading'],
           icons: [
             {
@@ -68,7 +67,7 @@ export default defineConfig(({ mode }) => {
           shortcuts: [
             {
               name: 'Dashboard',
-              url: '#/dashboard',
+              url: '/dashboard',
               description: 'View your copy trading dashboard and monitor performance',
               icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
             }
@@ -93,7 +92,7 @@ export default defineConfig(({ mode }) => {
           protocol_handlers: [
             {
               protocol: 'web+copytrading',
-              url: '/copy-trading/handle-protocol?url=%s'
+              url: '/handle-protocol?url=%s'
             }
           ]
         },
@@ -137,7 +136,8 @@ export default defineConfig(({ mode }) => {
       })
     ],
     server: {
-      port: 8443
+      port: 8443,
+      historyApiFallback: true
     },
     build: {
       // Enable asset hashing for better cache control
