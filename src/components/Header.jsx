@@ -22,7 +22,7 @@ const Header = () => {
         try {
             await logout();
             clearAccounts();
-            window.location.href = "/copy-trading/";
+            window.location.href = "/";
         } catch (error) {
             console.error("Logout failed:", error);
         }

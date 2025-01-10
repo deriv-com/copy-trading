@@ -65,13 +65,13 @@ const Login = () => {
             console.log("Updating accounts and redirecting to dashboard");
             const otherAccounts = accounts.slice(1);
             updateAccounts(defaultAcct, otherAccounts);
-            window.location.href = `${window.location.origin}/copy-trading/#/dashboard`;
+            window.location.href = `${window.location.origin}/dashboard`;
             return;
         }
 
         // Regular login flow - redirect if already logged in
         if (!isLoading && defaultAccount?.token) {
-            navigate("/dashboard", { replace: true });
+            navigate("/dashboard");
         }
     }, [defaultAccount, navigate, isLoading, location, updateAccounts]);
 
@@ -89,17 +89,27 @@ const Login = () => {
                 </div>
             ) : (
                 <div className="flex flex-col items-center justify-center min-h-screen px-4 md:px-8 lg:px-16 text-center">
-                    <Text as="h1" size="6xl" className="font-bold mb-6 max-w-3xl text-[2.5rem] md:text-[3.5rem] lg:text-[4rem]">
+                    <Text
+                        as="h1"
+                        size="6xl"
+                        className="font-bold mb-6 max-w-3xl text-[2.5rem] md:text-[3.5rem] lg:text-[4rem]"
+                    >
                         Deriv: Where Smart Traders Copy Smarter
                     </Text>
-                    <Text size="lg" className="mt-6 mb-12 max-w-2xl text-gray-600">
-                        Mirror the success of top traders automatically. Set up in minutes
+                    <Text
+                        size="lg"
+                        className="mt-6 mb-12 max-w-2xl text-gray-600"
+                    >
+                        Mirror the success of top traders automatically. Set up
+                        in minutes
                     </Text>
-                    <Button 
+                    <Button
                         variant="primary"
                         size="lg"
                         className="mt-6"
-                        onClick={() => window.location.href = `${config.OAUTH_URL}/oauth2/authorize?app_id=${config.APP_ID}`}
+                        onClick={() =>
+                            (window.location.href = `${config.OAUTH_URL}/oauth2/authorize?app_id=${config.APP_ID}`)
+                        }
                     >
                         Get started
                     </Button>
