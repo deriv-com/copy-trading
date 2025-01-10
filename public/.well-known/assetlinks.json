@@ -1,11 +1,14 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.get_login_creds",
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "com.deriv.copytrading",
       "sha256_cert_fingerprints": [
-        "40F6E7178BFBE83C9B9F83ADFC0A6CD35B40926D3DBEC28602C0C799A8B92023"
+        "40:F6:E7:17:8B:FB:E8:3C:9B:9F:83:AD:FC:0A:6C:D3:5B:40:92:6D:3D:BE:C2:86:02:C0:C7:99:A8:B9:20:23"
       ]
     }
   }
