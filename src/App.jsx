@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider, SnackbarProvider, Spinner } from "@deriv-com/quill-ui";
 import { AuthProvider, useAuth } from "./hooks/useAuth.jsx";
 import Login from "./components/Login";
+import EndpointSettings from "./components/EndpointSettings";
 import Header from "./components/Header";
 import Dashboard from "./components/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -32,7 +33,7 @@ function AppContent() {
 
     return (
         <Router>
-            <div className="bg-gray-50">
+            <div className="bg-gray-50 min-h-screen">
                 <Header />
                 <PWAInstallBanner />
                 <Routes>
@@ -45,6 +46,7 @@ function AppContent() {
                             </ProtectedRoute>
                         }
                     />
+                    <Route path="/endpoint" element={<EndpointSettings />} />
                     <Route path="/*" element={<Login />} />
                 </Routes>
             </div>
