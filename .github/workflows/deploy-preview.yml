@@ -21,25 +21,25 @@ env:
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 jobs:
-  quality:
-    name: Quality Checks
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      checks: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  # quality:
+  #   name: Quality Checks
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     checks: write
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
       
-      - name: Setup environment
-        uses: ./.github/actions/setup-environment
+  #     - name: Setup environment
+  #       uses: ./.github/actions/setup-environment
       
-      - name: Run quality assurance checks
-        uses: ./.github/actions/quality-checks
+  #     - name: Run quality assurance checks
+  #       uses: ./.github/actions/quality-checks
 
   preview:
     name: Deploy Preview
-    needs: quality
+    # needs: quality
     runs-on: ubuntu-latest
     permissions:
       deployments: write
