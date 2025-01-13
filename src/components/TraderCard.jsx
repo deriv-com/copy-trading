@@ -5,6 +5,7 @@ import { useState, useMemo } from "react";
 import ProfitableTrades from "./ProfitableTrades";
 import useCopyTradingStats from "../hooks/useCopyTradingStats";
 import useSymbolDisplayNames from "../hooks/useSymbolDisplayNames";
+import useContractCategoryDisplay from "../hooks/useContractCategoryDisplay";
 
 const TraderCard = ({ trader, onStopCopy }) => {
     const { stats, isLoading, fetchStats } = useCopyTradingStats(
@@ -13,6 +14,9 @@ const TraderCard = ({ trader, onStopCopy }) => {
     const [showStats, setShowStats] = useState(false);
 
     const { displayNames } = useSymbolDisplayNames(trader.assets || []);
+    const { contractCategoryDisplays } = useContractCategoryDisplay(
+        trader.trade_types || []
+    );
     const assetsDisplay = useMemo(() => {
         if (!trader.assets?.length) return "-";
         if (trader.assets.length === 1 && trader.assets[0] === "*")
@@ -72,7 +76,7 @@ const TraderCard = ({ trader, onStopCopy }) => {
                         {trader.trade_types?.length === 1 &&
                         trader.trade_types[0] === "*"
                             ? "All"
-                            : trader.trade_types?.join(", ") || "-"}
+                            : contractCategoryDisplays.join(", ") || "-"}
                     </Text>
                 </div>
             </div>
