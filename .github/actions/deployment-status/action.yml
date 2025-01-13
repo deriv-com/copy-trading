@@ -1,0 +1,45 @@
+name: 'Update GitHub Deployment Status'
+description: 'Creates and updates GitHub deployment status'
+
+inputs:
+  environment:
+    description: 'The deployment environment (e.g., Staging, Production)'
+    required: true
+  deployment-url:
+    description: 'The URL of the deployment'
+    required: true
+  sha:
+    description: 'The commit SHA'
+    required: true
+  status:
+    description: 'The deployment status (pending, success, failure)'
+    required: true
+  description:
+    description: 'Description of the deployment status'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Update GitHub deployment status
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const deployment = await github.rest.repos.createDeployment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: '${{ inputs.sha }}',
+            environment: '${{ inputs.environment }}',
+            auto_merge: false,
+            required_contexts: [],
+            description: '${{ inputs.description }}'
+          });
+          
+          await github.rest.repos.createDeploymentStatus({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            deployment_id: deployment.data.id,
+            state: '${{ inputs.status }}',
+            environment_url: '${{ inputs.deployment-url }}',
+            description: '${{ inputs.description }}'
+          });

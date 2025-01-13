@@ -1,0 +1,98 @@
+name: Deploy Preview
+on:
+  pull_request:
+    branches: [ main, dev ]
+    types: [opened, synchronize, reopened]
+
+# Default permissions
+permissions:
+  contents: read
+  packages: read
+
+# Cancel in-progress runs for pull requests
+concurrency:
+  group: preview-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_ENV: development
+  HUSKY: 0
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+  quality:
+    name: Quality Checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
+      
+      - name: Run quality assurance checks
+        uses: ./.github/actions/quality-checks
+
+  preview:
+    name: Deploy Preview
+    needs: quality
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
+         
+      - name: Deploy to Vercel
+        id: deploy
+        uses: ./.github/actions/deploy/vercel/development
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          pr-number: ${{ github.event.pull_request.number }}
+
+      - name: Generate App ID
+        id: generate-app-id
+        uses: ./.github/actions/generate-app-id
+        with:
+          vercel_preview_url: ${{ steps.deploy.outputs.deployment-url }}
+          deriv_api_token: ${{ secrets.DERIV_API_TOKEN }}
+          deriv_app_id: ${{ secrets.DERIV_APP_ID }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare preview URL
+        id: preview-url
+        uses: ./.github/actions/prepare-preview-url
+        with:
+          deployment-url: ${{ steps.deploy.outputs.deployment-url }}
+          app-id: ${{ steps.generate-app-id.outputs.app-id }}
+
+      - name: Add preview URL to pull request
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: ${{ github.event.pull_request.number }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `✨ Preview deployment is ready at: ${{ steps.preview-url.outputs.url }}`
+            })
+
+      - name: Update deployment status
+        uses: ./.github/actions/deployment-status
+        with:
+          environment: 'Preview'
+          deployment-url: ${{ steps.preview-url.outputs.url }}
+          sha: ${{ github.event.pull_request.head.sha }}
+          status: 'success'
+          description: '✨ Preview deployment completed'
