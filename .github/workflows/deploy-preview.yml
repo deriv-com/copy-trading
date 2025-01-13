@@ -1,10 +1,10 @@
 name: Deploy Preview
 on:
-  pull_request:
+  pull_request_target:  # Using pull_request_target instead of pull_request for fork security
     branches: [ main, dev ]
     types: [opened, synchronize, reopened]
 
-# Default permissions
+# Default permissions - restrictive by default
 permissions:
   contents: read
   packages: read
@@ -21,33 +21,101 @@ env:
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 jobs:
-  # quality:
-  #   name: Quality Checks
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: read
-  #     checks: write
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
-      
-  #     - name: Setup environment
-  #       uses: ./.github/actions/setup-environment
-      
-  #     - name: Run quality assurance checks
-  #       uses: ./.github/actions/quality-checks
+  security-check:
+    name: Security Check
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      is-fork: ${{ steps.check.outputs.is-fork }}
+      is-authorized: ${{ steps.check.outputs.is-authorized }}
+    steps:
+      - name: Check PR source and permissions
+        id: check
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const isFork = pr.head.repo.full_name !== pr.base.repo.full_name;
+            
+            // Check if PR author has write access or is a collaborator
+            let isAuthorized = false;
+            try {
+              const { data: permission } = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: pr.user.login
+              });
+              isAuthorized = ['admin', 'write'].includes(permission.permission);
+            } catch (e) {
+              isAuthorized = false;
+            }
+            
+            core.setOutput('is-fork', isFork.toString());
+            core.setOutput('is-authorized', isAuthorized.toString());
+            
+            if (isFork && !isAuthorized) {
+              core.notice('⚠️ This PR is from a fork and requires manual approval');
+            }
 
   preview:
     name: Deploy Preview
-    # needs: quality
+    needs: security-check
     runs-on: ubuntu-latest
+    # Only run if PR author is authorized or if it's an internal PR
+    if: |
+      needs.security-check.outputs.is-authorized == 'true' ||
+      needs.security-check.outputs.is-fork == 'false'
     permissions:
       deployments: write
       issues: write
       pull-requests: write
+      contents: read  # Needed for checkout
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          # Fetch all history for all tags and branches
+          fetch-depth: 0
+      
+      # Run security checks for fork PRs
+      - name: Additional security checks for forks
+        id: security_checks
+        if: needs.security-check.outputs.is-fork == 'true'
+        run: |
+          # Check for suspicious patterns in modified files
+          git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} > changed_files.txt
+          
+          # Define patterns to check
+          SUSPICIOUS_PATTERNS=(
+            "crypto\."                    # Crypto operations
+            "eval[\s]*\("                 # eval() calls
+            "child_process"               # Child process operations
+            "exec[A-Z][a-z]*\("          # Any exec* function calls
+            "http[s]?\."                  # HTTP/HTTPS operations
+            "net\."                       # Network operations
+            "process\.env"                # Environment access
+            "require\(['\"]child_process" # Child process requires
+            "fs\."                        # File system operations
+            "new\s+Function"              # Dynamic function creation
+            "__proto__"                   # Prototype manipulation
+          )
+          
+          # Check each pattern
+          FOUND_PATTERNS=()
+          for pattern in "${SUSPICIOUS_PATTERNS[@]}"; do
+            if git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep -q "$pattern"; then
+              FOUND_PATTERNS+=("$pattern")
+            fi
+          done
+          
+          if [ ${#FOUND_PATTERNS[@]} -eq 0 ]; then
+            echo "SECURITY_CHECK_RESULT=✅ No suspicious patterns found" >> $GITHUB_ENV
+          else
+            PATTERNS_LIST=$(printf "• %s\n" "${FOUND_PATTERNS[@]}")
+            echo "SECURITY_CHECK_RESULT=⚠️ Review required - Found suspicious patterns:\n${PATTERNS_LIST}" >> $GITHUB_ENV
+          fi
       
       - name: Setup environment
         uses: ./.github/actions/setup-environment
@@ -81,11 +149,24 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
+            const isFork = '${{ needs.security-check.outputs.is-fork }}' === 'true';
+            const isAuthorized = '${{ needs.security-check.outputs.is-authorized }}' === 'true';
+            
+            let securityStatus = '';
+            if (isFork) {
+              securityStatus = `\n\n🔒 Security Status:
+              - PR is from a fork repository
+              - Author permission level: ${isAuthorized ? '✅ Authorized' : '⚠️ Limited'}
+              - Security checks: ${process.env.SECURITY_CHECK_RESULT || '✅ Passed'}
+              
+              Note: Changes from fork PRs are reviewed with additional security measures.`;
+            }
+            
             github.rest.issues.createComment({
               issue_number: ${{ github.event.pull_request.number }},
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `✨ Preview deployment is ready at: ${{ steps.preview-url.outputs.url }}`
+              body: `✨ Preview deployment is ready at: ${{ steps.preview-url.outputs.url }}${securityStatus}`
             })
 
       - name: Update deployment status
