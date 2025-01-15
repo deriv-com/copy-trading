@@ -34,7 +34,6 @@ jobs:
     outputs:
       is-fork: ${{ steps.check.outputs.is-fork }}
       is-authorized: ${{ steps.check.outputs.is-authorized }}
-      security-passed: ${{ steps.validate.outputs.passed }}
     steps:
       - name: Check PR source and permissions
         id: check
