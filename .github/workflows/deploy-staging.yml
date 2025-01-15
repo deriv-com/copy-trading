@@ -10,6 +10,9 @@ on:
 permissions:
   contents: read       # Required for checkout
   packages: read      # Required for package installation
+  pull-requests: write
+  deployments: write
+  id-token: write  # Important for OIDC token generation
 
 # Ensure only one staging deployment can run at a time
 concurrency:

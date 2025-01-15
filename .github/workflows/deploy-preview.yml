@@ -11,29 +11,24 @@ on:
 permissions:
   contents: read       # Required for checkout
   packages: read      # Required for package installation
-  pull-requests: read # Required for PR information
+  pull-requests: write
+  deployments: write
+  id-token: write     # Important for OIDC token generation
 
-# Cancel redundant runs with specific PR identifier
+# Cancel redundant runs with specific PR identifier and branch
 concurrency:
-  group: preview-${{ github.event.pull_request.number }}
+  group: preview-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.ref }}
   cancel-in-progress: true
 
 env:
   NODE_ENV: development
   HUSKY: 0  # Disabled to prevent git hooks during CI
-  # Required environment variables validation
-  REQUIRED_SECRETS: >-
-    VERCEL_TOKEN
-    VERCEL_ORG_ID
-    VERCEL_PROJECT_ID
-    DERIV_API_TOKEN
-    DERIV_APP_ID
 
 jobs:
   security-check:
     name: Security Check
     runs-on: ubuntu-latest
-    timeout-minutes: 10  # Prevent hanging jobs
+    timeout-minutes: 5  # Reduced from 10 to 5 as security checks are typically quick
     permissions:
       pull-requests: read
     outputs:
@@ -43,6 +38,8 @@ jobs:
     steps:
       - name: Validate Required Secrets
         id: validate
+        env:
+          REQUIRED_SECRETS: VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID DERIV_API_TOKEN DERIV_APP_ID
         run: |
           missing_secrets=()
           for secret in $REQUIRED_SECRETS; do
@@ -52,14 +49,15 @@ jobs:
           done
           
           if [ ${#missing_secrets[@]} -ne 0 ]; then
-            echo "Missing required secrets: ${missing_secrets[*]}"
+            echo "::error::Missing required secrets: ${missing_secrets[*]}"
             echo "passed=false" >> $GITHUB_OUTPUT
             exit 1
           fi
           echo "passed=true" >> $GITHUB_OUTPUT
+
       - name: Check PR source and permissions
         id: check
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7  # Upgraded to v7
         with:
           script: |
             const pr = context.payload.pull_request;
@@ -75,6 +73,7 @@ jobs:
               });
               isAuthorized = ['admin', 'write'].includes(permission.permission);
             } catch (e) {
+              console.error('Error checking permissions:', e);
               isAuthorized = false;
             }
             
@@ -100,88 +99,106 @@ jobs:
       deployments: write
       issues: write
       pull-requests: write
-      contents: read  # Needed for checkout
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-          # Fetch all history for all tags and branches
-          fetch-depth: 0
+          fetch-depth: 0  # Fetch all history for proper diff analysis
+      
+      # Cache dependencies
+      - name: Cache node modules
+        uses: actions/cache@v3
+        id: cache-npm
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
       
       # Enhanced security checks for fork PRs
       - name: Additional security checks for forks
         id: security_checks
         if: needs.security-check.outputs.is-fork == 'true'
         run: |
-          # Check file size limits
-          git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | while read file; do
+          # Function to check file patterns
+          check_patterns() {
+            local file="$1"
+            local patterns=(
+              "crypto\."                    # Crypto operations
+              "eval[\s]*\("                 # eval() calls
+              "child_process"               # Child process operations
+              "exec[A-Z][a-z]*\("          # Any exec* function calls
+              "http[s]?\."                  # HTTP/HTTPS operations
+              "net\."                       # Network operations
+              "process\.env"                # Environment access
+              "require\(['\"]child_process" # Child process requires
+              "fs\."                        # File system operations
+              "new\s+Function"              # Dynamic function creation
+              "__proto__"                   # Prototype manipulation
+              "Function\("                  # Function constructor
+              "require\(['\"]\.\."         # Requiring outside directory
+              "require\(['\"]~"            # Requiring from home directory
+              "process\.binding"           # Low-level process bindings
+              "v8\."                       # V8 engine access
+              "vm\."                       # VM module operations
+              "\.constructor\."            # Constructor access
+              "Object\.prototype"          # Prototype manipulation
+              "Object\.defineProperty"     # Property definition
+              "Object\.setPrototypeOf"     # Prototype manipulation
+            )
+            
+            for pattern in "${patterns[@]}"; do
+              if grep -q "$pattern" "$file"; then
+                echo "⚠️ Suspicious pattern found in $file: $pattern"
+                return 1
+              fi
+            done
+            return 0
+          }
+
+          # Check file size and patterns
+          exit_code=0
+          while IFS= read -r file; do
             if [ -f "$file" ]; then
+              # Check file size (5MB limit)
               size=$(stat -f%z "$file")
-              if [ $size -gt 5242880 ]; then  # 5MB limit
+              if [ $size -gt 5242880 ]; then
                 echo "❌ File $file exceeds size limit of 5MB"
-                exit 1
+                exit_code=1
+              fi
+
+              # Check if file is binary
+              if file "$file" | grep -q "binary"; then
+                echo "❌ Binary file detected: $file"
+                exit_code=1
+              fi
+
+              # Check for suspicious patterns in text files
+              if ! file "$file" | grep -q "binary"; then
+                if ! check_patterns "$file"; then
+                  exit_code=1
+                fi
               fi
             fi
-          done
+          done < <(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
 
-          # Check for binary files
-          if git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | while read file; do
-            if [ -f "$file" ] && file "$file" | grep -q "binary"; then
-              echo "❌ Binary file detected: $file"
-              exit 1
-            fi
-          done
-
-          # Check for suspicious patterns in modified files
-          git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} > changed_files.txt
-          
-          # Define patterns to check
-          SUSPICIOUS_PATTERNS=(
-            "crypto\."                    # Crypto operations
-            "eval[\s]*\("                 # eval() calls
-            "child_process"               # Child process operations
-            "exec[A-Z][a-z]*\("          # Any exec* function calls
-            "http[s]?\."                  # HTTP/HTTPS operations
-            "net\."                       # Network operations
-            "process\.env"                # Environment access
-            "require\(['\"]child_process" # Child process requires
-            "fs\."                        # File system operations
-            "new\s+Function"              # Dynamic function creation
-            "__proto__"                   # Prototype manipulation
-            "Function\("                  # Function constructor
-            "require\(['\"]\.\."         # Requiring outside directory
-            "require\(['\"]~"            # Requiring from home directory
-            "process\.binding"           # Low-level process bindings
-            "v8\."                       # V8 engine access
-            "vm\."                       # VM module operations
-            "\.constructor\."            # Constructor access
-            "Object\.prototype"          # Prototype manipulation
-            "Object\.defineProperty"     # Property definition
-            "Object\.setPrototypeOf"     # Prototype manipulation
-          )
-          
-          # Check each pattern
-          FOUND_PATTERNS=()
-          for pattern in "${SUSPICIOUS_PATTERNS[@]}"; do
-            if git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep -q "$pattern"; then
-              FOUND_PATTERNS+=("$pattern")
-            fi
-          done
-          
-          if [ ${#FOUND_PATTERNS[@]} -eq 0 ]; then
-            echo "SECURITY_CHECK_RESULT=✅ No suspicious patterns found" >> $GITHUB_ENV
+          if [ $exit_code -eq 0 ]; then
+            echo "SECURITY_CHECK_RESULT=✅ All security checks passed" >> $GITHUB_ENV
           else
-            PATTERNS_LIST=$(printf "• %s\n" "${FOUND_PATTERNS[@]}")
-            echo "SECURITY_CHECK_RESULT=⚠️ Review required - Found suspicious patterns:\n${PATTERNS_LIST}" >> $GITHUB_ENV
+            echo "SECURITY_CHECK_RESULT=⚠️ Security review required - See above for details" >> $GITHUB_ENV
+            exit 1
           fi
       
       - name: Setup environment
+        id: setup
         uses: ./.github/actions/setup-environment
+        timeout-minutes: 3
          
       - name: Deploy to Vercel
         id: deploy
-        timeout-minutes: 15  # Prevent hanging deployments
+        timeout-minutes: 10
         uses: ./.github/actions/deploy/vercel/development
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
@@ -191,6 +208,7 @@ jobs:
 
       - name: Generate App ID
         id: generate-app-id
+        timeout-minutes: 2
         uses: ./.github/actions/generate-app-id
         with:
           vercel_preview_url: ${{ steps.deploy.outputs.deployment-url }}
@@ -206,7 +224,7 @@ jobs:
           app-id: ${{ steps.generate-app-id.outputs.app-id }}
 
       - name: Add preview URL to pull request
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const isFork = '${{ needs.security-check.outputs.is-fork }}' === 'true';
@@ -222,16 +240,24 @@ jobs:
               Note: First-time contributors require maintainer approval for workflow runs.`;
             }
             
-            github.rest.issues.createComment({
-              issue_number: ${{ github.event.pull_request.number }},
+            const deploymentUrl = '${{ steps.preview-url.outputs.url }}';
+            const comment = `✨ Preview deployment is ready!
+            
+            🔗 Preview URL: ${deploymentUrl}
+            📝 Commit: ${context.sha.substring(0, 7)}
+            🕒 Deployed at: ${new Date().toISOString()}${securityStatus}`;
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `✨ Preview deployment is ready at: ${{ steps.preview-url.outputs.url }}${securityStatus}`
-            })
+              body: comment
+            });
 
       # Cleanup old preview deployments
       - name: Cleanup old previews
         if: always()
+        continue-on-error: true  # Don't fail the workflow if cleanup fails
         run: |
           if [ ! -z "${{ steps.deploy.outputs.deployment-url }}" ]; then
             echo "Cleaning up old preview deployments..."
@@ -242,7 +268,7 @@ jobs:
 
       - name: Update deployment status
         uses: ./.github/actions/deployment-status
-        if: success()  # Only mark success if all previous steps succeeded
+        if: success()
         with:
           environment: 'preview'
           deployment-url: ${{ steps.preview-url.outputs.url }}
@@ -259,3 +285,4 @@ jobs:
           sha: ${{ github.event.pull_request.head.sha }}
           status: 'failure'
           description: '❌ Preview deployment failed'
+          
