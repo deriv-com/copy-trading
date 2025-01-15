@@ -36,25 +36,6 @@ jobs:
       is-authorized: ${{ steps.check.outputs.is-authorized }}
       security-passed: ${{ steps.validate.outputs.passed }}
     steps:
-      - name: Validate Required Secrets
-        id: validate
-        env:
-          REQUIRED_SECRETS: VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID DERIV_API_TOKEN DERIV_APP_ID
-        run: |
-          missing_secrets=()
-          for secret in $REQUIRED_SECRETS; do
-            if [ -z "${!secret}" ]; then
-              missing_secrets+=($secret)
-            fi
-          done
-          
-          if [ ${#missing_secrets[@]} -ne 0 ]; then
-            echo "::error::Missing required secrets: ${missing_secrets[*]}"
-            echo "passed=false" >> $GITHUB_OUTPUT
-            exit 1
-          fi
-          echo "passed=true" >> $GITHUB_OUTPUT
-
       - name: Check PR source and permissions
         id: check
         uses: actions/github-script@v7  # Upgraded to v7
@@ -106,16 +87,6 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0  # Fetch all history for proper diff analysis
-      
-      # Cache dependencies
-      - name: Cache node modules
-        uses: actions/cache@v3
-        id: cache-npm
-        with:
-          path: ~/.npm
-          key: npm-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            npm-${{ runner.os }}-
       
       # Enhanced security checks for fork PRs
       - name: Additional security checks for forks
