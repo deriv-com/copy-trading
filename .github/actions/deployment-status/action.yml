@@ -3,7 +3,7 @@ description: 'Creates and updates GitHub deployment status'
 
 inputs:
   environment:
-    description: 'The deployment environment (e.g., Staging, Production)'
+    description: 'The deployment environment (e.g., development, staging, production)'
     required: true
   deployment-url:
     description: 'The URL of the deployment'
