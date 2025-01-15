@@ -1,0 +1,59 @@
+name: 'Deploy to Vercel Production'
+description: 'Deploys the application to Vercel production environment'
+
+outputs:
+  deployment-url:
+    description: 'The URL of the Vercel deployment'
+    value: ${{ steps.deploy.outputs.deployment-url }}
+
+inputs:
+  vercel-token:
+    description: 'Vercel authentication token'
+    required: true
+  vercel-org-id:
+    description: 'Vercel organization ID'
+    required: true
+  vercel-project-id:
+    description: 'Vercel project ID'
+    required: true
+  sha:
+    description: 'Commit SHA'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check required inputs
+      shell: bash
+      run: |
+        if [ -z "${{ inputs.vercel-token }}" ] || [ -z "${{ inputs.vercel-org-id }}" ] || [ -z "${{ inputs.vercel-project-id }}" ]; then
+          echo "Error: Required inputs are not available."
+          exit 1
+        fi
+
+    - name: Install Vercel CLI
+      shell: bash
+      run: npm install --global vercel@latest
+
+    - name: Configure Vercel environment
+      shell: bash
+      env:
+        VERCEL_ORG_ID: ${{ inputs.vercel-org-id }}
+        VERCEL_PROJECT_ID: ${{ inputs.vercel-project-id }}
+      run: vercel pull --yes --environment=production --token=${{ inputs.vercel-token }}
+
+    - name: Build application
+      shell: bash
+      env:
+        VERCEL_ORG_ID: ${{ inputs.vercel-org-id }}
+        VERCEL_PROJECT_ID: ${{ inputs.vercel-project-id }}
+      run: vercel build --prod --token=${{ inputs.vercel-token }}
+
+    - name: Deploy to Vercel
+      shell: bash
+      env:
+        VERCEL_ORG_ID: ${{ inputs.vercel-org-id }}
+        VERCEL_PROJECT_ID: ${{ inputs.vercel-project-id }}
+      id: deploy
+      run: |
+        echo "deployment-url=$(vercel deploy --prebuilt --prod --token=${{ inputs.vercel-token }})" >> $GITHUB_OUTPUT
