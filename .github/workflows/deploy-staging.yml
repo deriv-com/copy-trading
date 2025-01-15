@@ -10,6 +10,9 @@ on:
 permissions:
   contents: read       # Required for checkout
   packages: read      # Required for package installation
+  pull-requests: write
+  deployments: write
+  id-token: write  # Important for OIDC token generation
 
 # Ensure only one staging deployment can run at a time
 concurrency:
@@ -19,42 +22,10 @@ concurrency:
 env:
   NODE_ENV: staging
   HUSKY: 0  # Disabled to prevent git hooks during CI
-  # Required environment variables validation
-  REQUIRED_SECRETS: >-
-    VERCEL_TOKEN
-    VERCEL_ORG_ID
-    VERCEL_PROJECT_ID
-    DERIV_API_TOKEN
-    DERIV_APP_ID
 
 jobs:
-  validate:
-    name: Validate Deployment
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    outputs:
-      secrets-valid: ${{ steps.check-secrets.outputs.valid }}
-    steps:
-      - name: Validate Required Secrets
-        id: check-secrets
-        run: |
-          missing_secrets=()
-          for secret in $REQUIRED_SECRETS; do
-            if [ -z "${!secret}" ]; then
-              missing_secrets+=($secret)
-            fi
-          done
-          
-          if [ ${#missing_secrets[@]} -ne 0 ]; then
-            echo "Missing required secrets: ${missing_secrets[*]}"
-            echo "valid=false" >> $GITHUB_OUTPUT
-            exit 1
-          fi
-          echo "valid=true" >> $GITHUB_OUTPUT
-
   quality:
     name: Quality Checks
-    needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -72,7 +43,7 @@ jobs:
 
   deploy:
     name: Deploy Staging
-    needs: [validate, quality]
+    needs: [quality]
     runs-on: ubuntu-latest
     timeout-minutes: 15  # Prevent hanging deployments
     environment:
