@@ -1,6 +1,5 @@
 import { Text, Button, Skeleton } from "@deriv-com/quill-ui";
 import AccountSelector from "./AccountSelector";
-import { getConfig } from "../config";
 import derivIcon from "../assets/deriv-icon.svg";
 import { useAuth } from "../hooks/useAuth.jsx";
 import useBalance from "../hooks/useBalance";
@@ -10,7 +9,11 @@ const Header = () => {
     const { defaultAccount, otherAccounts, isAuthorized, isLoading } =
         useAuth();
     const balances = useBalance();
-    const config = getConfig();
+    const settings = JSON.parse(
+        localStorage.getItem("deriv_endpoint_settings") || "{}"
+    );
+    const server = settings.server;
+    const appId = settings.appId;
     const { logout } = useLogout();
 
     const handleLogout = async () => {
@@ -23,7 +26,7 @@ const Header = () => {
     };
 
     const handleDerivLogin = () => {
-        window.location.href = `${config.OAUTH_URL}/oauth2/authorize?app_id=${config.APP_ID}`;
+        window.location.href = `https://${server}/oauth2/authorize?app_id=${appId}`;
     };
 
     return (
