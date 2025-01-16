@@ -7,13 +7,8 @@ import useBalance from "../hooks/useBalance";
 import useLogout from "../hooks/useLogout";
 
 const Header = () => {
-    const {
-        defaultAccount,
-        otherAccounts,
-        clearAccounts,
-        isAuthorized,
-        isLoading,
-    } = useAuth();
+    const { defaultAccount, otherAccounts, isAuthorized, isLoading } =
+        useAuth();
     const balances = useBalance();
     const config = getConfig();
     const { logout } = useLogout();
@@ -21,7 +16,6 @@ const Header = () => {
     const handleLogout = async () => {
         try {
             await logout();
-            clearAccounts();
             window.location.href = "/";
         } catch (error) {
             console.error("Logout failed:", error);

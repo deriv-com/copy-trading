@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import useLogout from "../hooks/useLogout";
 import { TextField, Button, Text } from "@deriv-com/quill-ui";
 import {
     getStoredEndpointSettings,
@@ -8,6 +10,7 @@ import {
 } from "../config";
 
 const EndpointSettings = () => {
+    const navigate = useNavigate();
     const defaultServer = getDefaultServer();
     const defaultAppId = getDefaultAppId();
 
@@ -24,9 +27,17 @@ const EndpointSettings = () => {
         }
     }, [defaultServer, defaultAppId]);
 
-    const handleSubmit = (e) => {
+    const { logout } = useLogout();
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setEndpointSettings(server, appId);
+        try {
+            await logout();
+            navigate("/");
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
     };
 
     const handleReset = () => {
@@ -51,8 +62,7 @@ const EndpointSettings = () => {
                                 label="Server"
                                 value={server}
                                 onChange={(e) => setServer(e.target.value)}
-                                helperText="e.g. frontend.derivws.com"
-                                fullWidth
+                                message="e.g. frontend.derivws.com"
                             />
                         </div>
 
@@ -61,8 +71,7 @@ const EndpointSettings = () => {
                                 label="OAuth App ID"
                                 value={appId}
                                 onChange={(e) => setAppId(e.target.value)}
-                                helperText="Register an app ID to use the above server for logging in."
-                                fullWidth
+                                message="Register an app ID to use the above server for logging in."
                             />
                         </div>
 
