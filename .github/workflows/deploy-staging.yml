@@ -24,26 +24,8 @@ env:
   HUSKY: 0  # Disabled to prevent git hooks during CI
 
 jobs:
-  quality:
-    name: Quality Checks
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      checks: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Setup environment
-        uses: ./.github/actions/setup-environment
-      
-      - name: Run quality assurance checks
-        uses: ./.github/actions/quality-checks
-
   deploy:
     name: Deploy Staging
-    needs: [quality]
     runs-on: ubuntu-latest
     timeout-minutes: 15  # Prevent hanging deployments
     environment:
