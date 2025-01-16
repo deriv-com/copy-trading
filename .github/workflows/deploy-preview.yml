@@ -133,7 +133,14 @@ jobs:
           while IFS= read -r file; do
             if [ -f "$file" ]; then
               # Check file size (5MB limit)
-              size=$(stat -f%z "$file")
+              # Cross-platform file size check
+              if [[ "$OSTYPE" == "darwin"* ]]; then
+                # macOS
+                size=$(stat -f%z "$file")
+              else
+                # Linux and others
+                size=$(stat -c%s "$file")
+              fi
               if [ $size -gt 5242880 ]; then
                 echo "❌ File $file exceeds size limit of 5MB"
                 exit_code=1
@@ -255,4 +262,3 @@ jobs:
           sha: ${{ github.event.pull_request.head.sha }}
           status: 'failure'
           description: '❌ Preview deployment failed'
-          
