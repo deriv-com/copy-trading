@@ -2,13 +2,16 @@ import { Spinner, Text, Button } from "@deriv-com/quill-ui";
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.jsx";
-import { getConfig } from "../config";
 
 const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { defaultAccount, isLoading, updateAccounts } = useAuth();
-    const config = getConfig();
+    const settings = JSON.parse(
+        localStorage.getItem("deriv_endpoint_settings") || "{}"
+    );
+    const server = settings.server;
+    const appId = settings.appId;
 
     useEffect(() => {
         // Handle OAuth redirect logic
@@ -108,7 +111,7 @@ const Login = () => {
                         size="lg"
                         className="mt-6"
                         onClick={() =>
-                            (window.location.href = `${config.OAUTH_URL}/oauth2/authorize?app_id=${config.APP_ID}`)
+                            (window.location.href = `https://${server}/oauth2/authorize?app_id=${appId}`)
                         }
                     >
                         Get started
