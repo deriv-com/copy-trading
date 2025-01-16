@@ -66,8 +66,8 @@ jobs:
 
   preview:
     name: Deploy Preview
-    needs: security-check
     runs-on: ubuntu-latest
+    needs: security-check
     # Run only after approval for first-time contributors from forks
     if: |
       github.event.workflow_run.conclusion != 'action_required' ||
@@ -133,14 +133,8 @@ jobs:
           while IFS= read -r file; do
             if [ -f "$file" ]; then
               # Check file size (5MB limit)
-              # Cross-platform file size check
-              if [[ "$OSTYPE" == "darwin"* ]]; then
-                # macOS
-                size=$(stat -f%z "$file")
-              else
-                # Linux and others
-                size=$(stat -c%s "$file")
-              fi
+              # Get file size in bytes using wc -c
+              size=$(wc -c < "$file")
               if [ $size -gt 5242880 ]; then
                 echo "❌ File $file exceeds size limit of 5MB"
                 exit_code=1
