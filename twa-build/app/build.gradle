@@ -22,8 +22,8 @@ plugins {
 
 def twaManifest = [
     applicationId: 'com.deriv.copytrading',
-    hostName: 'deriv-com.github.io', // The domain being opened in the TWA.
-    launchUrl: '/copy-trading/', // The start path for the TWA. Must be relative to the domain.
+    hostName: 'copy-trading.binary.sx', // The domain being opened in the TWA.
+    launchUrl: '/', // The start path for the TWA. Must be relative to the domain.
     name: 'Deriv Copy Trading', // The application name.
     launcherName: 'Deriv Copy Trading', // The name shown on the Android Launcher.
     themeColor: '#FF444F', // The color used for the status bar.
@@ -57,8 +57,8 @@ android {
         applicationId "com.deriv.copytrading"
         minSdkVersion 21
         targetSdkVersion 35
-        versionCode 5
-        versionName "5"
+        versionCode 9
+        versionName "9"
 
         // The name for the application
         resValue "string", "appName", twaManifest.name
@@ -74,12 +74,12 @@ android {
             // The URL the Web Manifest for the Progressive Web App that the TWA points to. This
             // is used by Chrome OS and Meta Quest to open the Web version of the PWA instead of
             // the TWA, as it will probably give a better user experience for non-mobile devices.
-            resValue "string", "webManifestUrl", 'http://deriv-com.github.io/copy-trading/manifest.json'
+            resValue "string", "webManifestUrl", 'https://copy-trading.binary.sx/manifest.json'
         
 
         
             // This is used by Meta Quest.
-            resValue "string", "fullScopeUrl", 'http://deriv-com.github.io/copy-trading/'
+            resValue "string", "fullScopeUrl", 'https://copy-trading.binary.sx/'
         
 
         

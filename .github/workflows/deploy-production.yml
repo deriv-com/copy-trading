@@ -1,0 +1,103 @@
+name: Deploy Production
+
+# Production deployment workflow triggered by version tags
+on:
+  push:
+    tags:
+      - 'v*'
+
+# Specific permissions granted only where needed
+permissions:
+  contents: read       # Required for checkout
+  packages: read      # Required for package installation
+  pull-requests: write
+  deployments: write
+  id-token: write  # Important for OIDC token generation
+
+# Ensure only one production deployment can run at a time
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+env:
+  NODE_ENV: production
+  HUSKY: 0  # Disabled to prevent git hooks during CI
+  # Required environment variables validation
+  REQUIRED_SECRETS: >-
+    VERCEL_TOKEN
+    VERCEL_ORG_ID
+    VERCEL_PROJECT_ID
+
+jobs:
+  validate:
+    name: Validate Deployment
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      secrets-valid: ${{ steps.check-secrets.outputs.valid }}
+    steps:
+      - name: Validate Required Secrets
+        id: check-secrets
+        run: |
+          missing_secrets=()
+          for secret in $REQUIRED_SECRETS; do
+            if [ -z "${!secret}" ]; then
+              missing_secrets+=($secret)
+            fi
+          done
+          
+          if [ ${#missing_secrets[@]} -ne 0 ]; then
+            echo "Missing required secrets: ${missing_secrets[*]}"
+            echo "valid=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          echo "valid=true" >> $GITHUB_OUTPUT
+
+  deploy:
+    name: Deploy Production
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15  # Prevent hanging deployments
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.deployment-url }}
+    permissions:
+      deployments: write
+      statuses: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
+        
+      - name: Deploy to Vercel
+        id: deploy
+        timeout-minutes: 10
+        uses: ./.github/actions/deploy/vercel/production
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          sha: ${{ github.sha }}
+
+      - name: Update deployment status
+        uses: ./.github/actions/deployment-status
+        if: success()
+        with:
+          environment: 'production'
+          deployment-url: ${{ steps.deploy.outputs.deployment-url }}
+          sha: ${{ github.sha }}
+          status: 'success'
+          description: '✨ Production deployment completed'
+
+      - name: Handle deployment failure
+        if: failure()
+        uses: ./.github/actions/deployment-status
+        with:
+          environment: 'production'
+          deployment-url: ${{ steps.deploy.outputs.deployment-url }}
+          sha: ${{ github.sha }}
+          status: 'failure'
+          description: '❌ Production deployment failed'

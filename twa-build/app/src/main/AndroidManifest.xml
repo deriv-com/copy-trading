@@ -142,8 +142,6 @@
                 <data android:scheme="https"
                     android:host="@string/hostName"
                 
-                    android:pathPrefix="/copy-trading/"
-                
                 />
             </intent-filter>
 

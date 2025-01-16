@@ -1,0 +1,25 @@
+name: 'Prepare Preview URL'
+description: 'Prepares preview URL with app ID for preview environments'
+
+inputs:
+  deployment-url:
+    description: 'Base deployment URL'
+    required: true
+  app-id:
+    description: 'App ID to append as query parameter'
+    required: true
+
+outputs:
+  url:
+    description: 'The final preview URL with app ID'
+    value: ${{ steps.prepare.outputs.url }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Prepare URL
+      id: prepare
+      shell: bash
+      run: |
+        FINAL_URL="${{ inputs.deployment-url }}?app-id=${{ inputs.app-id }}"
+        echo "url=$FINAL_URL" >> $GITHUB_OUTPUT
