@@ -17,9 +17,27 @@ import {
 
 function App() {
     useEffect(() => {
-        const storedSettings = getStoredEndpointSettings();
-        if (!storedSettings) {
-            setEndpointSettings(getDefaultServer(), getDefaultAppId());
+        try {
+            const storedSettings = getStoredEndpointSettings();
+            if (!storedSettings) {
+                setEndpointSettings(getDefaultServer(), getDefaultAppId());
+            }
+        } catch (error) {
+            console.error(
+                "Failed to access storage for endpoint settings:",
+                error
+            );
+            // Ensure app can still function by using defaults without storing them
+            const defaultServer = getDefaultServer();
+            const defaultAppId = getDefaultAppId();
+            try {
+                setEndpointSettings(defaultServer, defaultAppId);
+            } catch (storageError) {
+                console.error(
+                    "Failed to store default endpoint settings:",
+                    storageError
+                );
+            }
         }
     }, []);
 
