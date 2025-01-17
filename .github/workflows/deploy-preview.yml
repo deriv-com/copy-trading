@@ -1,168 +1,53 @@
 name: Deploy Preview
 
-# WARNING: This workflow uses pull_request_target which runs with repository secrets.
-# Careful review of PR changes is required before approval.
 on:
   pull_request_target:
-    branches: [ main, dev ]
+    branches: [main, dev]
     types: [opened, synchronize, reopened]
 
-# Specific permissions granted only where needed
 permissions:
-  contents: read       # Required for checkout
-  packages: read      # Required for package installation
+  contents: read
+  packages: read
   pull-requests: write
   deployments: write
-  id-token: write     # Important for OIDC token generation
+  id-token: write
 
-# Cancel redundant runs with specific PR identifier and branch
 concurrency:
   group: preview-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.ref }}
   cancel-in-progress: true
 
 env:
   NODE_ENV: development
-  HUSKY: 0  # Disabled to prevent git hooks during CI
+  HUSKY: 0
 
 jobs:
-  security-check:
-    name: Security Check
-    runs-on: ubuntu-latest
-    timeout-minutes: 5  # Reduced from 10 to 5 as security checks are typically quick
-    permissions:
-      pull-requests: read
-    outputs:
-      is-fork: ${{ steps.check.outputs.is-fork }}
-      is-authorized: ${{ steps.check.outputs.is-authorized }}
-    steps:
-      - name: Check PR source and permissions
-        id: check
-        uses: actions/github-script@v7  # Upgraded to v7
-        with:
-          script: |
-            const pr = context.payload.pull_request;
-            const isFork = pr.head.repo.full_name !== pr.base.repo.full_name;
-            
-            // Check if PR author has write access or is a collaborator
-            let isAuthorized = false;
-            try {
-              const { data: permission } = await github.rest.repos.getCollaboratorPermissionLevel({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                username: pr.user.login
-              });
-              isAuthorized = ['admin', 'write'].includes(permission.permission);
-            } catch (e) {
-              console.error('Error checking permissions:', e);
-              isAuthorized = false;
-            }
-            
-            core.setOutput('is-fork', isFork.toString());
-            core.setOutput('is-authorized', isAuthorized.toString());
-            
-            if (isFork && !isAuthorized) {
-              core.notice('⚠️ This PR is from a fork and requires approval from maintainers');
-            }
-
-  preview:
+  deploy-preview:
     name: Deploy Preview
     runs-on: ubuntu-latest
-    needs: security-check
-    # Run only after approval for first-time contributors from forks
-    if: |
-      github.event.workflow_run.conclusion != 'action_required' ||
-      github.event.workflow_run.conclusion == 'approved'
     environment:
       name: preview
       url: ${{ steps.preview-url.outputs.url }}
-    permissions:
-      deployments: write
-      issues: write
-      pull-requests: write
-      contents: read
     steps:
+      - name: Verify user
+        uses: 'deriv-com/shared-actions/.github/actions/verify_user_in_organization@v1'
+        with:
+          username: ${{github.event.pull_request.user.login}}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0  # Fetch all history for proper diff analysis
-      
-      # Enhanced security checks for fork PRs
-      - name: Additional security checks for forks
-        id: security_checks
-        if: needs.security-check.outputs.is-fork == 'true'
-        run: |
-          # Function to check file patterns
-          check_patterns() {
-            local file="$1"
-            local patterns=(
-              "crypto\."                    # Crypto operations
-              "eval[\s]*\("                 # eval() calls
-              "child_process"               # Child process operations
-              "exec[A-Z][a-z]*\("          # Any exec* function calls
-              "http[s]?\."                  # HTTP/HTTPS operations
-              "net\."                       # Network operations
-              "process\.env"                # Environment access
-              "require\(['\"]child_process" # Child process requires
-              "fs\."                        # File system operations
-              "new\s+Function"              # Dynamic function creation
-              "__proto__"                   # Prototype manipulation
-              "Function\("                  # Function constructor
-              "require\(['\"]\.\."         # Requiring outside directory
-              "require\(['\"]~"            # Requiring from home directory
-              "process\.binding"           # Low-level process bindings
-              "v8\."                       # V8 engine access
-              "vm\."                       # VM module operations
-              "\.constructor\."            # Constructor access
-              "Object\.prototype"          # Prototype manipulation
-              "Object\.defineProperty"     # Property definition
-              "Object\.setPrototypeOf"     # Prototype manipulation
-            )
-            
-            for pattern in "${patterns[@]}"; do
-              if grep -q "$pattern" "$file"; then
-                echo "⚠️ Suspicious pattern found in $file: $pattern"
-                return 1
-              fi
-            done
-            return 0
-          }
+          fetch-depth: 0
 
-          # Check file size and patterns
-          exit_code=0
-          while IFS= read -r file; do
-            if [ -f "$file" ]; then
-              # Check if file is binary
-              if file "$file" | grep -q "binary"; then
-                echo "❌ Binary file detected: $file"
-                exit_code=1
-              fi
-
-              # Check for suspicious patterns in text files
-              if ! file "$file" | grep -q "binary"; then
-                if ! check_patterns "$file"; then
-                  exit_code=1
-                fi
-              fi
-            fi
-          done < <(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
-
-          if [ $exit_code -eq 0 ]; then
-            echo "SECURITY_CHECK_RESULT=✅ All security checks passed" >> $GITHUB_ENV
-          else
-            echo "SECURITY_CHECK_RESULT=⚠️ Security review required - See above for details" >> $GITHUB_ENV
-            exit 1
-          fi
-      
       - name: Setup environment
-        id: setup
         uses: ./.github/actions/setup-environment
         timeout-minutes: 3
          
       - name: Deploy to Vercel
         id: deploy
-        timeout-minutes: 10
         uses: ./.github/actions/deploy/vercel/development
+        timeout-minutes: 10
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
@@ -171,8 +56,8 @@ jobs:
 
       - name: Generate App ID
         id: generate-app-id
-        timeout-minutes: 2
         uses: ./.github/actions/generate-app-id
+        timeout-minutes: 2
         with:
           vercel_preview_url: ${{ steps.deploy.outputs.deployment-url }}
           deriv_api_token: ${{ secrets.DERIV_API_TOKEN }}
@@ -190,25 +75,12 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const isFork = '${{ needs.security-check.outputs.is-fork }}' === 'true';
-            const isAuthorized = '${{ needs.security-check.outputs.is-authorized }}' === 'true';
-            
-            let securityStatus = '';
-            if (isFork) {
-              securityStatus = `\n\n🔒 Security Status:
-              - PR is from a fork repository
-              - Author permission level: ${isAuthorized ? '✅ Authorized' : '⚠️ Requires Approval'}
-              - Security checks: ${process.env.SECURITY_CHECK_RESULT || '✅ Passed'}
-              
-              Note: First-time contributors require maintainer approval for workflow runs.`;
-            }
-            
             const deploymentUrl = '${{ steps.preview-url.outputs.url }}';
             const comment = `✨ Preview deployment is ready!
             
             🔗 Preview URL: ${deploymentUrl}
             📝 Commit: ${context.sha.substring(0, 7)}
-            🕒 Deployed at: ${new Date().toISOString()}${securityStatus}`;
+            🕒 Deployed at: ${new Date().toISOString()}`;
             
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -217,34 +89,12 @@ jobs:
               body: comment
             });
 
-      # Cleanup old preview deployments
-      - name: Cleanup old previews
-        if: always()
-        continue-on-error: true  # Don't fail the workflow if cleanup fails
-        run: |
-          if [ ! -z "${{ steps.deploy.outputs.deployment-url }}" ]; then
-            echo "Cleaning up old preview deployments..."
-            curl -X DELETE \
-              -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
-              "https://api.vercel.com/v13/deployments/${{ steps.deploy.outputs.deployment-id }}"
-          fi
-
       - name: Update deployment status
-        uses: ./.github/actions/deployment-status
-        if: success()
-        with:
-          environment: 'preview'
-          deployment-url: ${{ steps.preview-url.outputs.url }}
-          sha: ${{ github.event.pull_request.head.sha }}
-          status: 'success'
-          description: '✨ Preview deployment completed'
-
-      - name: Handle deployment failure
-        if: failure()
+        if: always()
         uses: ./.github/actions/deployment-status
         with:
           environment: 'preview'
           deployment-url: ${{ steps.preview-url.outputs.url }}
           sha: ${{ github.event.pull_request.head.sha }}
-          status: 'failure'
-          description: '❌ Preview deployment failed'
+          status: ${{ job.status }}
+          description: ${{ job.status == 'success' && '✨ Preview deployment completed' || '❌ Preview deployment failed' }}
