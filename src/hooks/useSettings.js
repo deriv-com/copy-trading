@@ -9,6 +9,7 @@ const useSettings = () => {
     const { isAuthorized, isConnected } = useAuth();
     const { sendMessage } = useWebSocket();
     const hasInitialFetch = useRef(false);
+    const lastUpdateCall = useRef(null);
 
     const fetchSettings = useCallback(() => {
         if (!isConnected || !isAuthorized || hasInitialFetch.current) {
@@ -57,10 +58,10 @@ const useSettings = () => {
 
         // Add debounce to prevent rapid settings updates
         const now = Date.now();
-        if (updateSettings.lastCall && now - updateSettings.lastCall < 1000) {
+        if (lastUpdateCall.current && now - lastUpdateCall.current < 1000) {
             throw new Error('Please wait before updating settings again');
         }
-        updateSettings.lastCall = now;
+        lastUpdateCall.current = now;
 
         return new Promise((resolve, reject) => {
             sendMessage(
