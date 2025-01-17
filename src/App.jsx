@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider, SnackbarProvider, Spinner } from "@deriv-com/quill-ui";
 import { AuthProvider, useAuth } from "./hooks/useAuth.jsx";
@@ -7,8 +8,21 @@ import Header from "./components/Header";
 import Dashboard from "./components/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PWAInstallBanner from "./components/PWAInstallBanner";
+import {
+    getStoredEndpointSettings,
+    setEndpointSettings,
+    getDefaultServer,
+    getDefaultAppId,
+} from "./config/index.js";
 
 function App() {
+    useEffect(() => {
+        const storedSettings = getStoredEndpointSettings();
+        if (!storedSettings) {
+            setEndpointSettings(getDefaultServer(), getDefaultAppId());
+        }
+    }, []);
+
     return (
         <ThemeProvider theme="light" persistent>
             <SnackbarProvider>
