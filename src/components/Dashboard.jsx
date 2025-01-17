@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SegmentedControlSingleChoice, Skeleton } from "@deriv-com/quill-ui";
 import { useAuth } from "../hooks/useAuth.jsx";
 import useSettings from "../hooks/useSettings.js";
@@ -17,6 +17,13 @@ const Dashboard = () => {
         settings?.allow_copiers ? "trader" : "copier"
     );
 
+    // Update userType when settings change
+    useEffect(() => {
+        if (settings) {
+            setUserType(settings.allow_copiers ? "trader" : "copier");
+        }
+    }, [settings]);
+
     const isLoading = authLoading || settingsLoading;
 
     return (
@@ -31,9 +38,11 @@ const Dashboard = () => {
                         options={[
                             {
                                 label: "Copy",
+                                disabled: isLoading,
                             },
                             {
                                 label: "Trade",
+                                disabled: isLoading,
                             },
                         ]}
                         selectedItemIndex={userType === "copier" ? 0 : 1}

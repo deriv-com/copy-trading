@@ -1,94 +1,106 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import useWebSocket from './useWebSocket';
 import { useAuth } from '../hooks/useAuth.jsx';
 
 const useSettings = () => {
     const [settings, setSettings] = useState(null);
     const [error, setError] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const { isAuthorized, isConnected } = useAuth();
     const { sendMessage } = useWebSocket();
-    const hasInitialFetch = useRef(false);
-    const lastUpdateCall = useRef(null);
 
     const fetchSettings = useCallback(() => {
-        if (!isConnected || !isAuthorized || hasInitialFetch.current) {
-            return;
+        if (!isConnected || !isAuthorized) {
+            return Promise.reject(new Error('Not connected or authorized'));
+        }
+
+        // Return cached settings if available
+        if (settings !== null) {
+            return Promise.resolve(settings);
         }
 
         setIsLoading(true);
-        console.log('Fetching user settings');
-        hasInitialFetch.current = true;
-        sendMessage(
-            { get_settings: 1 },
-            (response) => {
-                if (response.error) {
-                    console.error('Failed to fetch settings:', response.error);
-                    setError(response.error);
-                } else {
-                    console.log('Settings received:', response.get_settings);
-                    setSettings(response.get_settings);
-                    setError(null);
-                }
-                setIsLoading(false);
-            }
-        );
-    }, [isConnected, isAuthorized, sendMessage]);
+        setError(null);
 
-    // Fetch settings on mount and when connection/auth state changes
-    useEffect(() => {
-        if (isConnected && isAuthorized) {
-            fetchSettings();
-        }
-    }, [isConnected, isAuthorized, fetchSettings]);
-
-    // Reset settings and fetch flag when connection is lost
-    useEffect(() => {
-        if (!isConnected) {
-            setSettings(null);
-            setIsLoading(true);
-            hasInitialFetch.current = false;
-        }
-    }, [isConnected]);
-
-    const updateSettings = useCallback(async (newSettings) => {
-        if (!isConnected || !isAuthorized) {
-            throw new Error('Not connected or authorized');
-        }
-
-        // Add debounce to prevent rapid settings updates
-        const now = Date.now();
-        if (lastUpdateCall.current && now - lastUpdateCall.current < 1000) {
-            throw new Error('Please wait before updating settings again');
-        }
-        lastUpdateCall.current = now;
-
+        // Fetch fresh settings only if cache is empty
         return new Promise((resolve, reject) => {
             sendMessage(
-                { set_settings: 1, ...newSettings },
+                { get_settings: 1 },
                 (response) => {
                     if (response.error) {
-                        console.error('Failed to update settings:', response.error);
+                        console.error('Failed to fetch settings:', response.error);
                         setError(response.error);
+                        setIsLoading(false);
                         reject(response.error);
                     } else {
-                        console.log('Settings updated:', response.set_settings);
-                        // After successful update, reset fetch flag and get fresh settings
-                        hasInitialFetch.current = false;
-                        fetchSettings();
-                        resolve(response.set_settings);
+                        console.log('Settings received:', response.get_settings);
+                        setSettings(response.get_settings);
+                        setError(null);
+                        setIsLoading(false);
+                        resolve(response.get_settings);
                     }
                 }
             );
         });
     }, [isConnected, isAuthorized, sendMessage]);
 
+    const updateSettings = useCallback(async (newSettings) => {
+        if (!isConnected || !isAuthorized) {
+            throw new Error('Not connected or authorized');
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            // First update the settings
+            await new Promise((resolve, reject) => {
+                sendMessage(
+                    { set_settings: 1, ...newSettings },
+                    (response) => {
+                        if (response.error) {
+                            console.error('Failed to update settings:', response.error);
+                            reject(response.error);
+                        } else {
+                            console.log('Settings updated:', response.set_settings);
+                            resolve(response.set_settings);
+                        }
+                    }
+                );
+            });
+
+            // Then fetch fresh settings
+            await fetchSettings();
+        } catch (err) {
+            setError(err);
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [isConnected, isAuthorized, sendMessage, fetchSettings]);
+
+    // Initial fetch on mount and when connection/auth changes
+    useEffect(() => {
+        if (isConnected && isAuthorized) {
+            fetchSettings();
+        }
+    }, [isConnected, isAuthorized, fetchSettings]);
+
+    // Reset state when connection is lost
+    useEffect(() => {
+        if (!isConnected) {
+            setSettings(null);
+            setError(null);
+            setIsLoading(false);
+        }
+    }, [isConnected]);
+
     return {
         settings,
         error,
         isLoading,
-        updateSettings,
-        fetchSettings
+        fetchSettings,
+        updateSettings
     };
 };
 
