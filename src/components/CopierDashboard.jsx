@@ -1,20 +1,14 @@
 import { useEffect, useState } from "react";
 import { Text, Snackbar, Spinner, SectionMessage } from "@deriv-com/quill-ui";
+import PropTypes from "prop-types";
 import useCopyTradersList from "../hooks/useCopyTradersList";
 import CopyTradingBanner from "./CopyTradingBanner";
-import useSettings from "../hooks/useSettings";
 import useCopyStart from "../hooks/useCopyStart";
 import useCopyStop from "../hooks/useCopyStop";
 import AddTraderForm from "./AddTraderForm";
 import TraderCard from "./TraderCard";
 
-const CopierDashboard = () => {
-    const {
-        settings,
-        updateSettings,
-        fetchSettings,
-        isLoading: isSettingsLoading,
-    } = useSettings();
+const CopierDashboard = ({ settings, updateSettings, fetchSettings }) => {
     const showCopierBanner = settings?.allow_copiers === 1;
     const { startCopyTrading, processingTrader: copyStartProcessingTrader } =
         useCopyStart();
@@ -107,9 +101,7 @@ const CopierDashboard = () => {
         }
     };
 
-    const isPageLoading = isLoading || isSettingsLoading;
-
-    if (isPageLoading) {
+    if (isLoading) {
         return (
             <div className="flex justify-center items-center min-h-[200px]">
                 <Spinner />
@@ -174,6 +166,12 @@ const CopierDashboard = () => {
             </div>
         </div>
     );
+};
+
+CopierDashboard.propTypes = {
+    settings: PropTypes.object,
+    updateSettings: PropTypes.func.isRequired,
+    fetchSettings: PropTypes.func.isRequired,
 };
 
 export default CopierDashboard;
