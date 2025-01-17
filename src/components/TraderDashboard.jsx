@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Spinner, SectionMessage } from "@deriv-com/quill-ui";
-import useSettings from "../hooks/useSettings";
+import PropTypes from "prop-types";
 import useCopyTradersList from "../hooks/useCopyTradersList";
 import TraderStatistics from "./TraderStatistics";
 import TraderBanner from "./TraderBanner";
@@ -9,13 +9,7 @@ import Settings from "./Settings";
 import TraderDesktopNavigation from "./TraderDesktopNavigation";
 import TraderMobileNavigation from "./TraderMobileNavigation";
 
-const TraderDashboard = () => {
-    const {
-        settings,
-        isLoading: settingsLoading,
-        updateSettings,
-        fetchSettings,
-    } = useSettings();
+const TraderDashboard = ({ settings, updateSettings, fetchSettings }) => {
     const { traders, isLoading: tradersLoading } = useCopyTradersList();
     const [selectedMenu, setSelectedMenu] = useState("statistics");
 
@@ -28,7 +22,7 @@ const TraderDashboard = () => {
         }
     };
 
-    if (settingsLoading || tradersLoading) {
+    if (tradersLoading) {
         return (
             <div className="flex justify-center items-center min-h-[200px]">
                 <Spinner />
@@ -81,6 +75,12 @@ const TraderDashboard = () => {
             )}
         </div>
     );
+};
+
+TraderDashboard.propTypes = {
+    settings: PropTypes.object,
+    updateSettings: PropTypes.func.isRequired,
+    fetchSettings: PropTypes.func.isRequired,
 };
 
 export default TraderDashboard;

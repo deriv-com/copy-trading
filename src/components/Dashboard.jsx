@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { SegmentedControlSingleChoice, Skeleton } from "@deriv-com/quill-ui";
 import { useAuth } from "../hooks/useAuth.jsx";
 import useSettings from "../hooks/useSettings.js";
@@ -7,20 +7,15 @@ import CopierDashboard from "./CopierDashboard";
 
 const Dashboard = () => {
     const { isLoading: authLoading } = useAuth();
-    const { settings, isLoading: settingsLoading } = useSettings();
-    const [userType, setUserType] = useState(() => {
-        // Set initial state based on settings if available
-        return settings?.allow_copiers ? "trader" : "copier";
-    });
-
-    useEffect(() => {
-        console.log("Settings updated:", settings);
-        if (settings) {
-            const newUserType = settings.allow_copiers ? "trader" : "copier";
-            console.log("Setting userType to:", newUserType);
-            setUserType(newUserType);
-        }
-    }, [settings]);
+    const {
+        settings,
+        isLoading: settingsLoading,
+        updateSettings,
+        fetchSettings,
+    } = useSettings();
+    const [userType, setUserType] = useState(
+        settings?.allow_copiers ? "trader" : "copier"
+    );
 
     const isLoading = authLoading || settingsLoading;
 
@@ -75,11 +70,23 @@ const Dashboard = () => {
                         </div>
                     </div>
                 ) : userType === "trader" ? (
-                    <TraderDashboard />
+                    <TraderDashboard
+                        settings={settings}
+                        updateSettings={updateSettings}
+                        fetchSettings={fetchSettings}
+                    />
                 ) : userType === "copier" ? (
-                    <CopierDashboard />
+                    <CopierDashboard
+                        settings={settings}
+                        updateSettings={updateSettings}
+                        fetchSettings={fetchSettings}
+                    />
                 ) : (
-                    <CopierDashboard />
+                    <CopierDashboard
+                        settings={settings}
+                        updateSettings={updateSettings}
+                        fetchSettings={fetchSettings}
+                    />
                 )}
             </div>
         </div>
