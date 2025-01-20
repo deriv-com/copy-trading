@@ -14,19 +14,43 @@ const getBaseConfig = () => {
 
 // Get stored endpoint settings if they exist
 export const getStoredEndpointSettings = () => {
-    const storedSettings = localStorage.getItem(ENDPOINT_STORAGE_KEY);
-    if (storedSettings) {
-        return JSON.parse(storedSettings);
+    try {
+        const storedSettings = localStorage.getItem(ENDPOINT_STORAGE_KEY);
+        if (storedSettings) {
+            return JSON.parse(storedSettings);
+        }
+    } catch (error) {
+        console.error('Error getting endpoint settings:', error);
     }
     return null;
 }
 
 // Store endpoint settings
 export const setEndpointSettings = (server, appId) => {
-    localStorage.setItem(
-        ENDPOINT_STORAGE_KEY,
-        JSON.stringify({ server, appId })
-    );
+    try {
+        if (!server || !appId) {
+            console.error('Invalid endpoint settings:', { server, appId });
+            return;
+        }
+
+        console.log('Storing endpoint settings:', { server, appId });
+        localStorage.setItem(
+            ENDPOINT_STORAGE_KEY,
+            JSON.stringify({ server, appId })
+        );
+
+        // Verify storage
+        const stored = localStorage.getItem(ENDPOINT_STORAGE_KEY);
+        console.log('Verified stored settings:', stored);
+
+        // Parse and validate stored data
+        const parsedStored = JSON.parse(stored);
+        if (!parsedStored || !parsedStored.server || !parsedStored.appId) {
+            console.error('Stored settings validation failed:', parsedStored);
+        }
+    } catch (error) {
+        console.error('Error setting endpoint settings:', error);
+    }
 }
 
 // Clear stored endpoint settings

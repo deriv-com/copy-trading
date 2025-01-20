@@ -16,30 +16,30 @@ import {
 } from "./config/index.js";
 
 function App() {
+    // Only set default endpoint settings once on initial mount
     useEffect(() => {
-        try {
-            const storedSettings = getStoredEndpointSettings();
-            if (!storedSettings) {
-                setEndpointSettings(getDefaultServer(), getDefaultAppId());
-            }
-        } catch (error) {
-            console.error(
-                "Failed to access storage for endpoint settings:",
-                error
-            );
-            // Ensure app can still function by using defaults without storing them
-            const defaultServer = getDefaultServer();
-            const defaultAppId = getDefaultAppId();
+        const initializeEndpointSettings = () => {
             try {
-                setEndpointSettings(defaultServer, defaultAppId);
-            } catch (storageError) {
-                console.error(
-                    "Failed to store default endpoint settings:",
-                    storageError
-                );
+                console.log("Checking for stored endpoint settings...");
+                const storedSettings = getStoredEndpointSettings();
+                console.log("Found stored settings:", storedSettings);
+
+                // Only set defaults if no settings exist at all
+                if (!storedSettings) {
+                    console.log(
+                        "No stored settings found, setting defaults..."
+                    );
+                    const defaultServer = getDefaultServer();
+                    const defaultAppId = getDefaultAppId();
+                    setEndpointSettings(defaultServer, defaultAppId);
+                }
+            } catch (error) {
+                console.error("Failed to initialize endpoint settings:", error);
             }
-        }
-    }, []);
+        };
+
+        initializeEndpointSettings();
+    }, []); // Empty dependency array ensures this only runs once on mount
 
     return (
         <ThemeProvider theme="light" persistent>

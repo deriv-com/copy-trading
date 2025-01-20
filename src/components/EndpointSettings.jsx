@@ -31,12 +31,40 @@ const EndpointSettings = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setEndpointSettings(server, appId);
+
         try {
+            // First ensure the settings are valid
+            if (!server || !appId) {
+                console.error("Invalid settings:", { server, appId });
+                return;
+            }
+
+            console.log("Saving new endpoint settings:", { server, appId });
+            setEndpointSettings(server, appId);
+
+            // Verify settings were saved
+            const storedSettings = getStoredEndpointSettings();
+            console.log("Verifying saved settings:", storedSettings);
+
+            if (
+                !storedSettings ||
+                storedSettings.server !== server ||
+                storedSettings.appId !== appId
+            ) {
+                console.error("Settings verification failed:", {
+                    expected: { server, appId },
+                    stored: storedSettings,
+                });
+                return;
+            }
+
+            // Only logout and redirect if settings were saved successfully
+            console.log("Settings saved successfully, logging out...");
             await logout();
+            console.log("Logged out, redirecting to home...");
             navigate("/");
         } catch (error) {
-            console.error("Logout failed:", error);
+            console.error("Failed to update endpoint settings:", error);
         }
     };
 
