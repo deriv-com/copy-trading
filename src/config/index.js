@@ -7,17 +7,9 @@ export const PROD_CONFIG = {
     OAUTH_URL: 'https://oauth.deriv.com'
 }
 
-// Development configuration
-export const DEV_CONFIG = {
-    APP_ID: '9999',
-    WS_URL: 'wss://qa47.deriv.dev/websockets/v3',
-    OAUTH_URL: 'https://qa47.deriv.dev',
-    REDIRECT_URL: 'http://localhost:8443'
-}
-
-// Get base configuration with fallback to production values
+// Get base configuration
 const getBaseConfig = () => {
-    return import.meta.env.DEV ? DEV_CONFIG : PROD_CONFIG;
+    return PROD_CONFIG;
 }
 
 // Get stored endpoint settings if they exist
