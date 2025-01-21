@@ -1,6 +1,6 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
-import { ToggleSwitch, Text } from "@deriv-com/quill-ui";
+import { ToggleSwitch, Text, SectionMessage } from "@deriv-com/quill-ui";
 
 const Settings = ({ settings, updateSettings, onChangeSettings }) => {
     const [allowCopiers, setAllowCopiers] = useState(
@@ -29,13 +29,22 @@ const Settings = ({ settings, updateSettings, onChangeSettings }) => {
                             Trader Mode
                         </Text>
                         <Text size="sm" color="secondary">
-                            Enable this to allow others to copy your trades
+                            Enable this to allow others to copy your trades.
+                            Disable this to become a copy.
                         </Text>
                     </div>
                     <ToggleSwitch
                         checked={allowCopiers}
                         onChange={handleTraderToggle}
                         size="lg"
+                    />
+                </div>
+                <div className="mt-4">
+                    <SectionMessage
+                        message="Upon disabling, others won't be able to copy you and all your active copiers will be dropped without any notification."
+                        size="sm"
+                        status="warning"
+                        title="Caution"
                     />
                 </div>
             </div>
