@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider, SnackbarProvider, Spinner } from "@deriv-com/quill-ui";
-import { AuthProvider, useAuth } from "./hooks/useAuth.jsx";
+import { AuthProvider } from "./hooks/useAuth.jsx";
+import useWebSocket from "./hooks/useWebSocket.js";
 import Login from "./components/Login";
 import EndpointSettings from "./components/EndpointSettings";
 import Header from "./components/Header";
@@ -53,15 +54,7 @@ function App() {
 }
 
 function AppContent() {
-    const { isConnected } = useAuth();
-
-    if (!isConnected) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <Spinner size="lg" />
-            </div>
-        );
-    }
+    const { isConnected } = useWebSocket();
 
     return (
         <Router>
@@ -69,17 +62,31 @@ function AppContent() {
                 <Header />
                 <PWAInstallBanner />
                 <Routes>
-                    <Route path="/" element={<Login />} />
-                    <Route
-                        path="/dashboard"
-                        element={
-                            <ProtectedRoute>
-                                <Dashboard />
-                            </ProtectedRoute>
-                        }
-                    />
+                    {/* Routes that don't require WebSocket connection */}
                     <Route path="/endpoint" element={<EndpointSettings />} />
+                    <Route path="/" element={<Login />} />
                     <Route path="/*" element={<Login />} />
+
+                    {/* Protected routes that require WebSocket connection */}
+                    {!isConnected ? (
+                        <Route
+                            path="/dashboard"
+                            element={
+                                <div className="flex justify-center items-center h-screen">
+                                    <Spinner size="lg" />
+                                </div>
+                            }
+                        />
+                    ) : (
+                        <Route
+                            path="/dashboard"
+                            element={
+                                <ProtectedRoute>
+                                    <Dashboard />
+                                </ProtectedRoute>
+                            }
+                        />
+                    )}
                 </Routes>
             </div>
         </Router>

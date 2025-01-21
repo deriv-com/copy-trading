@@ -47,9 +47,15 @@ export const useAuthState = () => {
     // Authorize effect - handles both initial auth and account switching
     useEffect(() => {
         let isActive = true; // For cleanup/prevent state updates after unmount
+        let isAuthorizingRef = false; // Track in-flight authorize requests
 
         const authorizeAccount = async () => {
-            if (!isConnected || !defaultAccount?.token || isAuthorizedGlobal) {
+            if (
+                !isConnected ||
+                !defaultAccount?.token ||
+                isAuthorizedGlobal ||
+                isAuthorizingRef
+            ) {
                 return;
             }
 
@@ -57,6 +63,7 @@ export const useAuthState = () => {
                 "Sending authorize request for account switch/initial auth"
             );
             setIsLoading(true);
+            isAuthorizingRef = true; // Set flag before starting request
 
             try {
                 await new Promise((resolve, reject) => {
@@ -93,6 +100,7 @@ export const useAuthState = () => {
             } finally {
                 if (isActive) {
                     setIsLoading(false);
+                    isAuthorizingRef = false; // Reset flag when request completes
                 }
             }
         };
@@ -101,6 +109,7 @@ export const useAuthState = () => {
 
         return () => {
             isActive = false; // Cleanup to prevent state updates after unmount
+            isAuthorizingRef = false; // Reset flag on cleanup
         };
     }, [isConnected, defaultAccount?.token]); // Reduced dependencies
 
@@ -146,10 +155,21 @@ export const useAuthState = () => {
                 throw new Error("WebSocket not connected");
             }
 
+            let isAuthorizingRef = false;
+
             return new Promise((resolve, reject) => {
+                if (isAuthorizingRef) {
+                    reject(new Error("Authorization already in progress"));
+                    return;
+                }
+
+                isAuthorizingRef = true;
                 setIsLoading(true);
+
                 sendMessage({ authorize: token }, (response) => {
                     setIsLoading(false);
+                    isAuthorizingRef = false;
+
                     if (response.error) {
                         console.error("Authorization failed:", response.error);
                         authErrorGlobal = response.error;
