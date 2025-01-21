@@ -14,69 +14,64 @@ const Login = () => {
     const appId = settings.appId;
 
     useEffect(() => {
-        // Handle OAuth redirect logic
-        const currentUrl = window.location.href;
-        const urlParams = new URLSearchParams(
-            window.location.search || location.search
-        );
-        const hashParams = new URLSearchParams(location.hash.replace("#", ""));
+        const handleOAuthRedirect = () => {
+            const urlParams = new URLSearchParams(
+                window.location.search || location.search
+            );
+            const hashParams = new URLSearchParams(
+                location.hash.replace("#", "")
+            );
 
-        console.log("OAuth Redirect Debug:", {
-            currentUrl,
-            urlSearch: window.location.search,
-            locationSearch: location.search,
-            hashSearch: location.hash,
-            urlParams: Object.fromEntries(urlParams.entries()),
-            hashParams: Object.fromEntries(hashParams.entries()),
-            pathname: window.location.pathname,
-            locationState: location.state,
-        });
+            const accounts = [];
+            let defaultAcct = null;
 
-        const accounts = [];
-        let defaultAcct = null;
+            // Iterate through params to find account data
+            let index = 1;
+            while (
+                urlParams.has(`acct${index}`) ||
+                hashParams.has(`acct${index}`)
+            ) {
+                const account = {
+                    account:
+                        urlParams.get(`acct${index}`) ||
+                        hashParams.get(`acct${index}`),
+                    token:
+                        urlParams.get(`token${index}`) ||
+                        hashParams.get(`token${index}`),
+                    currency:
+                        urlParams.get(`cur${index}`) ||
+                        hashParams.get(`cur${index}`),
+                };
 
-        // Iterate through params to find account data
-        let index = 1;
-        while (
-            urlParams.has(`acct${index}`) ||
-            hashParams.has(`acct${index}`)
-        ) {
-            const account = {
-                account:
-                    urlParams.get(`acct${index}`) ||
-                    hashParams.get(`acct${index}`),
-                token:
-                    urlParams.get(`token${index}`) ||
-                    hashParams.get(`token${index}`),
-                currency:
-                    urlParams.get(`cur${index}`) ||
-                    hashParams.get(`cur${index}`),
-            };
-            console.log(`Found account ${index}:`, account);
-
-            if (account.account && account.token) {
-                accounts.push(account);
-                if (index === 1) {
-                    defaultAcct = account;
+                if (account.account && account.token) {
+                    accounts.push(account);
+                    if (index === 1) {
+                        defaultAcct = account;
+                    }
                 }
+                index++;
             }
-            index++;
-        }
 
-        // Handle accounts if found in OAuth redirect
-        if (accounts.length > 0) {
-            console.log("Updating accounts and redirecting to dashboard");
-            const otherAccounts = accounts.slice(1);
-            updateAccounts(defaultAcct, otherAccounts);
-            window.location.href = `${window.location.origin}/dashboard`;
-            return;
+            if (accounts.length > 0) {
+                const otherAccounts = accounts.slice(1);
+                updateAccounts(defaultAcct, otherAccounts);
+                window.location.href = `${window.location.origin}/dashboard`;
+                return true;
+            }
+            return false;
+        };
+
+        // Only handle OAuth redirect if we have query params or hash
+        if (window.location.search || window.location.hash) {
+            const redirectHandled = handleOAuthRedirect();
+            if (redirectHandled) return;
         }
 
         // Regular login flow - redirect if already logged in
         if (!isLoading && defaultAccount?.token) {
             navigate("/dashboard");
         }
-    }, [defaultAccount, navigate, isLoading, location, updateAccounts]);
+    }, [defaultAccount?.token, navigate, isLoading, updateAccounts]); // Removed location dependency
 
     const showSpinner =
         (isLoading ||
