@@ -1,0 +1,140 @@
+name: Deploy PR Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: ['main']
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  pull-requests: write
+  deployments: write
+  statuses: write
+
+concurrency:
+  group: "preview-${{ github.event.pull_request.number }}"
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Run tests
+        run: npm test
+        continue-on-error: true
+
+  deploy-preview:
+    needs: quality
+    runs-on: ubuntu-latest
+    environment:
+      name: preview
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build
+        run: npm run build
+        env:
+          VITE_APP_ENV: preview
+          GITHUB_PAGES: true
+          BASE_URL: /copy-trading/
+          
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+          
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+          name: github-pages
+          
+      - name: Deploy Preview
+        id: deployment
+        uses: actions/deploy-pages@v3
+        with:
+          preview: true
+          artifact_name: github-pages
+          
+      - name: Comment PR
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = `${{ steps.deployment.outputs.page_url }}`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 Preview deployed to: ${url}`
+            });
+
+      - name: Check required secrets
+        run: |
+          if [ -z "${{ secrets.AUTOMAGICALLY_TOKEN }}" ]; then
+            echo "::error::Missing required secret: AUTOMAGICALLY_TOKEN"
+            exit 1
+          fi
+          if [ -z "${{ secrets.AUTOMAGICALLY_TEST_TARGET_ID }}" ]; then
+            echo "::error::Missing required secret: AUTOMAGICALLY_TEST_TARGET_ID"
+            exit 1
+          fi
+      - name: Run E2E tests
+        id: e2e
+        uses: OctoMind-dev/automagically-action-execute@v2
+        continue-on-error: true
+        with:
+          url: ${{ steps.deployment.outputs.page_url }}
+          token: ${{ secrets.AUTOMAGICALLY_TOKEN }}
+          testTargetId: ${{ secrets.AUTOMAGICALLY_TEST_TARGET_ID }}
+          blocking: true
+
+      - name: Report Workflow Status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const run_id = context.runId;
+            const run_url = `https://github.com/${owner}/${repo}/actions/runs/${run_id}`;
+            const status = '${{ steps.e2e.conclusion || steps.e2e.outcome || '' }}' === 'failure'
+              ? '❌ E2E tests failed'
+              : '✅ All checks completed';
+            
+            const body = `### Workflow Status\n${status}\n\nFor detailed test results, check the OctoMind report in the PR.\n\n🔍 [View Workflow Details](${run_url})`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: owner,
+              repo: repo,
+              body: body
+            });
